@@ -1,6 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import CustomizationsView from '../views/CustomizationsView.vue'
+import UserView from "../views/UserView.vue"
+import ErrorView from "../views/ErrorView.vue"
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -14,6 +16,16 @@ const router = createRouter({
       path: "/customizations",
       name: "customizations",
       component: CustomizationsView,
+    },
+    {
+      path: "/user",
+      name: "user",
+      component: UserView,
+    },
+    {
+      path: "/error",
+      name: "error",
+      component: ErrorView,
     },
   ],
 });

@@ -10,8 +10,6 @@ function displayCart(bool) {
 const props = defineProps({
   cart: Array,
 });
-
-console.log(props.cart);
 </script>
 
 <template>
@@ -26,7 +24,7 @@ console.log(props.cart);
         <span @click="displayCart(true)" class="material-symbols-outlined me-3 header-container__cart"
           >shopping_bag</span
         >
-        <div style="cursor: pointer">Chason</div>
+        <a href="./user">Chason</a>
 
         <div v-if="isCartVisible" class="header-container__cart-items-container">
           <div class="d-flex justify-content-between align-items-center">
@@ -64,6 +62,7 @@ console.log(props.cart);
 a {
   text-decoration: none;
   color: white;
+  cursor: pointer;
 }
 
 .header-container {
