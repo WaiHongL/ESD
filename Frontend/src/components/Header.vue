@@ -10,6 +10,8 @@ function displayCart(bool) {
 const props = defineProps({
   cart: Array,
 });
+
+console.log(props.cart);
 </script>
 
 <template>
@@ -24,7 +26,7 @@ const props = defineProps({
         <span @click="displayCart(true)" class="material-symbols-outlined me-3 header-container__cart"
           >shopping_bag</span
         >
-        <div>Chason</div>
+        <div style="cursor: pointer">Chason</div>
 
         <div v-if="isCartVisible" class="header-container__cart-items-container">
           <div class="d-flex justify-content-between align-items-center">
@@ -35,12 +37,18 @@ const props = defineProps({
           <hr />
 
           <!-- POPULATE CART ITEMS -->
-          <div v-for="game in cart" class="d-flex justify-content-between mb-2">
-            <div>
-              <div class="cart-item-title">{{ game[0].title }}</div>
-              <div class="cart-item-developer text-muted">{{ game[0].developer }}</div>
+          <div v-for="item in cart">
+            <div v-if="item.title" class="d-flex justify-content-between mb-2">
+              <div>
+                <div class="cart-item-title">{{ item.title }}</div>
+                <div class="cart-item-developer text-muted">{{ item.developer }}</div>
+              </div>
+              <div class="cart-item-title">${{ item.price }}</div>
             </div>
-            <div class="cart-item-title">${{ game[0].price.toFixed(2) }}</div>
+            <div v-else class="d-flex justify-content-between mb-2">
+              <div class="cart-item-title">{{ item.tier }}</div>
+              <div class="cart-item-title">{{ item.price }} credits</div>
+            </div>
           </div>
 
           <button class="btn btn-primary checkout-btn">Checkout</button>
