@@ -29,7 +29,7 @@ const imgSrc = computed(() => {
       <div class="card-subtitle text-muted">{{ developer }}</div>
       <br />
       <div class="d-flex justify-content-between align-items-center">
-        <div class="card-price">${{ price.toFixed(2) }}</div>
+        <div class="card-price">${{ price }}</div>
         <button @click="$emit('addToCart', { title, developer, price })" class="btn bg-primary text-white">
           Add to Cart
         </button>

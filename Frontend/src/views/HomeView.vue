@@ -7,8 +7,8 @@ import { ref } from "vue";
 const cart = ref([]);
 // FORCE HEADER TO RE-RENDER
 const cartKey = ref(0);
-function addToCart(title, developer, price) {
-  cart.value.push([title, developer, price]);
+function addToCart(gameData) {
+  cart.value.push(gameData);
   cartKey.value += 1;
 }
 </script>
@@ -31,9 +31,9 @@ function addToCart(title, developer, price) {
     <div class="recommendations-container">
       <div class="recommendations-container__title">Recommendations</div>
       <div class="recommendations-container__games-container">
-        <Game @add-to-cart="addToCart" :title="'Palworld'" :developer="'Pocketpair'" :price="26.0"></Game>
-        <Game @add-to-cart="addToCart" :title="'DAVE THE DIVER'" :developer="'MINTROCKET'" :price="21.99"></Game>
-        <Game @add-to-cart="addToCart" :title="'Elden Ring'" :developer="'FromSoftware'" :price="79.9"></Game>
+        <Game @add-to-cart="addToCart" title="Palworld" developer="Pocketpair" price="26.00"></Game>
+        <Game @add-to-cart="addToCart" title="DAVE THE DIVER" developer="MINTROCKET" price="21.99"></Game>
+        <Game @add-to-cart="addToCart" title="Elden Ring" developer="FromSoftware" price="79.90"></Game>
       </div>
     </div>
 
@@ -41,9 +41,9 @@ function addToCart(title, developer, price) {
     <div class="all-games-container">
       <div class="all-games-container__title">All Games</div>
       <div class="all-games-container__games-container">
-        <Game @add-to-cart="addToCart" :title="'Palworld'" :developer="'Pocketpair'" :price="26.0"></Game>
-        <Game @add-to-cart="addToCart" :title="'DAVE THE DIVER'" :developer="'MINTROCKET'" :price="21.99"></Game>
-        <Game @add-to-cart="addToCart" :title="'Elden Ring'" :developer="'FromSoftware'" :price="79.9"></Game>
+        <Game @add-to-cart="addToCart" title="Palworld" developer="Pocketpair" price="26.00"></Game>
+        <Game @add-to-cart="addToCart" title="DAVE THE DIVER" developer="MINTROCKET" price="21.99"></Game>
+        <Game @add-to-cart="addToCart" title="Elden Ring" developer="FromSoftware" price="79.90"></Game>
       </div>
     </div>
   </main>
