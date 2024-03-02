@@ -4,27 +4,27 @@ import Footer from "../components/Footer.vue";
 import Tier from "../components/customizations/Tier.vue";
 import { ref } from "vue";
 
-const wishlist = ref([]);
+const cart = ref([]);
 // FORCE HEADER TO RE-RENDER
-const wishlistKey = ref(0);
-function addToWishlist(customizationData) {
-  wishlist.value.push(customizationData);
-  displayAddToWishlistOverlay();
-  wishlistKey.value += 1;
+const cartKey = ref(0);
+function addToCart(customizationData) {
+  cart.value.push(customizationData);
+  displayAddToCartOverlay();
+  cartKey.value += 1;
 }
 
-// DISPLAY ADD TO WISHLIST CONFIRMATION
-const isAddToWishlistOverlayVisible = ref(false);
-function displayAddToWishlistOverlay() {
-  isAddToWishlistOverlayVisible.value = true;
+// DISPLAY ADD TO CART CONFIRMATION
+const isAddToCartOverlayVisible = ref(false);
+function displayAddToCartOverlay() {
+  isAddToCartOverlayVisible.value = true;
   setTimeout(() => {
-    isAddToWishlistOverlayVisible.value = false;
+    isAddToCartOverlayVisible.value = false;
   }, 2000);
 }
 </script>
 
 <template>
-  <Header :key="wishlistKey" :wishlist="wishlist" :isAddToWishlistOverlayVisible="isAddToWishlistOverlayVisible"></Header>
+  <Header :key="cartKey" :cart="cart" :isAddToCartOverlayVisible="isAddToCartOverlayVisible"></Header>
 
   <main>
     <h1>Customizations</h1>
@@ -33,11 +33,11 @@ function displayAddToWishlistOverlay() {
     <div class="tiers-container">
       <div class="tiers-container__title">Tiers</div>
       <div class="d-flex justify-content-between">
-        <Tier @add-to-wishlist="addToWishlist" tier="Novice" color="Yellow" price="100"></Tier>
-        <Tier @add-to-wishlist="addToWishlist" tier="Amateur" color="Green" price="200"></Tier>
-        <Tier @add-to-wishlist="addToWishlist" tier="Master" color="Blue" price="300"></Tier>
-        <Tier @add-to-wishlist="addToWishlist" tier="Expert" color="Red" price="400"></Tier>
-        <Tier @add-to-wishlist="addToWishlist" tier="Legend" color="Black" price="500"></Tier>
+        <Tier @add-to-cart="addToCart" tier="Novice" color="Yellow" price="100"></Tier>
+        <Tier @add-to-cart="addToCart" tier="Amateur" color="Green" price="200"></Tier>
+        <Tier @add-to-cart="addToCart" tier="Master" color="Blue" price="300"></Tier>
+        <Tier @add-to-cart="addToCart" tier="Expert" color="Red" price="400"></Tier>
+        <Tier @add-to-cart="addToCart" tier="Legend" color="Black" price="500"></Tier>
       </div>
     </div>
   </main>
