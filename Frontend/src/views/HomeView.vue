@@ -4,27 +4,27 @@ import Footer from "../components/Footer.vue";
 import Game from "../components/home/Game.vue";
 import { ref } from "vue";
 
-const cart = ref([]);
+const wishlist = ref([]);
 // FORCE HEADER TO RE-RENDER
-const cartKey = ref(0);
-function addToCart(gameData) {
-  cart.value.push(gameData);
-  displayAddToCartOverlay();
-  cartKey.value += 1;
+const wishlistKey = ref(0);
+function addToWishlist(gameData) {
+  wishlist.value.push(gameData);
+  displayAddToWishlistOverlay();
+  wishlistKey.value += 1;
 }
 
-// DISPLAY ADD TO CART CONFIRMATION
-const isAddToCartOverlayVisible = ref(false);
-function displayAddToCartOverlay() {
-  isAddToCartOverlayVisible.value = true;
+// DISPLAY ADD TO WISHLIST CONFIRMATION
+const isAddToWishlistOverlayVisible = ref(false);
+function displayAddToWishlistOverlay() {
+  isAddToWishlistOverlayVisible.value = true;
   setTimeout(() => {
-    isAddToCartOverlayVisible.value = false;
+    isAddToWishlistOverlayVisible.value = false;
   }, 2000);
 }
 </script>
 
 <template>
-  <Header :key="cartKey" :cart="cart" :isAddToCartOverlayVisible="isAddToCartOverlayVisible"></Header>
+  <Header :key="wishlistKey" :wishlist="wishlist" :isAddToWishlistOverlayVisible="isAddToWishlistOverlayVisible"></Header>
 
   <main>
     <div class="background-container">
@@ -41,9 +41,9 @@ function displayAddToCartOverlay() {
     <div class="recommendations-container">
       <div class="recommendations-container__title">Recommendations</div>
       <div class="recommendations-container__games-container">
-        <Game @add-to-cart="addToCart" title="Palworld" developer="Pocketpair" price="26.00"></Game>
-        <Game @add-to-cart="addToCart" title="DAVE THE DIVER" developer="MINTROCKET" price="21.99"></Game>
-        <Game @add-to-cart="addToCart" title="Elden Ring" developer="FromSoftware" price="79.90"></Game>
+        <Game @add-to-wishlist="addToWishlist" title="Palworld" genre="Open Wolrd" price="26.00"></Game>
+        <Game @add-to-wishlist="addToWishlist" title="DAVE THE DIVER" genre="Simulation" price="21.99"></Game>
+        <Game @add-to-wishlist="addToWishlist" title="Elden Ring" genre="Open World" price="79.90"></Game>
       </div>
     </div>
 
@@ -51,9 +51,9 @@ function displayAddToCartOverlay() {
     <div class="all-games-container">
       <div class="all-games-container__title">All Games</div>
       <div class="all-games-container__games-container">
-        <Game @add-to-cart="addToCart" title="Palworld" developer="Pocketpair" price="26.00"></Game>
-        <Game @add-to-cart="addToCart" title="DAVE THE DIVER" developer="MINTROCKET" price="21.99"></Game>
-        <Game @add-to-cart="addToCart" title="Elden Ring" developer="FromSoftware" price="79.90"></Game>
+        <Game @add-to-wishlist="addToWishlist" title="Palworld" genre="Pocketpair" price="26.00"></Game>
+        <Game @add-to-wishlist="addToWishlist" title="DAVE THE DIVER" genre="Simulation" price="21.99"></Game>
+        <Game @add-to-wishlist="addToWishlist" title="Elden Ring" genre="Open World" price="79.90"></Game>
       </div>
     </div>
   </main>
