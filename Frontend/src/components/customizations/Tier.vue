@@ -33,7 +33,7 @@ const borderColor = computed(() => {
         <div class="card-price">{{ price }} credits</div>
       </div>
       <div class="text-center">
-        <button @click="$emit('addToCart', { tier, price })" class="btn btn-primary">Add to Cart</button>
+        <button @click="$emit('addToWishlist', { tier, price })" class="btn btn-primary">Add to Wishlist</button>
       </div>
     </div>
   </div>

@@ -2,14 +2,14 @@
 import { ref } from "vue";
 
 const props = defineProps({
-  cart: Array,
-  isAddToCartOverlayVisible: Boolean,
+  wishlist: Array,
+  isAddToWishlistOverlayVisible: Boolean,
 });
 
-// DISPLAY CART WHEN CLICKED
-const isCartVisible = ref(false);
-function displayCart(bool) {
-  isCartVisible.value = bool;
+// DISPLAY WISHLIST WHEN CLICKED
+const isWishlistVisible = ref(false);
+function displayWishlist(bool) {
+  isWishlistVisible.value = bool;
 }
 </script>
 
@@ -23,45 +23,44 @@ function displayCart(bool) {
 
       <div class="header-container__user-container">
         <span
-          @click="displayCart(true)"
-          class="material-symbols-outlined me-3 header-container__cart"
-          :class="{ 'text-primary': cart.length >= 1 }"
-          >shopping_bag</span
-        >
+          @click="displayWishlist(true)"
+          class="material-symbols-outlined me-3 header-container__wishlist"
+          :class="{ 'text-primary': wishlist && wishlist.length >= 1 }"
+          >shopping_bag</span>
         <a href="./user">Chason</a>
 
-        <div v-if="isCartVisible" class="header-container__cart-items-container">
+        <div v-if="isWishlistVisible" class="header-container__wishlist-items-container">
           <div class="d-flex justify-content-between align-items-center">
-            <div class="header-container__cart-items-title">My Cart</div>
-            <span @click="displayCart(false)" class="material-symbols-outlined header-container__close-btn">close</span>
+            <div class="header-container__wishlist-items-title">My Wishlist</div>
+            <span @click="displayWishlist(false)" class="material-symbols-outlined header-container__close-btn">close</span>
           </div>
 
           <hr />
 
-          <!-- POPULATE CART ITEMS -->
-          <div v-for="item in cart">
+          <!-- POPULATE WISHLIST ITEMS -->
+          <div v-for="item in wishlist">
             <div v-if="item.title" class="d-flex justify-content-between mb-2">
               <div>
-                <div class="cart-item-title">{{ item.title }}</div>
-                <div class="cart-item-developer text-muted">{{ item.developer }}</div>
+                <div class="wishlist-item-title">{{ item.title }}</div>
+                <div class="wishlist-item-developer text-muted">{{ item.genre }}</div>
               </div>
-              <div class="cart-item-title">${{ item.price }}</div>
+              <div class="wishlist-item-title">${{ item.price }}</div>
             </div>
             <div v-else class="d-flex justify-content-between mb-2">
-              <div class="cart-item-title">{{ item.tier }}</div>
-              <div class="cart-item-title">{{ item.price }} credits</div>
+              <div class="wishlist-item-title">{{ item.tier }}</div>
+              <div class="wishlist-item-title">{{ item.price }} credits</div>
             </div>
           </div>
 
-          <button class="btn btn-primary checkout-btn" :class="{ disabled: cart.length == 0 }">Checkout</button>
+          <button class="btn btn-primary checkout-btn" :class="{ disabled: wishlist && wishlist.length == 0 }">Checkout</button>
         </div>
 
-        <div v-if="isCartVisible" class="header-container__cart-items-container-overlay"></div>
+        <div v-if="isWishlistVisible" class="header-container__wishlist-items-container-overlay"></div>
       </div>
     </div>
 
-    <!-- ADD TO CART OVERLAY -->
-    <div v-if="isAddToCartOverlayVisible" class="add-to-cart-overlay">Item has been added to cart.</div>
+    <!-- ADD TO WISHLIST OVERLAY -->
+    <div v-if="isAddToWishlistOverlayVisible" class="add-to-wishlist-overlay">Item has been added to wishlist.</div>
   </header>
 </template>
 
@@ -104,11 +103,11 @@ a {
   justify-content: center;
 }
 
-.header-container__cart {
+.header-container__wishlist {
   cursor: pointer;
 }
 
-.header-container__cart-items-container {
+.header-container__wishlist-items-container {
   position: fixed;
   top: 50%;
   left: 50%;
@@ -122,7 +121,7 @@ a {
   padding: 20px 30px;
 }
 
-.header-container__cart-items-title {
+.header-container__wishlist-items-title {
   font-weight: 700;
   font-size: 20px;
 }
@@ -131,12 +130,12 @@ a {
   cursor: pointer;
 }
 
-.cart-item-title {
+.wishlist-item-title {
   font-size: 18px;
   font-weight: 700;
 }
 
-.cart-item-developer {
+.wishlist-item-developer {
   font-size: 14px;
 }
 
@@ -146,7 +145,7 @@ a {
   left: 42%;
 }
 
-.header-container__cart-items-container-overlay {
+.header-container__wishlist-items-container-overlay {
   position: fixed;
   inset: 0;
   content: "";
@@ -155,7 +154,7 @@ a {
   z-index: 2;
 }
 
-.add-to-cart-overlay {
+.add-to-wishlist-overlay {
   position: fixed;
   top: 50%;
   left: 50%;
@@ -172,6 +171,6 @@ a {
   align-items: center;
 }
 
-.add-to-cart-overlay-opacity {
+.add-to-wishlist-overlay-opacity {
 }
 </style>
