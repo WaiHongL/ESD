@@ -1,15 +1,16 @@
 <script setup>
 import { ref } from "vue";
 
+const props = defineProps({
+  cart: Array,
+  isAddToCartOverlayVisible: Boolean,
+});
+
 // DISPLAY CART WHEN CLICKED
 const isCartVisible = ref(false);
 function displayCart(bool) {
   isCartVisible.value = bool;
 }
-
-const props = defineProps({
-  cart: Array,
-});
 </script>
 
 <template>
@@ -21,7 +22,10 @@ const props = defineProps({
       </div>
 
       <div class="header-container__user-container">
-        <span @click="displayCart(true)" class="material-symbols-outlined me-3 header-container__cart"
+        <span
+          @click="displayCart(true)"
+          class="material-symbols-outlined me-3 header-container__cart"
+          :class="{ 'text-primary': cart.length >= 1 }"
           >shopping_bag</span
         >
         <a href="./user">Chason</a>
@@ -49,12 +53,15 @@ const props = defineProps({
             </div>
           </div>
 
-          <button class="btn btn-primary checkout-btn">Checkout</button>
+          <button class="btn btn-primary checkout-btn" :class="{ disabled: cart.length == 0 }">Checkout</button>
         </div>
 
         <div v-if="isCartVisible" class="header-container__cart-items-container-overlay"></div>
       </div>
     </div>
+
+    <!-- ADD TO CART OVERLAY -->
+    <div v-if="isAddToCartOverlayVisible" class="add-to-cart-overlay">Item has been added to cart.</div>
   </header>
 </template>
 
@@ -146,5 +153,25 @@ a {
   background-color: black;
   opacity: 0.5;
   z-index: 2;
+}
+
+.add-to-cart-overlay {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  width: 400px;
+  height: 200px;
+  background-color: white;
+  color: black;
+  border-radius: 10px;
+  border: 3px solid black;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.add-to-cart-overlay-opacity {
 }
 </style>

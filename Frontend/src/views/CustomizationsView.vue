@@ -9,12 +9,22 @@ const cart = ref([]);
 const cartKey = ref(0);
 function addToCart(customizationData) {
   cart.value.push(customizationData);
+  displayAddToCartOverlay();
   cartKey.value += 1;
+}
+
+// DISPLAY ADD TO CART CONFIRMATION
+const isAddToCartOverlayVisible = ref(false);
+function displayAddToCartOverlay() {
+  isAddToCartOverlayVisible.value = true;
+  setTimeout(() => {
+    isAddToCartOverlayVisible.value = false;
+  }, 2000);
 }
 </script>
 
 <template>
-  <Header :key="cartKey" :cart="cart"></Header>
+  <Header :key="cartKey" :cart="cart" :isAddToCartOverlayVisible="isAddToCartOverlayVisible"></Header>
 
   <main>
     <h1>Customizations</h1>
