@@ -27,11 +27,13 @@ const borderColor = computed(() => {
     <div class="card-border" :class="borderColor">
       <div class="card-tier">{{ tier }}</div>
     </div>
+
     <div class="card-body">
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h5 class="card-title">{{ tier }}</h5>
         <div class="card-price">{{ price }} credits</div>
       </div>
+      
       <div class="text-center">
         <button @click="$emit('addToCart', { tier, price })" class="btn btn-primary">Add to Cart</button>
       </div>
