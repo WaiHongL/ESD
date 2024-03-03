@@ -5,63 +5,66 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://admin:password@luden-user.cbki4scc2nyk.ap-southeast-1.rds.amazonaws.com/user'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:password@34.124.211.169/user'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
-class Cart(db.Model):
-    __tablename__ = 'cart'
+class Wishlist(db.Model):
+    __tablename__ = 'wishlist'
 
-    game_title = db.Column(db.String(255), primary_key=True)
     user_id = db.Column(db.Integer, primary_key=True)
+    game_id = db.Column(db.Integer, primary_key=True)
 
-    def __init__(self, user_id, game_title):
+    def __init__(self, user_id, game_id):
         self.user_id = user_id
-        self.game_title = game_title
+        self.game_id = game_id
 
     def json(self):
         return {
-            "game_title": self.game_title,
-            "user_id": self.user_id
+            "user_id": self.user_id,
+            "game_id": self.game_id,
         }
     
 class Purchase(db.Model):
     __tablename__ = 'purchase'
 
-    game_title = db.Column(db.String(255), primary_key=True)
+    purchase_id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, primary_key=True)
+    item_id = db.Column(db.Integer, nullable=False)
 
-    def __init__(self, user_id, game_title):
+    def __init__(self, purchase_id, user_id, item_id):
+        self.purchase_id = purchase_id
         self.user_id = user_id
-        self.game_title = game_title
+        self.item_id = item_id
 
     def json(self):
         return {
-            "game_title": self.game_title,
+            "purchase_id": self.purchase_id,
+            "item_id": self.item_id,
             "user_id": self.user_id
         }
     
 # GET USER CART AND PURCHASE
 @app.route("/users/<int:userId>")
 def get_user_cart_and_purchase(userId):
-    cartList = db.session.scalars(db.select(Cart).filter_by(user_id=userId)).all()
+    wishlist = db.session.scalars(db.select(Wishlist).filter_by(user_id=userId)).all()
     purchaseList = db.session.scalars(db.select(Purchase).filter_by(user_id=userId)).all()
 
-    if (len(cartList) and len(purchaseList)):
+    if (len(wishlist) and len(purchaseList)):
         return jsonify(
             {
                 "code": 200,
                 "data": {
-                    "cart": [cart.json() for cart in cartList],
-                    "purchase": [purchase.json() for purchase in purchaseList]
+                    "wishlist": [cart.json() for cart in wishlist],
+                    "purchases": [purchase.json() for purchase in purchaseList]
                 }
             }
         )
     return jsonify(
         {
             "code": 404,
-            "message": "There are no games in cart."
+            "message": "There are no games in wishlist and purchase records."
         }
     ), 404
 

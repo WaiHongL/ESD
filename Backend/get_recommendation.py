@@ -25,11 +25,12 @@ def get_recommendations(userId):
     common_genre_result = invoke_http(common_genre_URL, method="POST", json=genre_result)
 
     # 4. INVOKE GAME MICROSERVICE TO GET GAMES THAT MATCHES COMMON GENRE
+    game_by_genre_result = invoke_http(game_URL, method="POST", json=common_genre_result)
 
     return jsonify (
         {
             "code": 200,
-            "result": common_genre_result
+            "result": game_by_genre_result
         }
     )
 
