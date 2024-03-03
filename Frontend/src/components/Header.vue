@@ -25,7 +25,7 @@ function displayCart(bool) {
         <span
           @click="displayCart(true)"
           class="material-symbols-outlined me-3 header-container__cart"
-          :class="{ 'text-primary': cart.length >= 1 }"
+          :class="{ 'text-primary': cart && cart.length >= 1 }"
           >shopping_bag</span
         >
         <a href="./user">Chason</a>
@@ -47,13 +47,14 @@ function displayCart(bool) {
               </div>
               <div class="cart-item-title">${{ item.price }}</div>
             </div>
+            
             <div v-else class="d-flex justify-content-between mb-2">
               <div class="cart-item-title">{{ item.tier }}</div>
               <div class="cart-item-title">{{ item.price }} credits</div>
             </div>
           </div>
 
-          <button class="btn btn-primary checkout-btn" :class="{ disabled: cart.length == 0 }">Checkout</button>
+          <button class="btn btn-primary checkout-btn" :class="{ disabled: cart && cart.length == 0 }">Checkout</button>
         </div>
 
         <div v-if="isCartVisible" class="header-container__cart-items-container-overlay"></div>

@@ -41,9 +41,8 @@ function displayAddToCartOverlay() {
     <div class="recommendations-container">
       <div class="recommendations-container__title">Recommendations</div>
       <div class="recommendations-container__games-container">
-        <Game @add-to-cart="addToCart" title="Palworld" developer="Pocketpair" price="26.00"></Game>
-        <Game @add-to-cart="addToCart" title="DAVE THE DIVER" developer="MINTROCKET" price="21.99"></Game>
-        <Game @add-to-cart="addToCart" title="Elden Ring" developer="FromSoftware" price="79.90"></Game>
+        <Game @add-to-cart="addToCart" title="Palworld" genre="Open World" price="26.00"></Game>
+        <Game @add-to-cart="addToCart" title="Elden Ring" genre="Open World" price="79.90"></Game>
       </div>
     </div>
 
@@ -51,9 +50,9 @@ function displayAddToCartOverlay() {
     <div class="all-games-container">
       <div class="all-games-container__title">All Games</div>
       <div class="all-games-container__games-container">
-        <Game @add-to-cart="addToCart" title="Palworld" developer="Pocketpair" price="26.00"></Game>
-        <Game @add-to-cart="addToCart" title="DAVE THE DIVER" developer="MINTROCKET" price="21.99"></Game>
-        <Game @add-to-cart="addToCart" title="Elden Ring" developer="FromSoftware" price="79.90"></Game>
+        <Game @add-to-cart="addToCart" title="Palworld" genre="Open World" price="26.00"></Game>
+        <Game @add-to-cart="addToCart" title="DAVE THE DIVER" genre="Simulation" price="21.99"></Game>
+        <Game @add-to-cart="addToCart" title="Oxygen Not Included" genre="Survival" price="7.48"></Game>
       </div>
     </div>
   </main>
@@ -126,6 +125,6 @@ function displayAddToCartOverlay() {
 .recommendations-container__games-container,
 .all-games-container__games-container {
   display: flex;
-  justify-content: space-between;
+  gap: 20px;
 }
 </style>

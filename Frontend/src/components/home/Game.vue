@@ -3,7 +3,7 @@ import { computed } from "vue";
 
 const props = defineProps({
   title: String,
-  developer: String,
+  genre: String,
   price: Number,
 });
 
@@ -14,8 +14,10 @@ const imgSrc = computed(() => {
     src += "dave_the_diver.jpg";
   } else if (props.title === "Elden Ring") {
     src += "elden_ring.jpg";
-  } else {
+  } else if (props.title === "Palworld") {
     src += "palworld.jpg";
+  } else if (props.title == "Oxygen Not Included") {
+    src += "oxygen_not_included.jpg";
   }
   return src;
 });
@@ -24,15 +26,27 @@ const imgSrc = computed(() => {
 <template>
   <div class="card">
     <img :src="imgSrc" class="card-img-top" />
+
     <div class="card-body">
       <h5 class="card-title">{{ title }}</h5>
-      <div class="card-subtitle text-muted">{{ developer }}</div>
+      <div class="card-subtitle text-muted">{{ genre }}</div>
       <br />
+
       <div class="d-flex justify-content-between align-items-center">
         <div class="card-price">${{ price }}</div>
-        <button @click="$emit('addToCart', { title, developer, price })" class="btn bg-primary text-white">
-          Add to Cart
-        </button>
+
+        <div class="d-flex">
+          <button class="btn bg-danger d-flex justify-content-center align-items-center me-2">
+            <span class="material-symbols-outlined text-white">favorite</span>
+          </button>
+
+          <button
+            @click="$emit('addToCart', { title, genre, price })"
+            class="btn bg-primary justify-content-center align-items-center"
+          >
+            <span class="material-symbols-outlined text-white">shopping_bag</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
