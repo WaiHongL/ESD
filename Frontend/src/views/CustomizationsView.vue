@@ -33,11 +33,11 @@ function displayAddToCartOverlay() {
     <div class="tiers-container">
       <div class="tiers-container__title">Tiers</div>
       <div class="d-flex justify-content-between">
-        <Tier @add-to-cart="addToCart" tier="Novice" color="Yellow" price="100"></Tier>
-        <Tier @add-to-cart="addToCart" tier="Amateur" color="Green" price="200"></Tier>
-        <Tier @add-to-cart="addToCart" tier="Master" color="Blue" price="300"></Tier>
-        <Tier @add-to-cart="addToCart" tier="Expert" color="Red" price="400"></Tier>
-        <Tier @add-to-cart="addToCart" tier="Legend" color="Black" price="500"></Tier>
+        <Tier @add-to-cart="addToCart" tier="Novice" color="Yellow" price="500"></Tier>
+        <Tier @add-to-cart="addToCart" tier="Amateur" color="Green" price="1000"></Tier>
+        <Tier @add-to-cart="addToCart" tier="Master" color="Blue" price="2000"></Tier>
+        <Tier @add-to-cart="addToCart" tier="Expert" color="Red" price="4000"></Tier>
+        <Tier @add-to-cart="addToCart" tier="Legend" color="Black" price="8000"></Tier>
       </div>
     </div>
   </main>
