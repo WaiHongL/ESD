@@ -35,5 +35,10 @@ def create_checkout_session():
     return redirect(checkout_session.url, code=303)
 
 
+@app.route("/view")
+def view_all_session():
+    return stripe.PaymentIntent.list()
+
+
 if __name__ == "__main__":
     app.run(port=4242, debug=True)
