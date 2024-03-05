@@ -61,7 +61,7 @@ def process_purchase(purchase):
     # Invoke the notification microservice
     print('\n-----Invoking order microservice-----')
     purchase_result = invoke_http(payment_URL, method='POST', json=purchase)
-    # Check the order result; if a failure, send it to the error microservice.
+    # Check the purchase result; if a failure, send it to the error microservice.
     code = purchase_result["code"]
     message = json.dumps(purchase_result)
 
@@ -74,8 +74,7 @@ def process_purchase(purchase):
         # invoke_http(error_URL, method="POST", json=order_result)
         channel.basic_publish(exchange=exchangename, routing_key="payment.error", 
             body=message, properties=pika.BasicProperties(delivery_mode = 2)) 
-        # make message persistent within the matching queues until it is received by some receiver 
-        # (the matching queues have to exist and be durable and bound to the exchange)
+        # make message persistent within the matching queues 
 
         # - reply from the invocation is not used;
         # continue even if this invocation fails        
@@ -89,15 +88,9 @@ def process_purchase(purchase):
             "message": "Order creation failure sent for error handling."
         }
 
-    # Notice that we are publishing to "Activity Log" only when there is no error in order creation.
-    # In http version, we first invoked "Activity Log" and then checked for error.
-    # Since the "Activity Log" binds to the queue using '#' => any routing_key would be matched 
-    # and a message sent to “Error” queue can be received by “Activity Log” too.
 
     else:
-        # 4. Record new order
-        # record the activity log anyway
-        #print('\n\n-----Invoking activity_log microservice-----')
+      
         print('\n\n-----Publishing the (order info) message with routing_key=order.info-----')        
 
         # invoke_http(activity_log_URL, method="POST", json=order_result)            
@@ -107,13 +100,9 @@ def process_purchase(purchase):
     print("\nOrder published to RabbitMQ Exchange.\n")
     # - reply from the invocation is not used;
     # continue even if this invocation fails
-    
-    # 5. Send new order to shipping
-    # Invoke the shipping record microservice
-    print('\n\n-----Invoking shipping_record microservice-----') 
 
-    # 5. Send new order to shipping
-    # Invoke the shipping record microservice
+  
+    # Invoke the notification record microservice
     print('\n\n-----Invoking shipping_record microservice-----')
     notification_result = invoke_http(
         notification_URL, method="POST", json=purchase_result['data'])
