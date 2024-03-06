@@ -3,6 +3,7 @@ import HomeView from '../views/HomeView.vue'
 import CustomizationsView from '../views/CustomizationsView.vue'
 import UserView from "../views/UserView.vue"
 import ErrorView from "../views/ErrorView.vue"
+import Checkout from '../views/Checkout.vue'; // Adjust the path as necessary
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -27,7 +28,13 @@ const router = createRouter({
       name: "error",
       component: ErrorView,
     },
+    {
+      path: '/checkout',
+      name: 'Checkout',
+      component: Checkout,
+    },
   ],
 });
 
 export default router
+
