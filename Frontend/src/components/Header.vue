@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from "vue";
+import axios from 'axios'
 
 const props = defineProps({
   cart: Array,
@@ -10,6 +11,16 @@ const props = defineProps({
 const isCartVisible = ref(false);
 function displayCart(bool) {
   isCartVisible.value = bool;
+}
+
+function sendDataToBackend(data) {
+    axios.post('http://localhost:4242/receive', data)
+        .then(response => {
+            console.log('Data sent successfully:', response.data);
+        })
+        .catch(error => {
+            console.error('Error sending data:', error);
+        });
 }
 </script>
 
@@ -53,8 +64,9 @@ function displayCart(bool) {
               <div class="cart-item-title">{{ item.price }} credits</div>
             </div>
           </div>
-
-          <button class="btn btn-primary checkout-btn" :class="{ disabled: cart && cart.length == 0 }">Checkout</button>
+        
+            <button @click="sendDataToBackend(cart)" class="btn btn-primary checkout-btn" :class="{ disabled: cart && cart.length == 0 }">Checkout</button>
+        
         </div>
 
         <div v-if="isCartVisible" class="header-container__cart-items-container-overlay"></div>
