@@ -22,8 +22,10 @@ if not amqp_connection.check_exchange(channel, exchangename, exchangetype):
     sys.exit(0)  # Exit with a success status
 
 payment_URL = "http://localhost:5000/create-checkout-session"
-notification_URL = "http://localhost:5001/notification"
-error_URL = "http://localhost:5004/error"
+notification_URL = "http://localhost:5000/notification"
+user_purchase_URL = "http://localhost:5000/game-purchase"
+user_point_URL = "http://localhost:5000/points/update"
+error_URL = "http://localhost:5000/error"
 
 
 @app.route("/make_purchase", methods=['POST'])
@@ -32,9 +34,11 @@ def make_purchase():
     if request.is_json:
         try:
             purchase = request.get_json()
-            
-            # do the actual work
+            updateuser = create_purchase(purchase)
             result = process_purchase(purchase)
+            #sends notification message to AMQP queue
+            channel.basic_publish(exchange=exchangename, routing_key="notification.info", 
+                body=message)
             return jsonify(result), result["code"]
 
         except Exception as e:
@@ -55,6 +59,66 @@ def make_purchase():
         "message": "Invalid JSON input: " + str(request.get_data())
     }), 400
 
+def create_purchase(purchase):
+    #create entry in purchase_game table
+    #modifies purchase json into wtv u need for below function
+    purchase1 = jsonify()
+    create_purchase_result = invoke_http(user_purchase_URL, method='POST', json=purchase1)
+    code = create_purchase_result["code"]
+    message = json.dumps(create_purchase_result)
+
+ 
+    if code not in range(200, 300):
+        print('\n\n-----Publishing the (create error) message with routing_key=create.error-----')
+
+        channel.basic_publish(exchange=exchangename, routing_key="create.error", 
+            body=message, properties=pika.BasicProperties(delivery_mode = 2)) 
+        # make message persistent within the matching queues 
+
+        # - reply from the invocation is not used;
+        # continue even if this invocation fails        
+        print("\nOrder status ({:d}) published to the RabbitMQ Exchange:".format(
+            code), create_purchase_result)
+
+        # 7. Return error
+        return {
+            "code": 500,
+            "data": {"create_result": create_purchase_result},
+            "message": "Purchase creation failure sent for error handling."
+        }
+
+
+
+    #update user points
+    #purchse 2 should have userid and update amt
+    purchase2 = jsonify()
+    update_points_result = invoke_http(user_point_URL, method='POST', json=purchase2)
+    code = update_points_result["code"]
+    message = json.dumps(update_points_result)
+
+ 
+    if code not in range(200, 300):
+        print('\n\n-----Publishing the (point error) message with routing_key=point.error-----')
+
+        channel.basic_publish(exchange=exchangename, routing_key="point.error", 
+            body=message, properties=pika.BasicProperties(delivery_mode = 2)) 
+        # make message persistent within the matching queues 
+
+        # - reply from the invocation is not used;
+        # continue even if this invocation fails        
+        print("\nOrder status ({:d}) published to the RabbitMQ Exchange:".format(
+            code), update_points_result)
+
+        # 7. Return error
+        return {
+            "code": 500,
+            "data": {"update_points_result": update_points_result},
+            "message": "Points update failure sent for error handling."
+        }
+
+    data = {"code": 200, "data": {"result": "success"}}
+    return data
+
 
 def process_purchase(purchase):
     
@@ -67,11 +131,8 @@ def process_purchase(purchase):
 
  
     if code not in range(200, 300):
-        # Inform the error microservice
-        #print('\n\n-----Invoking error microservice as order fails-----')
         print('\n\n-----Publishing the (order error) message with routing_key=order.error-----')
 
-        # invoke_http(error_URL, method="POST", json=order_result)
         channel.basic_publish(exchange=exchangename, routing_key="payment.error", 
             body=message, properties=pika.BasicProperties(delivery_mode = 2)) 
         # make message persistent within the matching queues 
@@ -89,54 +150,10 @@ def process_purchase(purchase):
         }
 
 
-    else:
-      
-        print('\n\n-----Publishing the (order info) message with routing_key=order.info-----')        
 
-        # invoke_http(activity_log_URL, method="POST", json=order_result)            
-        channel.basic_publish(exchange=exchangename, routing_key="order.info", 
-            body=message)
-    
-    print("\nOrder published to RabbitMQ Exchange.\n")
-    # - reply from the invocation is not used;
-    # continue even if this invocation fails
 
-  
-    # Invoke the notification record microservice
-    print('\n\n-----Invoking shipping_record microservice-----')
-    notification_result = invoke_http(
-        notification_URL, method="POST", json=purchase_result['data'])
-    print("notification_result:", notification_result, '\n')
 
-    # Check the shipping result; 
-    # if a failure, send it to the error microservice.
-    code = notification_result["code"]
-    if code not in range(200, 300):
 
-        # Inform the error microservice
-        print('\n\n-----Invoking error microservice as shipping fails-----')
-        invoke_http(error_URL, method="POST", json=notification_result)
-        print("Shipping status ({:d}) sent to the error microservice:".format(
-            code), notification_result)
-
-        # 7. Return error
-        return {
-            "code": 400,
-            "data": {
-                "purchase_result": purchase_result,
-                "notification_result": notification_result
-            },
-            "message": "error sent for error handling."
-        }
-
-    # 7. Return created order, shipping record
-    return {
-        "code": 201,
-        "data": {
-            "purchase_result": purchase_result,
-            "notification_result": notification_result
-        }
-    }
 
 
 

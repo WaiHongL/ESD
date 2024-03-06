@@ -32,7 +32,7 @@ def create_checkout_session():
     except Exception as e:
         return str(e)
 
-    return redirect(checkout_session.url, code=303)
+    return checkout_session
 
 
 @app.route("/view")

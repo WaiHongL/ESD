@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 
@@ -44,7 +44,24 @@ class Purchase(db.Model):
             "item_id": self.item_id,
             "user_id": self.user_id
         }
-    
+
+class GamePurchase(db.Model):
+    __tablename__ = 'game_purchase'
+
+    purchase_id = db.Column(db.Integer, autoincrement = True, primary_key=True)
+    user_id = db.Column(db.Integer, primary_key=True)
+    game_id = db.Column(db.Integer, nullable=False)
+
+    def __init__(self, user_id, game_id):
+        self.user_id = user_id
+        self.game_id = game_id
+
+    def json(self):
+        return {
+            "purchase_id": self.purchase_id,
+            "game_id": self.game_id,
+            "user_id": self.user_id
+        }
 # GET USER CART AND PURCHASE
 @app.route("/users/<int:userId>")
 def get_user_cart_and_purchase(userId):
@@ -67,6 +84,31 @@ def get_user_cart_and_purchase(userId):
             "message": "There are no games in wishlist and purchase records."
         }
     ), 404
+
+# CREATE A PURCHASE RECORD IN GAME PURCHASE TABLE
+@app.route("/game-purchase", methods=['POST'])
+def create_game_purchase():
+    data = request.get_json()
+    game = GamePurchase(**data)
+
+    try:
+        db.session.add(game)
+        db.session.commit()
+    except Exception as e:
+        return jsonify(
+            {
+                "code": 500,
+                "error": str(e),
+                "message": "An error occurred creating the game."
+            }
+        ), 500
+
+    return jsonify(
+        {
+            "code": 201,
+            "data": game.json()
+        }
+    ), 201
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5100, debug=True)
