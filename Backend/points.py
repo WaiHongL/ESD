@@ -10,6 +10,7 @@ def get_user_points(user_id):
         return jsonify({'message': 'User not found'}), 404
     return jsonify({'points': user_points[user_id]})
 
+@app.route('/points', methods=['POST'])
 def update_points():
     try:
         # Get data from the request
