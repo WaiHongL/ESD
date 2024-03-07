@@ -65,7 +65,7 @@ function sendDataToBackend(data) {
             </div>
           </div>
         
-            <button @click="sendDataToBackend(cart)" class="btn btn-primary checkout-btn" :class="{ disabled: cart && cart.length == 0 }">Checkout</button>
+            <button class="btn btn-primary checkout-btn" :class="{ disabled: cart && cart.length == 0 }">Checkout</button>
         
         </div>
 
