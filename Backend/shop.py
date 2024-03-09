@@ -108,5 +108,28 @@ def get_games_genre():
         }
     )
 
+#GET GAME DETAILS
+@app.route("/gamedetail/<int:gameId>")
+def get_game_details(gameId):
+    game = db.session.scalars(db.select(Game).filter_by(game_id=gameId)).one()
+    if (game):
+        print(game)
+        return jsonify(
+            {
+                "code": 200,
+                "data": {
+                    'game_id': game.game_id,
+                    'title': game.title,
+                    'price': game.price
+                }
+            }
+        )
+    return jsonify(
+        {
+            "code": 404,
+            "message": "There is no such game."
+        }
+    ), 404
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

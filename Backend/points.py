@@ -9,7 +9,7 @@ import json
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:pSSSS+]q8zZ-pjF@34.124.211.169/user'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
+CORS(app)
 db = SQLAlchemy(app)
 
 class User(db.Model):
@@ -55,18 +55,20 @@ def get_user_points(user_id):
 
 @app.route('/points/add', methods=['POST'])
 def add_points():
-    if request.is_json:
+    # if request.is_json:
+        # print(request.json())
         try:
-            pointjson = request.get_json()
-            user = User.query.get(1)
+            pointjson = request.json
+           
+            user = User.query.get(pointjson['user_id'])
             if user:
-                user.points = user.points + (pointjson['price'] *100)
+                user.points = user.points + (float(pointjson['price']) *100)
                 db.session.commit()
-                return jsonify({
+                return json.dumps({
                 "code": 200,
                 "message": "Points successfully added"
             }), 200
-            return jsonify({
+            return json.dumps({
                 "code": 400,
                 "message": "Invalid user"
             }), 400
@@ -81,7 +83,7 @@ def add_points():
             ex_str = str(e) + " at " + str(exc_type) + ": " + fname + ": line " + str(exc_tb.tb_lineno)
             print(ex_str)
 
-            return jsonify({
+            return json.dumps({
                 "code": 500,
                 "message": "place_order.py internal error: " + ex_str
             }), 500

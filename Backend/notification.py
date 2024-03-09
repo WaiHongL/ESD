@@ -3,17 +3,18 @@ from flask import Flask, redirect, request
 import amqp_connection
 import json
 import pika
+from flask_cors import CORS
 
 app = Flask(__name__, static_url_path="", static_folder="public")
-
+CORS(app)
 
 api_key = "ebf8fab91654b14ea8cb67d7899fd7eb"
 api_secret = "9b1132c0970817650f7e33fb8a345618"
 
 def send_email(data):
     email = data['email']
-    name = data['name']
-    textcontent = "You have bought {} for ${}\n Transaction ID: {}".format(data['gamename'], data['price'], data['transactionid'])
+    name = data['account_name']
+    textcontent = "You have bought {} for ${}\n Transaction ID: {}".format(data['title'], data['price'], data['transactionid'])
     message = {
         "Messages": [
             {
