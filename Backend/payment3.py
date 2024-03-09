@@ -2,36 +2,74 @@ import stripe
 import json
 import os
 
-from flask import Flask, render_template, jsonify, request, send_from_directory, redirect
+from flask import (
+    Flask,
+    render_template,
+    jsonify,
+    request,
+    send_from_directory,
+    redirect,
+)
 from dotenv import load_dotenv, find_dotenv
+from flask_cors import CORS
 
 load_dotenv(find_dotenv())
 
+os.environ["STATIC_DIR"] = "/Applications/MAMP/htdocs/ESD/Project/ESD/Frontend/dist"
+
 # For sample support and debugging, not required for production:
 stripe.set_app_info(
-    'stripe-samples/accept-a-payment/custom-payment-flow',
-    version='0.0.2',
-    url='https://github.com/stripe-samples')
+    "stripe-samples/accept-a-payment/custom-payment-flow",
+    version="0.0.2",
+    url="https://github.com/stripe-samples",
+)
 
-stripe.api_version = '2020-08-27'
-stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
+stripe.api_version = "2020-08-27"
+stripe.api_key = "sk_test_51LrjcfK1WW7DRh3qSpVCT1CWMxeC8bpxPOQdTWJ6SyFCJCSpt6opHUXb1QqB65u8zvxdrmkzYqNcZy2TBHoSzjX000cRwCOEA6"
 
-static_dir = str(os.path.abspath(os.path.join(__file__ , "..", os.getenv("STATIC_DIR"))))
-app = Flask(__name__, static_folder='/Applications/MAMP/htdocs/ESD/Project/ESD/Frontend/dist', static_url_path="", template_folder=static_dir)
+static_dir = str(os.path.abspath(os.path.join(__file__, "..", os.getenv("STATIC_DIR"))))
+app = Flask(
+    __name__,
+    static_folder="/Applications/MAMP/htdocs/ESD/Project/ESD/Frontend/dist",
+    static_url_path="",
+    template_folder=static_dir,
+)
+CORS(app)
 
-@app.route('/', methods=['GET'])
+
+@app.route("/", methods=["GET"])
 def get_root():
-    return send_from_directory(app.static_folder, 'index.html')
+    return send_from_directory(app.static_folder, "index.html")
 
 
-@app.route('/config', methods=['GET'])
+@app.route("/config", methods=["GET"])
 def get_config():
-    return jsonify({'publishableKey': os.getenv('STRIPE_PUBLISHABLE_KEY')})
+    return jsonify({"publishableKey": os.getenv("STRIPE_PUBLISHABLE_KEY")})
 
 
-@app.route('/create-payment-intent', methods=['POST'])
+@app.route("/create-payment-intent", methods=["POST"])
 def create_payment():
-    data = json.loads(request.data)
+    
+    data = request.json
+    print(data)
+    amount = 10000
+
+    try:
+
+        payment_intent = stripe.PaymentIntent.create(
+            amount=amount,
+            currency='usd',
+            payment_method=data['paymentMethodid']
+            # Add more parameters as needed
+        )
+        print('LOL')
+        print(payment_intent.client_secret)
+        return jsonify(payment_intent), 200
+    except Exception as e:
+        print('fuck la')
+        return jsonify(error=str(e)), 500
+    
+    # return jsonify({'message': 'Payment processed successfully'})
 
     # Each payment method type has support for different currencies. In order to
     # support many payment method types and several currencies, this server
@@ -41,87 +79,92 @@ def create_payment():
     # at https://dashboard.stripe.com/settings/payment_methods.
 
     # Some example payment method types include `card`, `ideal`, and `link`.
-    payment_method_type = data['paymentMethodType']
-    currency = data['currency']
-    amount = data['amount']
+    # payment_method_type = data[]
+    # currency = data["currency"]
+    # amount = data["amount"]
 
-    # Create a PaymentIntent with the amount, currency, and a payment method type.
-    #
-    # See the documentation [0] for the full list of supported parameters.
-    #
-    # [0] https://stripe.com/docs/api/payment_intents/create
-    formatted_payment_method_type = ['link', 'card'] if payment_method_type == 'link' else [payment_method_type]
-    params = {
-        'payment_method_types': formatted_payment_method_type,
-        'amount': amount,
-        'currency': currency
-    }
+    # # Create a PaymentIntent with the amount, currency, and a payment method type.
+    # #
+    # # See the documentation [0] for the full list of supported parameters.
+    # #
+    # # [0] https://stripe.com/docs/api/payment_intents/create
+    # formatted_payment_method_type = (
+    #     ["link", "card"] if payment_method_type == "link" else [payment_method_type]
+    # )
+    # params = {
+    #     "payment_method_types": formatted_payment_method_type,
+    #     "amount": amount,
+    #     "currency": currency,
+    # }
 
-    # If this is for an ACSS payment, we add payment_method_options
-    # to create the Mandate. This is not required if you're not accepting
-    # ACSS (Pre-authorized debit in Canada).
-    if payment_method_type == 'acss_debit':
-        params['payment_method_options'] = {
-            'acss_debit': {
-                'mandate_options': {
-                    'payment_schedule': 'sporadic',
-                    'transaction_type': 'personal'
-                }
-            }
-        }
+    # # If this is for an ACSS payment, we add payment_method_options
+    # # to create the Mandate. This is not required if you're not accepting
+    # # ACSS (Pre-authorized debit in Canada).
+    # if payment_method_type == "acss_debit":
+    #     params["payment_method_options"] = {
+    #         "acss_debit": {
+    #             "mandate_options": {
+    #                 "payment_schedule": "sporadic",
+    #                 "transaction_type": "personal",
+    #             }
+    #         }
+    #     }
+
+    # try:
+    #     intent = stripe.PaymentIntent.create(**params)
+
+    #     # Send PaymentIntent details to the front end.
+    #     return jsonify({"clientSecret": intent.client_secret})
+    # except stripe.error.StripeError as e:
+    #     return jsonify({"error": {"message": str(e)}}), 400
+    # except Exception as e:
+    #     return jsonify({"error": {"message": str(e)}}), 400
 
 
-    try:
-        intent = stripe.PaymentIntent.create(**params)
-
-        # Send PaymentIntent details to the front end.
-        return jsonify({'clientSecret': intent.client_secret})
-    except stripe.error.StripeError as e:
-        return jsonify({'error': {'message': str(e)}}), 400
-    except Exception as e:
-        return jsonify({'error': {'message': str(e)}}), 400
-
-@app.route('/payment/next', methods=['GET'])
+@app.route("/payment/next", methods=["GET"])
 def get_payment_next():
     payment_intent = request.args.get("payment_intent")
     intent = stripe.PaymentIntent.retrieve(payment_intent)
-    return redirect('/success?payment_intent_client_secret={intent.client_secret}')
+    return redirect("/success?payment_intent_client_secret={intent.client_secret}")
 
-@app.route('/success', methods=['GET'])
-def get_success():    
-    return render_template('success.html')
 
-@app.route('/webhook', methods=['POST'])
+@app.route("/success", methods=["GET"])
+def get_success():
+    return render_template("success.html")
+
+
+@app.route("/webhook", methods=["POST"])
 def webhook_received():
     # You can use webhooks to receive information about asynchronous payment events.
     # For more about our webhook events check out https://stripe.com/docs/webhooks.
-    webhook_secret = os.getenv('STRIPE_WEBHOOK_SECRET')
+    webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET")
     request_data = json.loads(request.data)
 
     if webhook_secret:
         # Retrieve the event by verifying the signature using the raw body and secret if webhook signing is configured.
-        signature = request.headers.get('stripe-signature')
+        signature = request.headers.get("stripe-signature")
         try:
             event = stripe.Webhook.construct_event(
-                payload=request.data, sig_header=signature, secret=webhook_secret)
-            data = event['data']
+                payload=request.data, sig_header=signature, secret=webhook_secret
+            )
+            data = event["data"]
         except Exception as e:
             return e
         # Get the type of webhook event sent - used to check the status of PaymentIntents.
-        event_type = event['type']
+        event_type = event["type"]
     else:
-        data = request_data['data']
-        event_type = request_data['type']
-    data_object = data['object']
+        data = request_data["data"]
+        event_type = request_data["type"]
+    data_object = data["object"]
 
-    if event_type == 'payment_intent.succeeded':
-        print('💰 Payment received!')
+    if event_type == "payment_intent.succeeded":
+        print("💰 Payment received!")
         # Fulfill any orders, e-mail receipts, etc
         # To cancel the payment you will need to issue a Refund (https://stripe.com/docs/api/refunds)
-    elif event_type == 'payment_intent.payment_failed':
-        print('❌ Payment failed.')
-    return jsonify({'status': 'success'})
+    elif event_type == "payment_intent.payment_failed":
+        print("❌ Payment failed.")
+    return jsonify({"status": "success"})
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(port=4242, debug=True)
