@@ -69,57 +69,18 @@ def create_payment():
         print('fuck la')
         return jsonify(error=str(e)), 500
     
-    # return jsonify({'message': 'Payment processed successfully'})
+@app.route("/receive", methods=["POST"])
+def receive_data():
+    data = request.json  # Assuming the data is sent in JSON format
+    # Process the data as needed
+    print("Received data:", data)
+    # You can return a response if needed
+    totalprice = 0
+    for game in data:
+        totalprice += float(game["price"])
+    print(totalprice)
 
-    # Each payment method type has support for different currencies. In order to
-    # support many payment method types and several currencies, this server
-    # endpoint accepts both the payment method type and the currency as
-    # parameters. To get compatible payment method types, pass
-    # `automatic_payment_methods[enabled]=true` and enable types in your dashboard
-    # at https://dashboard.stripe.com/settings/payment_methods.
-
-    # Some example payment method types include `card`, `ideal`, and `link`.
-    # payment_method_type = data[]
-    # currency = data["currency"]
-    # amount = data["amount"]
-
-    # # Create a PaymentIntent with the amount, currency, and a payment method type.
-    # #
-    # # See the documentation [0] for the full list of supported parameters.
-    # #
-    # # [0] https://stripe.com/docs/api/payment_intents/create
-    # formatted_payment_method_type = (
-    #     ["link", "card"] if payment_method_type == "link" else [payment_method_type]
-    # )
-    # params = {
-    #     "payment_method_types": formatted_payment_method_type,
-    #     "amount": amount,
-    #     "currency": currency,
-    # }
-
-    # # If this is for an ACSS payment, we add payment_method_options
-    # # to create the Mandate. This is not required if you're not accepting
-    # # ACSS (Pre-authorized debit in Canada).
-    # if payment_method_type == "acss_debit":
-    #     params["payment_method_options"] = {
-    #         "acss_debit": {
-    #             "mandate_options": {
-    #                 "payment_schedule": "sporadic",
-    #                 "transaction_type": "personal",
-    #             }
-    #         }
-    #     }
-
-    # try:
-    #     intent = stripe.PaymentIntent.create(**params)
-
-    #     # Send PaymentIntent details to the front end.
-    #     return jsonify({"clientSecret": intent.client_secret})
-    # except stripe.error.StripeError as e:
-    #     return jsonify({"error": {"message": str(e)}}), 400
-    # except Exception as e:
-    #     return jsonify({"error": {"message": str(e)}}), 400
-
+    return redirect(url_for("create_payment_intent", totalprice=totalprice))
 
 @app.route("/payment/next", methods=["GET"])
 def get_payment_next():

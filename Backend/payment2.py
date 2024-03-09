@@ -34,18 +34,7 @@ def create_payment_intent():
 #   return render_template('checkout.html', client_secret=intent.client_secret)
 
 
-@app.route("/receive", methods=["POST"])
-def receive_data():
-    data = request.json  # Assuming the data is sent in JSON format
-    # Process the data as needed
-    print("Received data:", data)
-    # You can return a response if needed
-    totalprice = 0
-    for game in data:
-        totalprice += float(game["price"])
-    print(totalprice)
 
-    return redirect(url_for("create_payment_intent", totalprice=totalprice))
 
 
 if __name__ == "__main__":

@@ -81,6 +81,24 @@ async submitCheckout(){
     });
     const data = await response.json();
     console.log(data);
+
+
+    const { paymentIntent, error } = await stripe.confirmCardPayment(data.client_secret, {
+  payment_method: {
+    card: cardElement,
+    billing_details: {
+      name: 'Jenny Rosen',
+    },
+  }
+});
+
+if (error) {
+  console.error('Error:', error);
+  // Handle payment failure
+} else if (paymentIntent.status === 'succeeded') {
+  console.log('Payment successful');
+  //show payment success modal??
+}
   });
   
   
