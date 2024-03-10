@@ -30,7 +30,7 @@ stripe.api_key = "sk_test_51LrjcfK1WW7DRh3qSpVCT1CWMxeC8bpxPOQdTWJ6SyFCJCSpt6opH
 static_dir = str(os.path.abspath(os.path.join(__file__, "..", os.getenv("STATIC_DIR"))))
 app = Flask(
     __name__,
-    static_folder="/Applications/MAMP/htdocs/ESD/Project/ESD/Frontend/dist",
+    static_folder="../Frontend/dist",
     static_url_path="",
     template_folder=static_dir,
 )
@@ -52,7 +52,8 @@ def create_payment():
     
     data = request.json
     print(data)
-    amount = 10000
+    #data will be price and paymentmethod obj
+    amount = float(data['price']) * 100
 
     try:
 
@@ -64,23 +65,23 @@ def create_payment():
         )
         print('LOL')
         print(payment_intent.client_secret)
-        return jsonify(payment_intent), 200
+        return jsonify({"client_secret":payment_intent.client_secret, "id":payment_intent.id}), 200
     except Exception as e:
         print('fuck la')
         return jsonify(error=str(e)), 500
     
-@app.route("/receive", methods=["POST"])
-def receive_data():
-    data = request.json  # Assuming the data is sent in JSON format
-    # Process the data as needed
-    print("Received data:", data)
-    # You can return a response if needed
-    totalprice = 0
-    for game in data:
-        totalprice += float(game["price"])
-    print(totalprice)
+# @app.route("/receive", methods=["POST"])
+# def receive_data():
+#     data = request.json  # Assuming the data is sent in JSON format
+#     # Process the data as needed
+#     print("Received data:", data)
+#     # You can return a response if needed
+#     totalprice = 0
+#     for game in data:
+#         totalprice += float(game["price"])
+#     print(totalprice)
 
-    return redirect(url_for("create_payment_intent", totalprice=totalprice))
+#     return redirect(url_for("create_payment_intent", totalprice=totalprice))
 
 @app.route("/payment/next", methods=["GET"])
 def get_payment_next():

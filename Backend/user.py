@@ -113,6 +113,16 @@ def get_user_cart_and_purchase(userId):
         }
     ), 404
 
+# DELETE PURCHASE RECORD IN GAME PURCHASE TABLE
+@app.route("/delete-game-purchase", methods=['DELETE'])
+def delete_game_purchase():
+    
+
+# UPDATE PURCHASE RECORD IN GAME PURCHASE TABLE
+@app.route("/update-game-purchase", methods=['POST'])
+def update_game_purchase():
+
+
 # CREATE A PURCHASE RECORD IN GAME PURCHASE TABLE
 @app.route("/game-purchase", methods=['POST'])
 def create_game_purchase():

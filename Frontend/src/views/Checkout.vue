@@ -72,12 +72,15 @@ async submitCheckout(){
     console.log(result)
     console.log('done')
     console.log(result.paymentMethod.id)
-    const response = await fetch('http://localhost:4242/create-payment-intent', {
+    const response = await fetch('http://localhost:5100/make-payment', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ paymentMethodid: result.paymentMethod.id }),
+      body: JSON.stringify({ paymentMethodid: result.paymentMethod.id,
+        "user_id": "2",
+        "game_id": "2"
+       }),
     });
     const data = await response.json();
     console.log(data);
@@ -95,6 +98,17 @@ async submitCheckout(){
 if (error) {
   console.error('Error:', error);
   // Handle payment failure
+  const response = await fetch('http://localhost:5100/payment-fail', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ paymentMethodid: result.paymentMethod.id,
+        "user_id": "2",
+        "game_id": "2"
+       }),
+    });
+
 } else if (paymentIntent.status === 'succeeded') {
   console.log('Payment successful');
   //show payment success modal??
