@@ -7,7 +7,7 @@ import { ref, onMounted } from "vue";
 import { loadStripe } from '@stripe/stripe-js';
 
 let cardElement;
-const stripePromise = loadStripe('pk_test_51LrjcfK1WW7DRh3qozq21D4vjLWPEPCEvUlElldx7B3kxJ0KlScZzZS8B17tNBs2cNJLCm83hNMx3HDgVXagGGOM00IYhIPgw7');
+const stripePromise = loadStripe('pk_test_51OqFQgC8BpOc5C7Dg2wPpokymYcuqCa40IwnqeIXZ33o0fhrhC199LGuUSuzR0pHzsfcupKelXLAShCT7cnDPrHU0027FoVa1Z');
 
 const createCardElement = async () => {
   try {
@@ -62,6 +62,7 @@ async submitCheckout(){
     // const cardElement = await createCardElement();
     console.log('submit')
     console.log((cardElement))
+
     // Use Stripe.js to create a payment intent and handle payment confirmation
     const paymentMethod  = stripe.createPaymentMethod({
     type: 'card',
@@ -72,12 +73,13 @@ async submitCheckout(){
     console.log(result)
     console.log('done')
     console.log(result.paymentMethod.id)
-    const response = await fetch('http://localhost:5100/make-payment', {
+
+    const response = await fetch('http://localhost:5100/make-purchase', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ paymentMethodid: result.paymentMethod.id,
+      body: JSON.stringify({ paymentmethod_id: result.paymentMethod.id,
         "user_id": "2",
         "game_id": "2"
        }),
@@ -86,17 +88,17 @@ async submitCheckout(){
     console.log(data);
 
 
-    const { paymentIntent, error } = await stripe.confirmCardPayment(data.client_secret, {
-  payment_method: {
-    card: cardElement,
-    billing_details: {
-      name: 'Jenny Rosen',
-    },
-  }
-});
+//     const { paymentIntent, error } = await stripe.confirmCardPayment(data.client_secret, {
+//   payment_method: {
+//     card: cardElement,
+//     billing_details: {
+//       name: 'Jenny Rosen',
+//     },
+//   }
+// });
 
-if (error) {
-  console.error('Error:', error);
+if (data['code'] == 400) {
+  console.error('Error:', data['code']);
   // Handle payment failure
   const response = await fetch('http://localhost:5100/payment-fail', {
       method: 'POST',
@@ -109,7 +111,7 @@ if (error) {
        }),
     });
 
-} else if (paymentIntent.status === 'succeeded') {
+} else {
   console.log('Payment successful');
   //show payment success modal??
 }

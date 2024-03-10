@@ -116,11 +116,42 @@ def get_user_cart_and_purchase(userId):
 # DELETE PURCHASE RECORD IN GAME PURCHASE TABLE
 @app.route("/delete-game-purchase", methods=['DELETE'])
 def delete_game_purchase():
+    return
     
 
 # UPDATE PURCHASE RECORD IN GAME PURCHASE TABLE
-@app.route("/update-game-purchase", methods=['POST'])
+@app.route("/update-game-purchase", methods=['PUT'])
 def update_game_purchase():
+    try:
+        data = request.get_json(force=True)
+        print(data)
+        user_id = data['user_id']
+        print(user_id)
+        game_id = data['game_id']
+        print(game_id)
+        purchase_id = data['transaction_id']
+        print(purchase_id)
+        purchase = db.session.scalars(db.select(GamePurchase).filter_by(user_id= user_id, game_id= game_id)).first()
+        
+        print(purchase)
+        if purchase:
+            purchase.purchase_id = purchase_id # Replace new_purchase_id with the actual new value
+            db.session.commit()
+    except Exception as e:
+        return jsonify(
+            {
+                "code": 500,
+                "error": str(e),
+                "message": "An error occurred updating the game purchase."
+            }
+        ), 500
+    return jsonify(
+    {
+        "code": 200,
+        
+    }
+), 200
+
 
 
 # CREATE A PURCHASE RECORD IN GAME PURCHASE TABLE

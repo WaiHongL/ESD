@@ -15,8 +15,7 @@ db = SQLAlchemy(app)
 # CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 CORS(app)
 
-global price
-global user_id
+
 #AMQP STUFF
 exchangename = "order_topic" # exchange name
 exchangetype="topic" # use a 'topic' exchange to enable interaction
@@ -29,13 +28,15 @@ if not amqp_connection.check_exchange(channel, exchangename, exchangetype):
     sys.exit(0)  # Exit with a success status
 
 #URLS
-payment_URL = "http://localhost:4242/create-payment-intent"
+payment_URL = "http://localhost:5666/payment"
 notification_URL = "http://localhost:5200/notification"
 user_purchase_URL = "http://localhost:5101/game-purchase"
 user_point_URL = "http://localhost:5600/points/add"
 error_URL = "http://localhost:5100/error"
 userdetails_URL = "http://localhost:5101/userdetail/"
 gamedetails_URL = "http://localhost:5000/gamedetail/"
+update_purchase_table_URL = "http://localhost:5101/update-game-purchase"
+
 
 #USER TABLE
 class User(db.Model):
@@ -76,7 +77,7 @@ class User(db.Model):
 @app.route("/payment-fail", methods=['POST'])
 
 # @cross_origin()
-def rollback():
+# def rollback():
 
 
 @app.route("/make-purchase", methods=['POST'])
@@ -110,39 +111,46 @@ def make_purchase():
                 
                 payment_json = json.dumps({
                                 'price': gamedetails['price'],
-                                'paymentMethodid': userid_gameid['paymentMethodid']
+                                'paymentmethod_id': userid_gameid['paymentmethod_id']
                 })
-                #payment TBD
+                #payment
                 payment_result = make_payment(payment_json)
-                update_purchase_table(payment_result['id'])
                 print('payment done')
-            # if(make_payment['code'] == 200):
-                
-                userdetailsjson = invoke_http(userdetails_URL + str(user_id), method='GET')
-                userdetails = userdetailsjson['data']
-                notification_json = {
-                    
-                    'price': gamedetails['price'],
-                    'title': gamedetails['title'],
-                    'email': userdetails['email'],
-                    'account_name': userdetails['account_name'],
-                    'transactionid': payment_result['id']
+                if payment_result['code'] in range(200, 300):
+                    print('payment successful')
+                    #update gamepurchase table
+                    updatejson = {'user_id': user_id,
+                                  'game_id': game_id,
+                                  'transaction_id': payment_result['confirmation']['id']
 
-                }
-                print('processing notification...')
-                process_notification(notification_json)
-            # else:
-            #     return
-                #rollback function TBD
-            # result = process_purchase(purchase)
-            #sends notification message to AMQP queue
-            # channel.basic_publish(exchange=exchangename, routing_key="notification.info", 
-            #     body=message)
-            # return jsonify(result), result["code"]
+                    }
+                    print(updatejson)
+                    update_result = update_purchase_table(updatejson)
+                    userdetailsjson = invoke_http(userdetails_URL + str(user_id), method='GET')
+                    userdetails = userdetailsjson['data']
+                    notification_json = {
+                    
+                        'price': gamedetails['price'],
+                        'title': gamedetails['title'],
+                        'email': userdetails['email'],
+                        'account_name': userdetails['account_name'],
+                        'transactionid': payment_result['confirmation']['id']
+
+                    }
+                    print('processing notification...')
+                    process_notification(notification_json)
+    
+                else:
+                    return
+                    #rollback function TBD
+        
                 
             #NEED TO RETURN 
             return jsonify({
-                "client_secret": payment_result['client_secret']
+                
+                "sucess": "succes!",
+                "code": 200
+
             }), 202
 
         except Exception as e:
@@ -163,17 +171,45 @@ def make_purchase():
         "message": "Invalid JSON input: " + str(request.get_data())
     }), 400
 
-def update_purchase_table(id):
-    
+def update_purchase_table(updatejson):
+    update_purchase = invoke_http(update_purchase_table_URL, method='PUT', json=updatejson)
+    code = update_purchase['code']
+    message = json.dumps(update_purchase)
+    print(message)
+    if code not in range(200, 300):
+        print('\n\n-----Publishing the (update error) message with routing_key=update_purchase.error-----')
+
+        channel.basic_publish(exchange=exchangename, routing_key="update_purchase.error", 
+            body=message, properties=pika.BasicProperties(delivery_mode = 2)) 
+        # make message persistent within the matching queues 
+
+        # - reply from the invocation is not used;
+        # continue even if this invocation fails        
+        print("\nOrder status ({:d}) published to the RabbitMQ Exchange:".format(
+            code), update_purchase)
+
+        # 7. Return error
+        return {
+            "code": 500,
+            "data": {"create_result": update_purchase},
+            "message": "Update failure sent for error handling."
+        }
+
+
+
 
 def create_purchase(userid_gameid):
     #create entry in purchase_game table
     print(userid_gameid)
-    create_purchase_result = invoke_http(user_purchase_URL, method='POST', json=userid_gameid)
+    createjson = {"user_id": userid_gameid['user_id'],
+                  "game_id": userid_gameid['game_id']
+    }
+    create_purchase_result = invoke_http(user_purchase_URL, method='POST', json=createjson)
     print(create_purchase_result)
     code = create_purchase_result["code"]
     message = json.dumps(create_purchase_result)
     print(message)
+
 
  
     if code not in range(200, 300):
@@ -243,8 +279,7 @@ def make_payment(payment_json):
 
     #returns client secret and id
 
-    return {"client_secret": payment_result['client_secret'],
-            "id": payment_result['id']}
+    return payment_result
 
 
 def process_notification(notification_json):

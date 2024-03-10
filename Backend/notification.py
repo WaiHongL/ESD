@@ -14,7 +14,7 @@ api_secret = "9b1132c0970817650f7e33fb8a345618"
 def send_email(data):
     email = data['email']
     name = data['account_name']
-    textcontent = "You have bought {} for ${}\n Transaction ID: {}".format(data['title'], data['price'], data['transactionid'])
+    textcontent = "You have bought {} for ${}\n Transaction ID: {}".format(data['title'], data['price'], data['transaction_id'])
     message = {
         "Messages": [
             {
