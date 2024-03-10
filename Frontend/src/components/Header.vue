@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from "vue";
-import axios from 'axios'
+import axios from 'axios';
+import { useRouter } from 'vue-router';
 
 const props = defineProps({
   cart: Array,
@@ -13,6 +14,9 @@ function displayCart(bool) {
   isCartVisible.value = bool;
 }
 
+// gets the router instance
+const router = useRouter(); 
+
 function sendDataToBackend(data) {
     axios.post('http://localhost:4242/receive', data)
         .then(response => {
@@ -22,6 +26,15 @@ function sendDataToBackend(data) {
             console.error('Error sending data:', error);
         });
 }
+
+// handle checkout button click
+async function handleCheckout() {
+ if (props.cart && props.cart.length > 0) {
+    await sendDataToBackend(props.cart); // Wait for the data to be sent
+    router.push({ name: 'Checkout' }); // Navigate to Checkout.vue
+ }
+}
+
 </script>
 
 <template>
@@ -65,7 +78,7 @@ function sendDataToBackend(data) {
             </div>
           </div>
         
-            <button @click="sendDataToBackend(cart)" class="btn btn-primary checkout-btn" :class="{ disabled: cart && cart.length == 0 }">Checkout</button>
+            <button @click="handleCheckout()" class="btn btn-primary checkout-btn" :class="{ disabled: cart && cart.length == 0 }">Checkout</button>
         
         </div>
 
@@ -185,6 +198,8 @@ a {
   align-items: center;
 }
 
-.add-to-cart-overlay-opacity {
-}
+/* .add-to-cart-overlay-opacity {
+  
+} */
+
 </style>

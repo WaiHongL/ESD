@@ -29,6 +29,7 @@ def create_checkout_session():
             success_url=YOUR_DOMAIN + "/success.html",
             cancel_url=YOUR_DOMAIN + "/cancel.html",
         )
+        
     except Exception as e:
         return str(e)
 

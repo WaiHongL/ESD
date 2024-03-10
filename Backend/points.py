@@ -1,6 +1,43 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
+from flask_sqlalchemy import SQLAlchemy
+
+import os, sys
+import requests
+import json
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:pSSSS+]q8zZ-pjF@34.124.211.169/user'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+CORS(app)
+db = SQLAlchemy(app)
+
+class User(db.Model):
+    __tablename__ = 'user'
+
+    user_id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String)
+    account_name = db.Column(db.String)
+    password = db.Column(db.String)
+    email = db.Column(db.String)
+    points = db.Column(db.Float)
+
+    def __init__(self, user_id, email, account_name, password, points):
+        self.user_id = user_id
+        self.email = email
+        self.account_name = account_name
+        self.password = password
+        self.points = points
+
+    def json(self):
+        return {
+            "user_id": self.user_id,
+            "email": self.email,
+            "account_name": self.account_name,
+            "password": self.password,
+            "points": self.points
+        }
+    
 
 user_points = {}
 
@@ -14,6 +51,45 @@ def get_user_points(user_id):
         return jsonify({'user_id': user_id, 'refund_amount': refund_amount})
     else:
         return jsonify({'user_id': user_id, 'points': user_points[user_id]})
+
+
+@app.route('/points/add', methods=['POST'])
+def add_points():
+    # if request.is_json:
+        # print(request.json())
+        try:
+            pointjson = request.json
+           
+            user = User.query.get(pointjson['user_id'])
+            if user:
+                user.points = user.points + (float(pointjson['price']) *100)
+                db.session.commit()
+                return json.dumps({
+                "code": 200,
+                "message": "Points successfully added"
+            }), 200
+            return json.dumps({
+                "code": 400,
+                "message": "Invalid user"
+            }), 400
+
+
+
+        
+        except Exception as e:
+            # Unexpected error in code
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            ex_str = str(e) + " at " + str(exc_type) + ": " + fname + ": line " + str(exc_tb.tb_lineno)
+            print(ex_str)
+
+            return json.dumps({
+                "code": 500,
+                "message": "place_order.py internal error: " + ex_str
+            }), 500
+    
+
+
 
 @app.route('/points/update', methods=['POST'])
 def update_points():

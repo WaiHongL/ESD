@@ -1,14 +1,41 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
+import json
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, supports_credentials=True)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:pSSSS+]q8zZ-pjF@34.124.211.169/user'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
+
+class User(db.Model):
+    __tablename__ = 'user'
+
+    user_id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String)
+    account_name = db.Column(db.String)
+    password = db.Column(db.String)
+    email = db.Column(db.String)
+    points = db.Column(db.Float)
+
+    def __init__(self, user_id, email, account_name, password, points):
+        self.user_id = user_id
+        self.email = email
+        self.account_name = account_name
+        self.password = password
+        self.points = points
+
+    def json(self):
+        return {
+            "user_id": self.user_id,
+            "email": self.email,
+            "account_name": self.account_name,
+            "password": self.password,
+            "points": self.points
+        }
 
 class Wishlist(db.Model):
     __tablename__ = 'wishlist'
@@ -46,11 +73,12 @@ class Purchase(db.Model):
         }
 
 class GamePurchase(db.Model):
-    __tablename__ = 'game_purchase'
+    __tablename__ = 'gamepurchase'
 
-    purchase_id = db.Column(db.Integer, autoincrement = True, primary_key=True)
-    user_id = db.Column(db.Integer, primary_key=True)
-    game_id = db.Column(db.Integer, nullable=False)
+   
+    user_id = db.Column(db.Integer, nullable=False, primary_key=True)
+    game_id = db.Column(db.Integer, nullable=False, primary_key = True)
+    purchase_id = db.Column(db.String, nullable = True)
 
     def __init__(self, user_id, game_id):
         self.user_id = user_id
@@ -88,7 +116,10 @@ def get_user_cart_and_purchase(userId):
 # CREATE A PURCHASE RECORD IN GAME PURCHASE TABLE
 @app.route("/game-purchase", methods=['POST'])
 def create_game_purchase():
-    data = request.get_json()
+    print("user service")
+    data = request.get_json(force=True)
+   
+    print(type(data))
     game = GamePurchase(**data)
 
     try:
@@ -110,5 +141,28 @@ def create_game_purchase():
         }
     ), 201
 
+
+#GET USER DETAILS
+@app.route("/userdetail/<int:userId>")
+def get_user_details(userId):
+    user = db.session.scalars(db.select(User).filter_by(user_id=userId)).one()
+    if (user):
+        print(user)
+        return jsonify(
+            {
+                "code": 200,
+                "data": {
+                    'user_id': user.user_id,
+                    'account_name': user.account_name,
+                    'email': user.email
+                }
+            }
+        )
+    return jsonify(
+        {
+            "code": 404,
+            "message": "There is no such user."
+        }
+    ), 404
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5100, debug=True)
+    app.run(host='0.0.0.0', port=5101, debug=True)
