@@ -35,9 +35,31 @@ class Game(db.Model):
             "points": self.points
         }
     
-# GET ALL GAMES
+# GET ALL GAMES AND GAMES BY GENRE
 @app.route("/games")
 def get_all_games():
+    # CHECK IF "GENRE" IS IN QUERY PARAMS
+    if (request.args.get("genre")):
+        genre = request.args.get("genre")
+        gameList = db.session.scalars(db.select(Game).filter_by(genre=genre)).all()
+
+        if len(gameList):
+            return jsonify(
+                {
+                    "code": 200,
+                    "data": {
+                        "games": [game.json() for game in gameList]
+                    }
+                }
+            )
+
+        return jsonify(
+            {
+                "code": 404,
+                "message": "There are no games that matches the genre."
+            }
+        ), 404
+    
     gameList = db.session.scalars(db.select(Game)).all()
 
     if len(gameList):
@@ -56,35 +78,13 @@ def get_all_games():
         }
     ), 404
 
-@app.route("/games", methods=["POST"])
-def get_games_by_genre():
-    genre = request.get_json()["data"]
-    gameList = db.session.scalars(db.select(Game).filter_by(genre=genre)).all()
-
-    if len(gameList):
-        return jsonify(
-            {
-                "code": 200,
-                "data": {
-                    "games": [game.json() for game in gameList]
-                }
-            }
-        )
-    return jsonify(
-        {
-            "code": 404,
-            "message": "There are no games that matches the genre."
-        }
-    ), 404
-
-
 # GET GAME GENRES
 @app.route("/games/genre", methods=["POST"])
 def get_games_genre():
     wishlist_data = request.get_json()["data"]["wishlist"]
     purchase_data = request.get_json()["data"]["purchases"]
     
-    # CONCATENATE cart_data and purchase_data
+    # CONCATENATE cart_data AND purchase_data
     data_arr = wishlist_data + purchase_data
     id_arr = []
 
@@ -100,7 +100,7 @@ def get_games_genre():
         if (game):
             genre = game.genre
             genres.append(genre)
-    
+
     return jsonify(
         {
             "code": 200,

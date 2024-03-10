@@ -83,7 +83,6 @@ def create_error_queue(channel):
         # any routing_key with two words and ending with '.error' will be matched
 
 
-
 if __name__ == "__main__":  # execute this program only if it is run as a script (not by 'import')   
     connection = create_connection()
     channel = create_channel(connection)

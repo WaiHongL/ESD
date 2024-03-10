@@ -1,7 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-import json
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
@@ -75,7 +74,6 @@ class Purchase(db.Model):
 class GamePurchase(db.Model):
     __tablename__ = 'gamepurchase'
 
-   
     user_id = db.Column(db.Integer, nullable=False, primary_key=True)
     game_id = db.Column(db.Integer, nullable=False, primary_key = True)
     purchase_id = db.Column(db.String, nullable = True)
@@ -90,26 +88,36 @@ class GamePurchase(db.Model):
             "game_id": self.game_id,
             "user_id": self.user_id
         }
+    
 # GET USER CART AND PURCHASE
 @app.route("/users/<int:userId>")
 def get_user_cart_and_purchase(userId):
-    wishlist = db.session.scalars(db.select(Wishlist).filter_by(user_id=userId)).all()
-    purchaseList = db.session.scalars(db.select(Purchase).filter_by(user_id=userId)).all()
+    user = db.session.scalars(db.select(User).filter_by(user_id=userId)).all()
 
-    if (len(wishlist) and len(purchaseList)):
+    if (user):
+        wishlist = db.session.scalars(db.select(Wishlist).filter_by(user_id=userId)).all()
+        purchaseList = db.session.scalars(db.select(Purchase).filter_by(user_id=userId)).all()
+
+        if (len(wishlist) or len(purchaseList)):
+            return jsonify(
+                {
+                    "code": 200,
+                    "data": {
+                        "wishlist": [cart.json() for cart in wishlist],
+                        "purchases": [purchase.json() for purchase in purchaseList]
+                    }
+                }
+            )
         return jsonify(
             {
-                "code": 200,
-                "data": {
-                    "wishlist": [cart.json() for cart in wishlist],
-                    "purchases": [purchase.json() for purchase in purchaseList]
-                }
+                "code": 404,
+                "message": "There are no games in wishlist and purchase records."
             }
-        )
+        ), 404
     return jsonify(
         {
             "code": 404,
-            "message": "There are no games in wishlist and purchase records."
+            "message": "User does not exist."
         }
     ), 404
 
@@ -118,7 +126,6 @@ def get_user_cart_and_purchase(userId):
 def delete_game_purchase():
     return
     
-
 # UPDATE PURCHASE RECORD IN GAME PURCHASE TABLE
 @app.route("/update-game-purchase", methods=['PUT'])
 def update_game_purchase():
@@ -148,11 +155,8 @@ def update_game_purchase():
     return jsonify(
     {
         "code": 200,
-        
     }
 ), 200
-
-
 
 # CREATE A PURCHASE RECORD IN GAME PURCHASE TABLE
 @app.route("/game-purchase", methods=['POST'])
@@ -182,7 +186,6 @@ def create_game_purchase():
         }
     ), 201
 
-
 #GET USER DETAILS
 @app.route("/userdetail/<int:userId>")
 def get_user_details(userId):
@@ -205,5 +208,6 @@ def get_user_details(userId):
             "message": "There is no such user."
         }
     ), 404
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5101, debug=True)
