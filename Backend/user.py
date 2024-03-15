@@ -51,25 +51,6 @@ class Wishlist(db.Model):
             "user_id": self.user_id,
             "game_id": self.game_id,
         }
-    
-class Purchase(db.Model):
-    __tablename__ = 'purchase'
-
-    purchase_id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, primary_key=True)
-    item_id = db.Column(db.Integer, nullable=False)
-
-    def __init__(self, purchase_id, user_id, item_id):
-        self.purchase_id = purchase_id
-        self.user_id = user_id
-        self.item_id = item_id
-
-    def json(self):
-        return {
-            "purchase_id": self.purchase_id,
-            "item_id": self.item_id,
-            "user_id": self.user_id
-        }
 
 class GamePurchase(db.Model):
     __tablename__ = 'gamepurchase'
@@ -84,42 +65,55 @@ class GamePurchase(db.Model):
 
     def json(self):
         return {
-            "purchase_id": self.purchase_id,
             "game_id": self.game_id,
-            "user_id": self.user_id
+            "user_id": self.user_id,
+            "purchase_id": self.purchase_id,
         }
     
-# GET USER CART AND PURCHASE
-@app.route("/users/<int:userId>")
+# GET USER CART AND PURCHASES
+@app.route("/users/<int:userId>/cart-and-purchases")
 def get_user_cart_and_purchase(userId):
-    user = db.session.scalars(db.select(User).filter_by(user_id=userId)).all()
+    try: 
+        user = db.session.scalars(db.select(User).filter_by(user_id=userId)).all()
 
-    if (user):
-        wishlist = db.session.scalars(db.select(Wishlist).filter_by(user_id=userId)).all()
-        purchaseList = db.session.scalars(db.select(Purchase).filter_by(user_id=userId)).all()
+        if (user):
+            wishlist = db.session.scalars(db.select(Wishlist).filter_by(user_id=userId)).all()
+            purchase_list = db.session.scalars(db.select(GamePurchase).filter_by(user_id=userId)).all()
 
-        if (len(wishlist) or len(purchaseList)):
+            if len(wishlist) or len(purchase_list):
+                if len(wishlist) and not len(purchase_list):
+                    data = { "wishlist": [cart.json() for cart in wishlist] }
+                elif len(purchase_list) and not len(wishlist):
+                    data = { "purchases": [purchase.json() for purchase in purchase_list] }
+                else:
+                    data = {
+                        "wishlist": [cart.json() for cart in wishlist],
+                        "purchases": [purchase.json() for purchase in purchase_list]
+                    }
+
+                return jsonify({"code": 200, "data": data})
+
             return jsonify(
                 {
-                    "code": 200,
-                    "data": {
-                        "wishlist": [cart.json() for cart in wishlist],
-                        "purchases": [purchase.json() for purchase in purchaseList]
-                    }
+                    "code": 404,
+                    "message": "There are no games in wishlist and purchase records."
                 }
-            )
+            ), 404
+        
         return jsonify(
             {
                 "code": 404,
-                "message": "There are no games in wishlist and purchase records."
+                "message": "User does not exist."
             }
         ), 404
-    return jsonify(
-        {
-            "code": 404,
-            "message": "User does not exist."
-        }
-    ), 404
+    
+    except Exception as e:
+        return jsonify(
+            {
+                "code": 500,
+                "message": "An error occurred while getting user cart and purchases."
+            }
+        )
 
 # DELETE PURCHASE RECORD IN GAME PURCHASE TABLE
 @app.route("/delete-game-purchase", methods=['DELETE'])
