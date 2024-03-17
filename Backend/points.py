@@ -8,7 +8,9 @@ import json
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:pSSSS+]q8zZ-pjF@34.124.211.169/user'
+app.config['SQLALCHEMY_BINDS'] = {'shop': 'mysql+mysqlconnector://root:pSSSS+]q8zZ-pjF:@34.142.233.183/shop'}
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 CORS(app)
 db = SQLAlchemy(app)
 
@@ -38,6 +40,51 @@ class User(db.Model):
             "points": self.points
         }
     
+class Game(db.Model):
+    __bind_key__ = 'shop'
+    __tablename__ = 'game'  
+
+    game_id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(255), nullable=False)
+    genre = db.Column(db.String(255), nullable=False)
+    price = db.Column(db.Numeric(precision=10, scale=2), nullable=False)
+    points = db.Column(db.Integer, primary_key=True)
+
+    def __init__(self, game_id, title, genre, price, points):
+        self.game_id = game_id
+        self.title = title
+        self.genre = genre
+        self.price = price
+        self.points = points
+
+    def json(self):
+        return {
+            "game_id": self.game_id,
+            "title": self.title,
+            "genre": self.genre,
+            "price": self.price,
+            "points": self.points
+        }
+    
+class Customizations(db.Model):
+    __bind_key__ = 'shop'
+    __tablename__ = 'customizations'  
+
+    customization_id = db.Column(db.Integer, primary_key=True)
+    tier = db.Column(db.String(255), nullable=False)
+    credits = db.Column(db.Integer, primary_key=True)
+
+    def __init__(self, customization_id, tier, credits):
+        self.customization_id = customization_id
+        self.tier = tier
+        self.credits = credits
+
+    def json(self):
+        return {
+            "customization_id": self.customization_id,
+            "tier": self.tier,
+            "credits": self.credits,
+        }
 
 user_points = {}
 
@@ -73,9 +120,6 @@ def add_points():
                 "message": "Invalid user"
             }), 400
 
-
-
-        
         except Exception as e:
             # Unexpected error in code
             exc_type, exc_obj, exc_tb = sys.exc_info()
@@ -89,46 +133,35 @@ def add_points():
             }), 500
     
 
-
-
 @app.route('/points/update', methods=['POST'])
 def update_points():
     try:
-        # Get data from the request
-        data_array = request.json
+        data = request.json
+        
+        user_id = data.get('user_id')
+        game_id = data.get('game_id')
+        customization_id = data.get('customization_id')
+        
+        # Retrieve user and game from the database
+        user = User.query.get(user_id)
+        game = Game.query.get(game_id)
+        customization = Customizations.query.get(customization_id)
+        
+        if not user or not game:
+            return jsonify({'error': 'Invalid user ID or game ID'}), 400
+        
+        # Add points for customizations
+        customizations_points = customization.credits
+        user.points += customizations_points
+        
+        # Deduct game points
+        game_points = game.points
+        user.points -= game_points
+        
+        # Update user's points in the database
+        db.session.commit()
 
-        # Check if data is an array
-        if not isinstance(data_array, list):
-            raise ValueError('Invalid data format. Expected an array.')
-
-        # Process each user in the array
-        for data in data_array:
-            # Check if required keys are present in the JSON payload
-            required_keys = ['user_id', 'refund_amount']
-            if not all(key in data for key in required_keys):
-                raise ValueError('Missing required keys in JSON payload')
-
-            user_id = data['user_id']
-            refund_amount = data['refund_amount']
-
-            # Check if user_id exists in user_points, initialize with 0 points if not
-            user_points.setdefault(user_id, 0)
-
-            # Check if the user has sufficient points to deduct
-            if user_points[user_id] >= refund_amount:
-                # Deduct points
-                user_points[user_id] -= refund_amount
-            else:
-                # Add points to restore balance
-                user_points[user_id] += refund_amount
-
-        # Return the corrected user points
-        response = {
-            'message': 'Points updated successfully',
-            'user_points': user_points
-        }
-
-        return jsonify(response), 200
+        return jsonify({'message': 'Points updated successfully', 'user_points': user.points}), 200
 
     except Exception as e:
         print(f"Error updating points: {str(e)}")
