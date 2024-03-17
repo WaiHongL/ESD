@@ -7,7 +7,7 @@ import { ref, onMounted } from "vue";
 import { loadStripe } from '@stripe/stripe-js';
 
 let cardElement;
-const stripePromise = loadStripe('pk_test_51OqFQgC8BpOc5C7Dg2wPpokymYcuqCa40IwnqeIXZ33o0fhrhC199LGuUSuzR0pHzsfcupKelXLAShCT7cnDPrHU0027FoVa1Z');
+const stripePromise = loadStripe('pk_test_51LrjcfK1WW7DRh3qozq21D4vjLWPEPCEvUlElldx7B3kxJ0KlScZzZS8B17tNBs2cNJLCm83hNMx3HDgVXagGGOM00IYhIPgw7');
 
 const createCardElement = async () => {
   try {
@@ -80,7 +80,7 @@ async submitCheckout(){
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ paymentmethod_id: result.paymentMethod.id,
-        "user_id": "2",
+        "user_id": "3",
         "game_id": "2"
        }),
     });
@@ -106,7 +106,7 @@ if (data['code'] == 400) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ paymentMethodid: result.paymentMethod.id,
-        "user_id": "2",
+        "user_id": "3",
         "game_id": "2"
        }),
     });
