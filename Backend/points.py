@@ -142,10 +142,11 @@ def update_points():
         game_id = data.get('game_id')
         customization_id = data.get('customization_id')
         
-        # Retrieve user and game from the database
-        user = User.query.get(user_id)
-        game = Game.query.get(game_id)
-        customization = Customizations.query.get(customization_id)
+        # Retrieve user and game from the database using Session.get()
+        session = Session()
+        user = session.query(User).get(user_id)
+        game = session.query(Game).get(game_id)
+        customization = session.query(Customizations).get(customization_id)
         
         if not user or not game:
             return jsonify({'error': 'Invalid user ID or game ID'}), 400
