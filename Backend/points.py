@@ -138,28 +138,26 @@ def update_points():
     try:
         data = request.json
         
-        user_id = data.get('user_id')
-        game_id = data.get('game_id')
-        customization_id = data.get('customization_id')
+        for entry in data:
+            user_id = entry.get('user_id')
+            game_id = entry.get('game_id')
+            customization_id = entry.get('customization_id')
+            
+            # Retrieve user, game, and customization from the database
+            user = User.query.get(user_id)
+            game = Game.query.get(game_id)
+            customization = Customizations.query.get(customization_id)
+            
+            if not user or not game or not customization:
+                return jsonify({'error': 'Invalid user ID, game ID, or customization ID'}), 400
+            
+            # Add points for customizations
+            user.points += customization.credits
+            
+            # Deduct game points
+            user.points -= game.points
         
-        # Retrieve user and game from the database using Session.get()
-        session = Session()
-        user = session.query(User).get(user_id)
-        game = session.query(Game).get(game_id)
-        customization = session.query(Customizations).get(customization_id)
-        
-        if not user or not game:
-            return jsonify({'error': 'Invalid user ID or game ID'}), 400
-        
-        # Add points for customizations
-        customizations_points = customization.credits
-        user.points += customizations_points
-        
-        # Deduct game points
-        game_points = game.points
-        user.points -= game_points
-        
-        # Update user's points in the database
+        # Commit changes to the database
         db.session.commit()
 
         return jsonify({'message': 'Points updated successfully', 'user_points': user.points}), 200
@@ -167,6 +165,7 @@ def update_points():
     except Exception as e:
         print(f"Error updating points: {str(e)}")
         return jsonify({'error': 'Internal Server Error'}), 500
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5600)
