@@ -48,9 +48,6 @@ def send_email(data):
 
 a_queue_name = 'Notification_Log' # queue to be subscribed by Activity_Log microservice
 
-# Instead of hardcoding the values, we can also get them from the environ as shown below
-# a_queue_name = environ.get('Activity_Log') #Activity_Log
-
 def receiveNotificationLog(channel):
     try:
         # set up a consumer and start to wait for coming messages
@@ -80,7 +77,7 @@ def processOrderLog(notification):
 if __name__ == "__main__":  # execute this program only if it is run as a script (not by 'import')
     print("notification_log: Getting Connection")
     connection = amqp_connection.create_connection() #get the connection to the broker
-    print("activity_log: Connection established successfully")
+    print("notification_log: Connection established successfully")
     channel = connection.channel()
     receiveNotificationLog(channel)
 

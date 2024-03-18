@@ -12,7 +12,6 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:pSSSS+]q8zZ-pjF@34.124.211.169/user'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
-# CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 CORS(app)
 
 
@@ -64,51 +63,28 @@ class User(db.Model):
             "password": self.password,
             "points": self.points
         }
-# @app.before_request
-# def handle_options():
-#     if request.method == 'OPTIONS':
-#         response = Response()
-#         response.headers['Access-Control-Allow-Origin'] = '*'
-#         response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
-#         response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
-#         response.headers['Content-Type'] = 'application/json'
-#         return response
+
     
-@app.route("/payment-fail", methods=['POST'])
-
-# @cross_origin()
-# def rollback():
-
-
 @app.route("/make-purchase", methods=['POST'])
-
-# @cross_origin()
 def make_purchase():
     # Simple check of input format and data of the request are JSON
     if request.is_json:
         try:
             #get response body
-
             userid_gameid = request.get_json()
             print(userid_gameid)
             user_id = userid_gameid['user_id']
             game_id = userid_gameid['game_id']
-
-            
-            
-
-
             #updates gamepurchase table and updates points
             updateuser = create_purchase(userid_gameid)
+            print('last line')
+            print(updateuser)
             if(updateuser['code'] == 202):
                 gamedetailsjson = invoke_http(gamedetails_URL + str(userid_gameid['game_id']), method='GET')
                 gamedetails = gamedetailsjson['data']
                 print("printing price")
                 price = gamedetails['price']
-                print(price)
-
-
-                
+                print(price)                
                 payment_json = json.dumps({
                                 'price': gamedetails['price'],
                                 'paymentmethod_id': userid_gameid['paymentmethod_id']
@@ -134,18 +110,28 @@ def make_purchase():
                         'title': gamedetails['title'],
                         'email': userdetails['email'],
                         'account_name': userdetails['account_name'],
-                        'transactionid': payment_result['confirmation']['id']
+                        'transaction_id': payment_result['confirmation']['id']
 
-                    }
-                    print('processing notification...')
-                    process_notification(notification_json)
-    
+                    }    
                 else:
-                    return
                     #rollback function TBD
+                    try:
+                        rollback_points(userid_gameid)
+                        rollback_record(userid_gameid)
+                    except Exception as e:
+                        # Unexpected error in code
+                        exc_type, exc_obj, exc_tb = sys.exc_info()
+                        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+                        ex_str = str(e) + " at " + str(exc_type) + ": " + fname + ": line " + str(exc_tb.tb_lineno)
+                        print(ex_str)
+
+                    return
+                    
         
                 
             #NEED TO RETURN 
+            print('processing notification...')
+            process_notification(notification_json)
             return jsonify({
                 
                 "sucess": "succes!",
@@ -205,7 +191,9 @@ def create_purchase(userid_gameid):
                   "game_id": userid_gameid['game_id']
     }
     create_purchase_result = invoke_http(user_purchase_URL, method='POST', json=createjson)
+    print('create_purchase_result')
     print(create_purchase_result)
+    print('code')
     code = create_purchase_result["code"]
     message = json.dumps(create_purchase_result)
     print(message)
@@ -246,6 +234,7 @@ def create_purchase(userid_gameid):
     print(json.dumps(pointsjson))
    
     update_points_result = invoke_http(user_point_URL, method='POST', json=pointsjson)
+    print('testing')
     code = update_points_result["code"]
     message = json.dumps(update_points_result)
 
@@ -311,8 +300,53 @@ def process_notification(notification_json):
         ex_str = str(e) + " at " + str(exc_type) + ": " + fname + ": line " + str(exc_tb.tb_lineno)
         print(ex_str)
  
+def rollback_points(userid_gameid):
+    gamedetailsjson = invoke_http(gamedetails_URL + str(userid_gameid['game_id']), method='GET')
 
-        
+    gamedetails = gamedetailsjson['data']
+    print(gamedetails)
+    pointsjson = {
+        "user_id": userid_gameid['user_id'],
+        "price": str(-float(gamedetails['price']))
+    }
+    print(pointsjson)
+    print(json.dumps(pointsjson))
+   
+    update_points_result = invoke_http(user_point_URL, method='POST', json=pointsjson)
+    code = update_points_result["code"]
+    message = json.dumps(update_points_result)
+
+    if code not in range(200, 300):
+        print('\n\n-----Publishing the (point error) message with routing_key=point.error-----')
+
+        # channel.basic_publish(exchange=exchangename, routing_key="point.error", 
+        #     body=message, properties=pika.BasicProperties(delivery_mode = 2)) 
+    #     # make message persistent within the matching queues 
+
+    #     # - reply from the invocation is not used;
+    #     # continue even if this invocation fails        
+        print("\nOrder status ({:d}) published to the RabbitMQ Exchange:".format(
+            code), update_points_result)
+
+    #     # 7. Return error
+        return {
+            "code": 500,
+            "data": {"update_points_result": update_points_result},
+            "message": "Points update failure sent for error handling."
+        }
+
+    data = {"code": 202, "data": {"result": "success"}}
+    return data
+
+def rollback_record(userid_gameid):
+    game_id = userid_gameid['game_id']
+    user_id = userid_gameid['game_id']
+    delete_result = invoke_http(user_purchase_URL + "/" + str(user_id) + "/" + str(game_id), method='DELETE')
+    return delete_result
+
+
+
+
 
 
 
