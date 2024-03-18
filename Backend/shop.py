@@ -34,6 +34,25 @@ class Game(db.Model):
             "price": self.price,
             "points": self.points
         }
+
+class Customizations(db.Model):
+    __tablename__ = 'customizations'
+
+    customization_id = db.Column(db.Integer, primary_key=True)
+    tier = db.Column(db.String(255), nullable=False)
+    credits = db.Column(db.Integer, nullable=False)
+
+    def __init__(self, customization_id, tier, credits):
+        self.customization_id = customization_id
+        self.tier = tier
+        self.credits = credits
+
+    def json(self):
+        return {
+            "customization_id": self.customization_id,
+            "tier": self.tier,
+            "credits": self.credits
+        }
     
 # GET ALL GAMES AND GAMES BY GENRE
 @app.route("/games")
@@ -79,6 +98,30 @@ def get_all_games():
             "message": "There are no games."
         }
     ), 404
+
+
+@app.route("/customizations")
+def get_all_customizations():
+    customization_list = db.session.scalars(db.select(Customizations)).all()
+
+    if len(customization_list):
+        return jsonify(
+            {
+                "code": 200,
+                "data": {
+                    "customizations": [customization.json() for customization in customization_list]
+                }
+            }
+        )
+    
+    return jsonify(
+        {
+            "code": 404,
+            "message": "There are no customizations."
+        }
+    ), 404
+
+
 
 # GET GAME GENRES
 @app.route("/games/genre", methods=["POST"])
