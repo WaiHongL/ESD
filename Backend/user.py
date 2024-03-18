@@ -127,10 +127,6 @@ def get_user_cart_and_purchase(userId):
         )
 
 
-# DELETE PURCHASE RECORD IN GAME PURCHASE TABLE
-@app.route("/delete-game-purchase", methods=["DELETE"])
-def delete_game_purchase():
-    return
 
 
 # UPDATE PURCHASE RECORD IN GAME PURCHASE TABLE
@@ -202,6 +198,20 @@ def create_game_purchase():
 
     return jsonify({"code": 201, "data": game.json()}), 201
 
+# DELETE A PURCHASE RECORD
+@app.route("/game-purchase/<int:userid>/<int:gameid>", methods=["DELETE"])
+def delete_game_purchase(userid, gameid):
+    # Query the database for the purchase entry
+    purchase = GamePurchase.query.filter_by(user_id=userid, game_id=gameid).first()
+    
+    # Check if the purchase entry exists
+    if purchase:
+        # Delete the purchase entry
+        db.session.delete(purchase)
+        db.session.commit()
+        return jsonify({"code": 200, "message": "Purchase entry deleted successfully"}), 200
+    else:
+        return jsonify({"code": 404, "message": "Purchase entry not found"}), 404
 
 # GET USER DETAILS
 @app.route("/userdetail/<int:userId>")
@@ -240,5 +250,9 @@ def get_purchase_records(userId, gameId):
         )
     return jsonify({"code": 404, "message": "There is no such record."}), 404
 
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5101, debug=True)
+
+
