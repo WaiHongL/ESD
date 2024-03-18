@@ -40,10 +40,8 @@ const imgSrc = computed(() => {
             <span class="material-symbols-outlined text-white">favorite</span>
           </button>
 
-          <button
-            @click="$emit('addToCart', { title, genre, price })"
-            class="btn bg-primary justify-content-center align-items-center"
-          >
+          <button @click="$emit('addToCart', { title, genre, price })"
+            class="btn bg-primary justify-content-center align-items-center">
             <span class="material-symbols-outlined text-white">shopping_bag</span>
           </button>
         </div>
