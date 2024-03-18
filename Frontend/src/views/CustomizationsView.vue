@@ -29,7 +29,6 @@ function getAllCustomizations() {
     axios.get("http://localhost:5000/customizations")
         .then((res) => {
             customizations.value = res.data.data.customizations;
-            console.log(customizations.value);
         })
         .catch((err) => {
             console.log(err);
@@ -51,13 +50,8 @@ onMounted(() => {
         <div class="tiers-container">
             <div class="tiers-container__title">Tiers</div>
             <div class="d-flex justify-content-between">
-                <!-- <Tier @add-to-cart="addToCart" tier="Novice" color="Yellow" price="500"></Tier>
-                <Tier @add-to-cart="addToCart" tier="Amateur" color="Green" price="1000"></Tier>
-                <Tier @add-to-cart="addToCart" tier="Master" color="Blue" price="2000"></Tier>
-                <Tier @add-to-cart="addToCart" tier="Expert" color="Red" price="4000"></Tier>
-                <Tier @add-to-cart="addToCart" tier="Legend" color="Black" price="8000"></Tier> -->
                 <Tier v-for="(customization, index) in customizations" :key="index" @add-to-cart="addToCart"
-                    :tier="customization.tier" :credits="customization.credits"></Tier>
+                    :tier="customization.tier" :borderColor="customization.border_color" :credits="customization.credits"></Tier>
             </div>
         </div>
     </main>

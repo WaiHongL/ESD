@@ -3,21 +3,12 @@ import { computed } from "vue";
 
 const props = defineProps({
   tier: String,
+  borderColor: String,
   credits: Number,
 });
 
 const borderColor = computed(() => {
-  let bootstrapColor = "black";
-  if (props.tier == "Novice") {
-    bootstrapColor = "warning";
-  } else if (props.tier == "Amateur") {
-    bootstrapColor = "success";
-  } else if (props.tier == "Master") {
-    bootstrapColor = "primary";
-  } else if (props.tier == "Expert") {
-    bootstrapColor = "danger";
-  }
-  return "border-" + bootstrapColor;
+  return "border-" + props.borderColor;
 });
 </script>
 

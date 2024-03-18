@@ -75,11 +75,29 @@ class GamePurchase(db.Model):
             "purchase_id": self.purchase_id,
             "gameplay_time": self.gameplay_time,
         }
+    
+class CustomizationPurchase(db.Model):
+    __tablename__ = "customization_purchase"
+
+    purchase_id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, nullable=False)
+    customization_id = db.Column(db.Integer, nullable=False)
+
+    def __init__(self, user_id, customization_id):
+        self.user_id = user_id
+        self.customization_id = customization_id
+
+    def json(self):
+        return {
+            "purchase_id": self.purchase_id,
+            "customization_id": self.customization_id,
+            "user_id": self.user_id
+        }
 
 
 # GET USER WISHLIST AND PURCHASES
 @app.route("/users/<int:userId>/wishlist-and-purchases")
-def get_user_wishlist_and_purchase(userId):
+def get_wishlist_and_purchase(userId):
     try:
         user = db.session.scalars(db.select(User).filter_by(user_id=userId)).all()
 
@@ -131,8 +149,47 @@ def get_user_wishlist_and_purchase(userId):
                 "message": "An error occurred while getting user wishlist and purchases.",
             }
         )
+    
 
+# GET USER CUSTOMIZATIONS
+@app.route("/users/<int:userId>/customizations")
+def get_customizations(userId):
+    try:
+        user = db.session.scalars(db.select(User).filter_by(user_id=userId)).all()
 
+        if user:
+            customizations_list = db.session.scalars(
+                db.select(CustomizationPurchase).filter_by(user_id=userId)
+            ).all()
+
+            if len(customizations_list):
+                return jsonify({
+                    "code": 200, 
+                    "data": [customization.json() for customization in customizations_list]
+                })
+
+            return (
+                jsonify(
+                    {
+                        "code": 404,
+                        "message": "There are no customizations available.",
+                    }
+                ),
+                404,
+            )
+
+        return jsonify({
+            "code": 404, 
+            "message": "User does not exist."
+        }), 404
+
+    except Exception as e:
+        return jsonify(
+            {
+                "code": 500,
+                "message": "An error occurred while getting user customizations.",
+            }
+        )
 
 
 # UPDATE PURCHASE RECORD IN GAME PURCHASE TABLE
@@ -204,6 +261,7 @@ def create_game_purchase():
 
     return jsonify({"code": 201, "data": game.json()}), 201
 
+
 # DELETE A PURCHASE RECORD
 @app.route("/game-purchase/<int:userid>/<int:gameid>", methods=["DELETE"])
 def delete_game_purchase(userid, gameid):
@@ -218,6 +276,7 @@ def delete_game_purchase(userid, gameid):
         return jsonify({"code": 200, "message": "Purchase entry deleted successfully"}), 200
     else:
         return jsonify({"code": 404, "message": "Purchase entry not found"}), 404
+
 
 # GET USER DETAILS
 @app.route("/userdetail/<int:userId>")
@@ -236,6 +295,23 @@ def get_user_details(userId):
             }
         )
     return jsonify({"code": 404, "message": "There is no such user."}), 404
+
+
+# GET USER DETAILS (NEW)
+@app.route("/users/<int:userId>")
+def get_user_details_new(userId):
+    user = db.session.scalars(db.select(User).filter_by(user_id=userId)).one()
+    if user:
+        return jsonify(
+            {
+                "code": 200,
+                "data": user.json()
+            }
+        )
+    return jsonify({
+        "code": 404, 
+        "message": "There is no such user."
+    }), 404
 
 
 @app.route("/gameplay-time/<int:userId>/<int:gameId>", methods = ["GET"])

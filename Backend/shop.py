@@ -40,17 +40,20 @@ class Customizations(db.Model):
 
     customization_id = db.Column(db.Integer, primary_key=True)
     tier = db.Column(db.String(255), nullable=False)
+    border_color = db.Column(db.String(255), nullable=False)
     credits = db.Column(db.Integer, nullable=False)
 
-    def __init__(self, customization_id, tier, credits):
+    def __init__(self, customization_id, tier, border_color, credits):
         self.customization_id = customization_id
         self.tier = tier
+        self.border_color = border_color
         self.credits = credits
 
     def json(self):
         return {
             "customization_id": self.customization_id,
             "tier": self.tier,
+            "border_color": self.border_color,
             "credits": self.credits
         }
     
@@ -98,29 +101,6 @@ def get_all_games():
             "message": "There are no games."
         }
     ), 404
-
-
-@app.route("/customizations")
-def get_all_customizations():
-    customization_list = db.session.scalars(db.select(Customizations)).all()
-
-    if len(customization_list):
-        return jsonify(
-            {
-                "code": 200,
-                "data": {
-                    "customizations": [customization.json() for customization in customization_list]
-                }
-            }
-        )
-    
-    return jsonify(
-        {
-            "code": 404,
-            "message": "There are no customizations."
-        }
-    ), 404
-
 
 
 # GET GAME GENRES
@@ -174,6 +154,7 @@ def get_games_genre():
         "message": "Invalid JSON input: " + str(request.get_data())
     })
 
+
 #GET GAME DETAILS
 @app.route("/gamedetail/<int:gameId>")
 def get_game_details(gameId):
@@ -196,6 +177,50 @@ def get_game_details(gameId):
             "message": "There is no such game."
         }
     ), 404
+
+
+@app.route("/customizations")
+def get_all_customizations():
+    # try: 
+    customization_list = db.session.scalars(db.select(Customizations)).all()
+
+    if len(customization_list):
+        return jsonify(
+            {
+                "code": 200,
+                "data": {
+                    "customizations": [customization.json() for customization in customization_list]
+                }
+            }
+        )
+    
+    return jsonify(
+        {
+            "code": 404,
+            "message": "There are no customizations."
+        }
+    ), 404
+
+# GET CUSTOMIZATIONS BY ID
+@app.route("/customizations/<int:customizationId>")
+def get_customization_by_id(customizationId):
+    customization = db.session.scalars(db.select(Customizations).filter_by(customization_id=customizationId)).one()
+
+    if customization:
+        return jsonify(
+            {
+                "code": 200,
+                "data": customization.json()
+            }
+        )
+    
+    return jsonify(
+        {
+            "code": 404,
+            "message": "Customization does not exist."
+        }
+    ), 404
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

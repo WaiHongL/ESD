@@ -70,9 +70,11 @@ onMounted(() => {
 		<!-- RECOMMENDATIONS -->
 		<div class="recommendations-container">
 			<div class="recommendations-container__title">Recommendations</div>
-			<div class="recommendations-container__games-container">
-				<Game v-for="(game, index) in recommendedGames" :key="index" @add-to-cart="addToCart"
-					:title="game.title" :genre="game.genre" :price="game.price" />
+			<div class="recommendations-container__games-container"
+				:class="{'justify-content-center': recommendedGames.length == 0}">
+				<Game v-if="recommendedGames.length" v-for="(game, index) in recommendedGames" :key="index"
+					@add-to-cart="addToCart" :title="game.title" :genre="game.genre" :price="game.price" />
+				<div v-else class="fs-5">Loading recommendations...</div>
 			</div>
 		</div>
 
