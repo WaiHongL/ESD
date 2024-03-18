@@ -77,9 +77,9 @@ class GamePurchase(db.Model):
         }
 
 
-# GET USER CART AND PURCHASES
-@app.route("/users/<int:userId>/cart-and-purchases")
-def get_user_cart_and_purchase(userId):
+# GET USER WISHLIST AND PURCHASES
+@app.route("/users/<int:userId>/wishlist-and-purchases")
+def get_user_wishlist_and_purchase(userId):
     try:
         user = db.session.scalars(db.select(User).filter_by(user_id=userId)).all()
 
@@ -104,25 +104,31 @@ def get_user_cart_and_purchase(userId):
                         "purchases": [purchase.json() for purchase in purchase_list],
                     }
 
-                return jsonify({"code": 200, "data": data})
+                return jsonify({
+                    "code": 200, 
+                    "data": data
+                })
 
             return (
                 jsonify(
                     {
                         "code": 404,
-                        "message": "There are no games in wishlist and purchase records.",
+                        "message": "There are no games in user wishlist and purchase records.",
                     }
                 ),
                 404,
             )
 
-        return jsonify({"code": 404, "message": "User does not exist."}), 404
+        return jsonify({
+            "code": 404, 
+            "message": "User does not exist."
+        }), 404
 
     except Exception as e:
         return jsonify(
             {
                 "code": 500,
-                "message": "An error occurred while getting user cart and purchases.",
+                "message": "An error occurred while getting user wishlist and purchases.",
             }
         )
 
