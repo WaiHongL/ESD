@@ -1,7 +1,7 @@
 <script setup>
 import Header from "../components/Header.vue";
 import Footer from "../components/Footer.vue";
-import Game from "../components/wishlist/Game.vue";
+import Game from "../components/home/Game.vue";
 </script>
 
 <template>
@@ -24,13 +24,22 @@ import Game from "../components/wishlist/Game.vue";
 
     <br /><br />
 
+    <!-- WISHLIST -->
     <div class="wishlist-container">
-      <div class="text-center fs-4 fw-bold">My Wishlist</div>
-      <br />
+      <div class="fs-4 fw-bold mb-3">My Wishlist</div>
 
-      <div class="d-inline-block px-3" style="max-height: 450px; overflow-y: scroll;">
+      <div class="wishlist-container__games-container">
         <Game title="Palworld" genre="Open World" price="26.00"></Game>
         <Game title="Elden Ring" genre="Open World" price="79.90"></Game>
+      </div>
+    </div>
+
+    <!-- PURCHASE -->
+    <div class="purchase-container">
+      <div class="fs-4 fw-bold mb-3">My Purchases</div>
+
+      <div class="purchase-container__games-container">
+        <Game @add-to-cart="addToCart" title="DAVE THE DIVER" genre="Simulation" price="21.99"></Game>
       </div>
     </div>
   </main>
@@ -40,7 +49,6 @@ import Game from "../components/wishlist/Game.vue";
 
 <style scoped>
 main {
-  height: calc(100vh - 70px - 90px);
   width: 90%;
   max-width: 1500px;
   margin: 0 auto;
@@ -65,6 +73,16 @@ h1 {
 }
 
 .wishlist-container {
-  text-align: center;
+  margin-bottom: 50px;
+}
+
+.wishlist-container__games-container,
+.purchase-container__games-container {
+  display: flex;
+  gap: 20px;
+}
+
+.purchase-container {
+  margin-bottom: 100px;
 }
 </style>
