@@ -21,13 +21,15 @@ class User(db.Model):
     password = db.Column(db.String)
     email = db.Column(db.String)
     points = db.Column(db.Float)
+    selected_customization_id = db.Column(db.Integer)
 
-    def __init__(self, user_id, email, account_name, password, points):
+    def __init__(self, user_id, email, account_name, password, points, selected_customization_id):
         self.user_id = user_id
         self.email = email
         self.account_name = account_name
         self.password = password
         self.points = points
+        self.selected_customization_id = selected_customization_id
 
     def json(self):
         return {
@@ -36,6 +38,7 @@ class User(db.Model):
             "account_name": self.account_name,
             "password": self.password,
             "points": self.points,
+            "selected_customization_id": self.selected_customization_id
         }
 
 

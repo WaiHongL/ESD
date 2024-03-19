@@ -11,29 +11,10 @@ function displayCustomizationModal(bool) {
     isCustomizationModelVisible.value = bool;
 }
 
-// DISPLAY HIGHEST TIER
+// DISPLAY SELECTED CUSTOMIZATION
+const selectedCustomizationId = ref(null);
 const selectedTier = ref(null);
 const selectedBorderColor = ref(null);
-function displayHighestTier() {
-    let highestCustomizationId = 0;
-    let highestTier;
-    let highestTierBorderColor;
-    
-    for(const customization of customizations.value) {
-        const id = customization.customization_id;
-        const tier = customization.tier;
-        const borderColor = customization.border_color;
-
-        if(id > highestCustomizationId) {
-            highestCustomizationId = id;
-            highestTier = tier;
-            highestTierBorderColor = borderColor;
-        }
-    }
-
-    selectedTier.value = highestTier;
-    selectedBorderColor.value = highestTierBorderColor;
-}
 
 // HANDLE CUSTOMIZATION CHANGE
 function handleCustomizationChange(customization) {
@@ -48,30 +29,30 @@ function handleCustomizationChange(customization) {
 
 // GET WISHLIST AND PURCHASES
 const wishlist = ref([]);
-let wishlistIds;
+let wishlistData;
 const purchases = ref([]);
-let purchaseIds;
+let purchaseData;
 
 async function getWishlistAndPurchases() {
     await axios.get("http://localhost:5101/users/1/wishlist-and-purchases")
         .then(res => {
             const data = res.data.data;
-            wishlistIds = data.wishlist;
-            purchaseIds = data.purchases;
+            wishlistData = data.wishlist;
+            purchaseData = data.purchases;
         })
         .catch(err => {
             console.log(err);
         });
 
-    if (wishlistIds != undefined) {
-        for (const wishlistId of wishlistIds) {
+    if (wishlistData != undefined) {
+        for (const wishlistId of wishlistData) {
             const gameId = wishlistId.game_id;
             await getGameById(gameId, "wishlist");
         }
     }
 
-    if (purchaseIds != undefined) {
-        for (const purchaseId of purchaseIds) {
+    if (purchaseData != undefined) {
+        for (const purchaseId of purchaseData) {
             const gameId = purchaseId.game_id;
             await getGameById(gameId, "purchases");
         }
@@ -90,10 +71,11 @@ async function getGameById(gameId, type) {
 
 // GET USER POINTS
 const points = ref(null);
-function getUserPoints() {
+async function getUserDetails() {
     axios.get("http://localhost:5101/users/1")
         .then(res => {
             points.value = res.data.data.points;
+            selectedCustomizationId.value = res.data.data.selected_customization_id;
         })
         .catch(err => {
             console.log(err);
@@ -102,22 +84,27 @@ function getUserPoints() {
 
 // GET USER CUSTOMIZATIONS
 const customizations = ref([]);
-let customizationIds;
+let customizationData;
 async function getUserCustomizations() {
     await axios.get("http://localhost:5101/users/1/customizations")
         .then(res => {
-            customizationIds = res.data.data;
+            customizationData = res.data.data;
         })
         .catch(err => {
             console.log(err);
         })
 
-    if (customizationIds != undefined) {
-        for (const customizationId of customizationIds) {
-            const id = customizationId.customization_id
+    if (customizationData != undefined) {
+        for (const customization of customizationData) {
+            const id = customization.customization_id
             await axios.get("http://localhost:5000/customizations/" + id)
                 .then(res => {
                     customizations.value.push(res.data.data);
+
+                    if(id == selectedCustomizationId.value) {
+                        selectedTier.value = res.data.data.tier;
+                        selectedBorderColor.value = res.data.data.border_color;
+                    }
                 })
                 .catch(err => {
                     console.log(err);
@@ -127,10 +114,9 @@ async function getUserCustomizations() {
 }
 
 onMounted(async () => {
-    getWishlistAndPurchases();
-    getUserPoints();
+    await getWishlistAndPurchases();
+    await getUserDetails();
     await getUserCustomizations();
-    displayHighestTier();
 })
 </script>
 
