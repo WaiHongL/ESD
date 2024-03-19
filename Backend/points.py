@@ -75,7 +75,7 @@ class Customizations(db.Model):
     border_color = db.Column(db.String(255), nullable=False)
     credits = db.Column(db.Integer, nullable=False)
 
-    def __init__(self, customization_id, tier, credits):
+    def __init__(self, customization_id, tier, credits, border_color):
         self.customization_id = customization_id
         self.tier = tier
         self.border_color = border_color
