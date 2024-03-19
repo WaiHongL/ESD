@@ -110,14 +110,46 @@ def make_purchase():
                         'title': gamedetails['title'],
                         'email': userdetails['email'],
                         'account_name': userdetails['account_name'],
-                        'transaction_id': payment_result['confirmation']['id']
+                        'transaction_id': payment_result['confirmation']['id'],
+                        'notification_type': 'purchase'
 
                     }    
+                    print('processing notification...')
+                    process_notification(notification_json)
+                    return jsonify({
+                        
+                        "sucess": "succes!",
+                        "code": 200
+
+                    }), 202
                 else:
                     #rollback function TBD
                     try:
-                        rollback_points(userid_gameid)
-                        rollback_record(userid_gameid)
+                        point_result = rollback_points(userid_gameid)
+                        record_result = rollback_record(userid_gameid)
+                        print(point_result)
+                        print(record_result)
+                    
+                        userdetailsjson = invoke_http(userdetails_URL + str(user_id), method='GET')
+                        userdetails = userdetailsjson['data']
+                        notification_json = {
+                        
+                            'price': gamedetails['price'],
+                            'title': gamedetails['title'],
+                            'email': userdetails['email'],
+                            'account_name': userdetails['account_name'],
+                            'notification_type': 'payment_failure',
+                            
+
+                        }    
+                        print('processing notification...')
+                        process_notification(notification_json)
+                        return jsonify({
+                            
+                            "sucess": "succes!",
+                            "code": 200
+
+                        }), 202
                     except Exception as e:
                         # Unexpected error in code
                         exc_type, exc_obj, exc_tb = sys.exc_info()
@@ -125,19 +157,12 @@ def make_purchase():
                         ex_str = str(e) + " at " + str(exc_type) + ": " + fname + ": line " + str(exc_tb.tb_lineno)
                         print(ex_str)
 
-                    return
+                    return {'code': 200, 'data': {'result': 'rollback success'}}
                     
         
                 
             #NEED TO RETURN 
-            print('processing notification...')
-            process_notification(notification_json)
-            return jsonify({
-                
-                "sucess": "succes!",
-                "code": 200
 
-            }), 202
 
         except Exception as e:
             # Unexpected error in code
@@ -272,15 +297,6 @@ def make_payment(payment_json):
 
 
 def process_notification(notification_json):
-    
-    # message = {
-    #     "email": "zexter18518@gmail.com",
-    #     "name": "zexter",
-    #     "gamename": "eldenring",
-    #     "price": 20,
-    #     "transactionid": "osopfof_1231"
-         
-    # }
     message = notification_json
 
     print('\n\n-----Publishing the notification with routing_key=purchase.notification-----')
@@ -310,11 +326,11 @@ def rollback_points(userid_gameid):
         "price": str(-float(gamedetails['price']))
     }
     print(pointsjson)
-    print(json.dumps(pointsjson))
-   
     update_points_result = invoke_http(user_point_URL, method='POST', json=pointsjson)
+    print(update_points_result)
     code = update_points_result["code"]
     message = json.dumps(update_points_result)
+    print(message)
 
     if code not in range(200, 300):
         print('\n\n-----Publishing the (point error) message with routing_key=point.error-----')

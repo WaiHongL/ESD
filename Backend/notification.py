@@ -14,26 +14,50 @@ api_secret = "9b1132c0970817650f7e33fb8a345618"
 def send_email(data):
     email = data['email']
     name = data['account_name']
-    textcontent = "You have bought {} for ${}\n Transaction ID: {}".format(data['title'], data['price'], data['transaction_id'])
-    message = {
-        "Messages": [
-            {
-                "From": {
-                    "Email": "luden.gamestore@gmail.com",
-                    "Name": "Luden Gamestore",
-                },
-                "To": [
-                    {"Email": email, "Name": name}
-                    
-                ],
-                "Subject": "Game purchased",
-                "TextPart": "Purchase notification",
-                "HTMLPart": textcontent,
-                "CustomID": "paymentnotif",
-            }
-        ]
-    }
-    print(message)
+    notification_type = data['notification_type']
+    if notification_type == "purchase":
+        textcontent = "You have bought {} for ${}\n Transaction ID: {}".format(data['title'], data['price'], data['transaction_id'])
+        message = {
+            "Messages": [
+                {
+                    "From": {
+                        "Email": "luden.gamestore@gmail.com",
+                        "Name": "Luden Gamestore",
+                    },
+                    "To": [
+                        {"Email": email, "Name": name}
+                        
+                    ],
+                    "Subject": "Game purchased",
+                    "TextPart": "Purchase notification",
+                    "HTMLPart": textcontent,
+                    "CustomID": "paymentnotif",
+                }
+            ]
+        }
+        print(message)
+    elif notification_type == "payment_failure":
+        textcontent = "An error has occured for your payment. Please try again."
+        message = {
+            "Messages": [
+                {
+                    "From": {
+                        "Email": "luden.gamestore@gmail.com",
+                        "Name": "Luden Gamestore",
+                    },
+                    "To": [
+                        {"Email": email, "Name": name}
+                        
+                    ],
+                    "Subject": "Payment failed",
+                    "TextPart": "Payment failed",
+                    "HTMLPart": textcontent,
+                    "CustomID": "paymentnotif",
+                }
+            ]
+        }
+        print(message)
+
 
     mailjet = Client(auth=(api_key, api_secret), version="v3.1")
     result = mailjet.send.create(data=message)
@@ -46,7 +70,8 @@ def send_email(data):
 
 
 
-a_queue_name = 'Notification_Log' # queue to be subscribed by Activity_Log microservice
+a_queue_name = 'Notification_Log' # queue to be subscribed by Notification_Log microservice
+payment_failure_queue_name = 'Payment_Failure_Notification'
 
 def receiveNotificationLog(channel):
     try:
