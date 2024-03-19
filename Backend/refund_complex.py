@@ -4,13 +4,14 @@ import requests
 app = Flask(__name__)
 
 # URLs for the other microservices, need to edit accordingly
-USER_MICROSERVICE_URL = ''
-TIME_MICROSERVICE_URL = ''
+USER_MICROSERVICE_URL = 'http://localhost:5277/users'
+TIME_MICROSERVICE_URL = 'http://localhost:5999/checktime'
 POINT_MICROSERVICE_URL = ''
-ERROR_MICROSERVICE_URL = ''
-STRIPE_API_URL = ''  # The URL for the Stripe API
+ERROR_MICROSERVICE_URL = 'http://localhost:5445/error'
+
 
 @app.route('/refund', methods=['POST'])
+
 def process_refund():
     data = request.json
     user_id = data['user_id']
@@ -72,6 +73,11 @@ def process_refund():
 
     # If everything is successful, return confirmation, need AMQP
     return jsonify({"message": "Refund processed successfully."}), 200
+
+    #check the logic behind point.copy()
+    
+    #the action move to user.py 
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5200, debug=True)
