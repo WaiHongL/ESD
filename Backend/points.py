@@ -48,7 +48,7 @@ class Game(db.Model):
     title = db.Column(db.String(255), nullable=False)
     genre = db.Column(db.String(255), nullable=False)
     price = db.Column(db.Numeric(precision=10, scale=2), nullable=False)
-    points = db.Column(db.Integer, primary_key=True)
+    points = db.Column(db.Integer, nullable=False)
 
     def __init__(self, game_id, title, genre, price, points):
         self.game_id = game_id
@@ -72,17 +72,20 @@ class Customizations(db.Model):
 
     customization_id = db.Column(db.Integer, primary_key=True)
     tier = db.Column(db.String(255), nullable=False)
-    credits = db.Column(db.Integer, primary_key=True)
+    border_color = db.Column(db.String(255), nullable=False)
+    credits = db.Column(db.Integer, nullable=False)
 
     def __init__(self, customization_id, tier, credits):
         self.customization_id = customization_id
         self.tier = tier
+        self.border_color = border_color
         self.credits = credits
 
     def json(self):
         return {
             "customization_id": self.customization_id,
             "tier": self.tier,
+            "border_color": self.border_color,
             "credits": self.credits,
         }
 
