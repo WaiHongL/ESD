@@ -3,81 +3,61 @@ import requests
 
 app = Flask(__name__)
 
-# URLs for the other microservices, need to edit accordingly
-USER_MICROSERVICE_URL = 'http://localhost:5277/users'
-TIME_MICROSERVICE_URL = 'http://localhost:5999/checktime'
-POINT_MICROSERVICE_URL = ''
-ERROR_MICROSERVICE_URL = 'http://localhost:5445/error'
-
+# Define the microservices URLs
+USER_MICROSERVICE_URL = 'http://localhost:5012/user'
+POINTS_MICROSERVICE_URL = 'http://localhost:5333/points'
+PAYMENT_MICROSERVICE_URL = 'http://localhost:5129/payment'
+ERROR_MICROSERVICE_URL = 'http://localhost:5445/error' 
 
 @app.route('/refund', methods=['POST'])
-
 def process_refund():
     data = request.json
     user_id = data['user_id']
     game_id = data['game_id']
+    points_to_deduct = data.get('points_to_deduct')
 
-    # Step 2: Send user info to User Microservice to get gameplay time
-    try:
-        gameplay_time_response = requests.get(f"{USER_MICROSERVICE_URL}/gameplay-time/{user_id}/{game_id}")
-        gameplay_time_response.raise_for_status()
-    except requests.RequestException as e:
-        # Log e
+    # Step 1: Retrieve user gameplay time
+    gameplay_time_response = requests.get(f"{USER_MICROSERVICE_URL}/gameplay-time/{user_id}/{game_id}")
+    if gameplay_time_response.status_code != 200:
         return jsonify({"error": "Failed to get gameplay time."}), 500
+    gameplay_time = gameplay_time_response.json().get('data', {}).get('gameplay_time')
 
-    gameplay_time = gameplay_time_response.json().get('gameplay_time')
-
-    # Step 4 and 5: Check with Time Microservice if gameplay time is less than 2 hours
-    try:
-        refund_eligibility_response = requests.get(f"{TIME_MICROSERVICE_URL}/check-time", params={'gameplayTime': gameplay_time})
-        refund_eligibility_response.raise_for_status()
-    except requests.RequestException as e:
-        # Log e
-        return jsonify({"error": "Failed to check time eligibility."}), 500
-
-    is_eligible_for_refund = refund_eligibility_response.json().get('eligibleForRefund')
-
-    # Step 8: If gameplay time is more than 2 hours, the refund is ineligible
-    if not is_eligible_for_refund:
-        try:
-            error_response = requests.post(f"{ERROR_MICROSERVICE_URL}/refund-eligibility", json=data)
-            error_response.raise_for_status()
-        except requests.RequestException as e:
-            # Log e
-            pass  # Error microservice call failed, decide how to handle this. need to come up with error microservice
+    # Step 2: Check for refund eligibility
+    if gameplay_time >= 120:
+        # Log the error with the Error Microservice
+        error_data = {
+            'user_id': user_id,
+            'game_id': game_id,
+            'gameplay_time': gameplay_time
+        }
+        requests.post(f"{ERROR_MICROSERVICE_URL}/log", json=error_data)
         return jsonify({"error": "Refund ineligible due to gameplay time."}), 400
 
-    # Step 6 and 7: If eligible, get the user's points
-    try:
-        user_points_response = requests.get(f"{USER_MICROSERVICE_URL}/points/{user_id}")
-        user_points_response.raise_for_status()
-    except requests.RequestException as e:
-        # Log e
+    # Step 3: Get user points
+    user_points_response = requests.get(f"{POINTS_MICROSERVICE_URL}/points/{user_id}")
+    if user_points_response.status_code != 200:
         return jsonify({"error": "Failed to get user points."}), 500
-
     user_points = user_points_response.json().get('points')
-    points_to_deduct = data['points_to_deduct']
 
-    # Step 9 and 11: Deduct points if sufficient
-    if user_points >= points_to_deduct:
-        try:
-            update_points_response = requests.post(f"{POINT_MICROSERVICE_URL}/points/update", json=data)
-            update_points_response.raise_for_status()
-            # Proceed with Stripe refund, NEED CAIJUN HELP
-        except requests.RequestException as e:
-            # Log e
-            return jsonify({"error": "Failed to update user points."}), 500
+    # Step 4: Check if points are sufficient
+    if user_points < points_to_deduct:
+        return jsonify({"error": "Insufficient points."}), 400
 
-    # Handle insufficient points in some way IDK HELPS
-    # ...
+    # Step 5: Deduct points for the refund
+    update_points_data = {'user_id': user_id, 'points_to_deduct': points_to_deduct}
+    points_update_response = requests.post(f"{POINTS_MICROSERVICE_URL}/points/update", json=update_points_data)
+    if points_update_response.status_code != 200:
+        return jsonify({"error": "Failed to update points."}), 500
 
-    # If everything is successful, return confirmation, need AMQP
+    # Step 6: Process the refund through Stripe
+    payment_intent_id = gameplay_time_response.json().get('data', {}).get('payment_intent')
+    refund_data = {'payment_intent': payment_intent_id}
+    payment_response = requests.post(f"{PAYMENT_MICROSERVICE_URL}/refund", json=refund_data)
+    if payment_response.status_code != 200:
+        return jsonify({"error": "Failed to process refund through Stripe."}), 500
+
+    # If everything is successful, return confirmation
     return jsonify({"message": "Refund processed successfully."}), 200
-
-    #check the logic behind point.copy()
-    
-    #the action move to user.py 
-
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5200, debug=True)
