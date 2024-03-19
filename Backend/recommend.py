@@ -7,23 +7,37 @@ CORS(app)
 # GET COMMON GENRE
 @app.route("/recommend/genre", methods=["POST"])
 def get_common_genre():
-    genre_data = request.get_json()["data"]
-    genre_dict = {}
+    if request.get_json():
+        genre_data = request.get_json()["data"]
+        genre_dict = {}
 
-    for genre in genre_data:
-        if genre not in genre_dict:
-            genre_dict[genre] = 1
-        else:
-            genre_dict[genre] += 1
+        for genre in genre_data:
+            if genre not in genre_dict:
+                genre_dict[genre] = 1
+            else:
+                genre_dict[genre] += 1
 
-    common_genre = max(genre_dict, key=genre_dict.get)
-
-    return jsonify(
-        {
-            "code": 200,
-            "data": common_genre
-        }
-    )
+        # CHECKS IF GENRE_DATA IS EMPTY
+        try:
+            common_genre = max(genre_dict, key=genre_dict.get)
+            return jsonify(
+                {
+                    "code": 200,
+                    "data": common_genre
+                }
+            )
+        except Exception as e:
+            return jsonify(
+                {
+                    "code": 404,
+                    "data": "There are no common genres."
+                }
+            )    
+                
+    return jsonify({
+        "code": 400,
+        "message": "Invalid JSON input: " + str(request.get_data())
+    })
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5300, debug=True)

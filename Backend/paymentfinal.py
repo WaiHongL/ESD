@@ -4,7 +4,7 @@ from flask import Flask, request
 from flask_cors import CORS
 
 import json
-stripe.api_key = "sk_test_51OqFQgC8BpOc5C7DEKINJtCp0DGCzJEizg1HcisSEon5cgmGMrIu3A1jpymDkd92fgYs2rSODEQB48u9LpDRPkUf00WIXc2Mkd"
+stripe.api_key = "sk_test_51LrjcfK1WW7DRh3qSpVCT1CWMxeC8bpxPOQdTWJ6SyFCJCSpt6opHUXb1QqB65u8zvxdrmkzYqNcZy2TBHoSzjX000cRwCOEA6"
 app = Flask(__name__)
 CORS(app)
 @app.route("/payment", methods=['POST'])
@@ -40,6 +40,15 @@ def payment():
         ex_str = str(e) + " at " + str(exc_type) + ": " + fname + ": line " + str(exc_tb.tb_lineno)
         print(ex_str)
         return {"code": 400}
+
+@app.route("/refund", methods=['POST'])
+def refund():
+    refund_obj = stripe.Refund.create(payment_intent="pi_3Ov8sDK1WW7DRh3q1ypxFZr2")
+    status = refund_obj['status']
+    if status == 'succeeded':
+        return #refund successful
+    else:
+        return #refund fail
 
 
 if __name__ == '__main__':

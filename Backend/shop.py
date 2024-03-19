@@ -34,6 +34,28 @@ class Game(db.Model):
             "price": self.price,
             "points": self.points
         }
+
+class Customizations(db.Model):
+    __tablename__ = 'customizations'
+
+    customization_id = db.Column(db.Integer, primary_key=True)
+    tier = db.Column(db.String(255), nullable=False)
+    border_color = db.Column(db.String(255), nullable=False)
+    credits = db.Column(db.Integer, nullable=False)
+
+    def __init__(self, customization_id, tier, border_color, credits):
+        self.customization_id = customization_id
+        self.tier = tier
+        self.border_color = border_color
+        self.credits = credits
+
+    def json(self):
+        return {
+            "customization_id": self.customization_id,
+            "tier": self.tier,
+            "border_color": self.border_color,
+            "credits": self.credits
+        }
     
 # GET ALL GAMES AND GAMES BY GENRE
 @app.route("/games")
@@ -60,6 +82,7 @@ def get_all_games():
             }
         ), 404
     
+    # FOR FRONTEND
     gameList = db.session.scalars(db.select(Game)).all()
 
     if len(gameList):
@@ -71,6 +94,7 @@ def get_all_games():
                 }
             }
         )
+    
     return jsonify(
         {
             "code": 404,
@@ -78,35 +102,58 @@ def get_all_games():
         }
     ), 404
 
+
 # GET GAME GENRES
 @app.route("/games/genre", methods=["POST"])
 def get_games_genre():
-    wishlist_data = request.get_json()["data"]["wishlist"]
-    purchase_data = request.get_json()["data"]["purchases"]
-    
-    # CONCATENATE cart_data AND purchase_data
-    data_arr = wishlist_data + purchase_data
-    id_arr = []
+    if request.is_json:
+        data = request.get_json()["data"]
+        wishlist_data = []
+        purchase_data = []
 
-    for data in data_arr:
-        for key, value in data.items():
-            if (key == "game_id" or key == "item_id") and value not in id_arr:
-                id_arr.append(value)
+        if "wishlist" in data:
+            wishlist_data = data["wishlist"]
 
-    # GET GENRES
-    genres = []
-    for id in id_arr:
-        game = db.session.scalars(db.select(Game).filter_by(game_id=id).limit(1)).first()
-        if (game):
-            genre = game.genre
-            genres.append(genre)
+        if "purchases" in data:
+            purchase_data = data["purchases"]
+        
+        # CONCATENATE cart_data AND purchase_data
+        data_arr = wishlist_data + purchase_data
+        games_id_arr = []
 
-    return jsonify(
-        {
-            "code": 200,
-            "data": genres
-        }
-    )
+        for data in data_arr:
+            for key, value in data.items():
+                if (key == "game_id" or key == "item_id") and value not in games_id_arr:
+                    games_id_arr.append(value)
+
+        # GET GENRES
+        genres = []
+        for game_id in games_id_arr:
+            game = db.session.scalars(db.select(Game).filter_by(game_id=game_id).limit(1)).first()
+            if (game):
+                genre = game.genre
+                genres.append(genre)
+
+        if len(genres) > 0:
+            return jsonify(
+                {
+                    "code": 200,
+                    "data": genres
+                }
+            )
+        else:
+            return jsonify(
+                {
+                    "code": 404,
+                    "data": "There are no game genres."
+                }
+            )
+        
+    return jsonify({
+        "code": 400,
+        "message": "Invalid JSON input: " + str(request.get_data())
+    })
+
 
 #GET GAME DETAILS
 @app.route("/gamedetail/<int:gameId>")
@@ -130,6 +177,50 @@ def get_game_details(gameId):
             "message": "There is no such game."
         }
     ), 404
+
+
+@app.route("/customizations")
+def get_all_customizations():
+    # try: 
+    customization_list = db.session.scalars(db.select(Customizations)).all()
+
+    if len(customization_list):
+        return jsonify(
+            {
+                "code": 200,
+                "data": {
+                    "customizations": [customization.json() for customization in customization_list]
+                }
+            }
+        )
+    
+    return jsonify(
+        {
+            "code": 404,
+            "message": "There are no customizations."
+        }
+    ), 404
+
+# GET CUSTOMIZATIONS BY ID
+@app.route("/customizations/<int:customizationId>")
+def get_customization_by_id(customizationId):
+    customization = db.session.scalars(db.select(Customizations).filter_by(customization_id=customizationId)).one()
+
+    if customization:
+        return jsonify(
+            {
+                "code": 200,
+                "data": customization.json()
+            }
+        )
+    
+    return jsonify(
+        {
+            "code": 404,
+            "message": "Customization does not exist."
+        }
+    ), 404
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
