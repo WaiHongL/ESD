@@ -17,21 +17,22 @@ function displayCart(bool) {
 // gets the router instance
 const router = useRouter(); 
 
-function sendDataToBackend(data) {
-    axios.post('http://localhost:4242/receive', data)
-        .then(response => {
-            console.log('Data sent successfully:', response.data);
-        })
-        .catch(error => {
-            console.error('Error sending data:', error);
-        });
-}
+// function sendDataToBackend(data) {
+//     axios.post('http://localhost:4242/receive', data)
+//         .then(response => {
+//             console.log('Data sent successfully:', response.data);
+//         })
+//         .catch(error => {
+//             console.error('Error sending data:', error);
+//         });
+// }
 
 // handle checkout button click
 async function handleCheckout() {
  if (props.cart && props.cart.length > 0) {
-    await sendDataToBackend(props.cart); // Wait for the data to be sent
-    router.push({ name: 'Checkout' }); // Navigate to Checkout.vue
+    // await sendDataToBackend(props.cart);
+    console.log (props.cart)
+    router.push({ name: 'Checkout', query: { cart: JSON.stringify(props.cart) } }); // Navigate to Checkout.vue and send over shopping cart
  }
 }
 

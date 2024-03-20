@@ -59,3 +59,4 @@ def check_exchange(channel, exchangename, exchangetype):
 
 if __name__ == "__main__":
     create_connection()
+    
