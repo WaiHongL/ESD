@@ -75,7 +75,7 @@ class Customizations(db.Model):
     border_color = db.Column(db.String(255), nullable=False)
     credits = db.Column(db.Integer, nullable=False)
 
-    def __init__(self, customization_id, tier, credits):
+    def __init__(self, customization_id, tier, credits, border_color):
         self.customization_id = customization_id
         self.tier = tier
         self.border_color = border_color
@@ -154,6 +154,17 @@ def update_points():
             if not user or not game or not customization:
                 return jsonify({'error': 'Invalid user ID, game ID, or customization ID'}), 400
             
+            # I realised that in order to know whether to deduct customization credits or not,
+            # I would need to know the user's originial points prior to purchasing the game is more
+            # than or equals to the customization points purchased. And in order to do that, the db
+            # would need to be queried to retrieve the user's original points.If we go ahead with that,
+            # the code would look like this:
+            # if user.ogpoints >= customization.credits:
+            #    user.points -= game.points
+            # else:
+            #    user.points += customization.credits
+            #    user.points -= game.points
+
             # Add points for customizations
             user.points += customization.credits
             
