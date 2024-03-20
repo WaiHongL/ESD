@@ -16,10 +16,40 @@ CORS(app)
 
 
 # AMQP STUFF
+def create_notification_queue(channel):
+    print('amqp_setup:create_notification_queue')
+    a_queue_name = 'Notification_Log'
+    channel.queue_declare(queue=a_queue_name, durable=True) # 'durable' makes the queue survive broker restarts
+    channel.queue_bind(exchange=exchangename, queue=a_queue_name, routing_key='purchase.notification')
+        # bind the queue to the exchange via the key
+        # 'routing_key=#' => any routing_key would be matched
+    
+def create_notification_queue_2(channel):
+    print('amqp_setup:create_notification_queue_2')
+    a_queue_name = 'Notification_Log_Fail'
+    channel.queue_declare(queue=a_queue_name, durable=True) # 'durable' makes the queue survive broker restarts
+    channel.queue_bind(exchange=exchangename, queue=a_queue_name, routing_key='fail.notification')
+        # bind the queue to the exchange via the key
+        # 'routing_key=#' => any routing_key would be matched
+    
+# function to create Error queue
+def create_error_queue(channel):
+    print('amqp_setup:create_error_queue')
+    e_queue_name = 'Error'
+    channel.queue_declare(queue=e_queue_name, durable=True) # 'durable' makes the queue survive broker restarts
+    #bind Error queue
+    channel.queue_bind(exchange=exchangename, queue=e_queue_name, routing_key='*.error')
+        # bind the queue to the exchange via the key
+        # any routing_key with two words and ending with '.error' will be matched
 exchangename = "order_topic" # exchange name
 exchangetype="topic" # use a 'topic' exchange to enable interaction
 connection = amqp_connection.create_connection() 
 channel = connection.channel()
+channel.exchange_declare(exchange=exchangename, exchange_type=exchangetype, durable=True) 
+print('amqp_setup:create queues')
+create_error_queue(channel)
+create_notification_queue(channel)
+create_notification_queue_2(channel)
 
 # if the exchange is not yet created, exit the program
 if not amqp_connection.check_exchange(channel, exchangename, exchangetype):
@@ -91,8 +121,7 @@ def make_purchase():
                                 'title': game_details['title'],
                                 'email': user_details['email'],
                                 'account_name': user_details['account_name'],
-                                'transaction_id': make_payment_result['data']['id'],
-                                'notification_type': 'purchase'
+                                'transaction_id': make_payment_result['data']['id']
                             }    
 
                             print('processing notification...')
@@ -127,12 +156,11 @@ def make_purchase():
                                     'price': game_details['price'],
                                     'title': game_details['title'],
                                     'email': user_details['email'],
-                                    'account_name': user_details['account_name'],
-                                    'notification_type': 'payment_failure',
+                                    'account_name': user_details['account_name']
                                 }    
 
                                 print('processing notification...')
-                                process_notification(notification_json)
+                                process_fail_notification(notification_json)
 
                                 return jsonify(
                                     {
@@ -475,7 +503,26 @@ def process_notification(notification_json):
     #     ex_str = str(e) + " at " + str(exc_type) + ": " + fname + ": line " + str(exc_tb.tb_lineno)
     #     print(ex_str)
  
+def process_fail_notification(notification_json):
+    message = notification_json
 
+    print('\n\n-----Publishing the notification with routing_key=fail.notification-----')
+
+    try:
+        channel.basic_publish(exchange=exchangename, routing_key="fail.notification", 
+            body=json.dumps(message), properties=pika.BasicProperties(delivery_mode = 2)) 
+        print("published")
+    # make message persistent within the matching queues 
+
+    # - reply from the invocation is not used;
+    # continue even if this invocation fails        
+    except Exception as e:
+        # Unexpected error in code
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        ex_str = str(e) + " at " + str(exc_type) + ": " + fname + ": line " + str(exc_tb.tb_lineno)
+        print(ex_str)
+        
 def rollback_record(user_id, game_id):
     delete_game_purchase_json = {
         "user_id": user_id,

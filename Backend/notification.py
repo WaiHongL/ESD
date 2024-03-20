@@ -13,52 +13,57 @@ api_secret = "d20ed987dd240464d6f4bd92af7247de"
 
 def send_email(data):
     email = data['email']
+    name = data['account_name'] 
+    textcontent = "You have bought {} for ${}\n Transaction ID: {}".format(data['title'], data['price'], data['transaction_id'])
+    message = {
+        "Messages": [
+            {
+                "From": {
+                    "Email": "luden.gamestore@gmail.com",
+                    "Name": "Luden Gamestore",
+                },
+                "To": [
+                    {"Email": email, "Name": name}
+                    
+                ],
+                "Subject": "Game purchased",
+                "TextPart": "Purchase notification",
+                "HTMLPart": textcontent,
+                "CustomID": "paymentnotif",
+            }
+        ]
+    }
+    print(message)
+    mailjet = Client(auth=(api_key, api_secret), version="v3.1")
+    result = mailjet.send.create(data=message)
+    # return (result.status_code)
+    return result.json()
+
+   
+def send_failure_email(data):
+       
+    email = data['email']
     name = data['account_name']
-    notification_type = data['notification_type']
-    if notification_type == "purchase":
-        textcontent = "You have bought {} for ${}\n Transaction ID: {}".format(data['title'], data['price'], data['transaction_id'])
-        message = {
-            "Messages": [
-                {
-                    "From": {
-                        "Email": "luden.gamestore@gmail.com",
-                        "Name": "Luden Gamestore",
-                    },
-                    "To": [
-                        {"Email": email, "Name": name}
-                        
-                    ],
-                    "Subject": "Game purchased",
-                    "TextPart": "Purchase notification",
-                    "HTMLPart": textcontent,
-                    "CustomID": "paymentnotif",
-                }
-            ]
-        }
-        print(message)
-    elif notification_type == "payment_failure":
-        textcontent = "An error has occured for your payment. Please try again."
-        message = {
-            "Messages": [
-                {
-                    "From": {
-                        "Email": "luden.gamestore@gmail.com",
-                        "Name": "Luden Gamestore",
-                    },
-                    "To": [
-                        {"Email": email, "Name": name}
-                        
-                    ],
-                    "Subject": "Payment failed",
-                    "TextPart": "Payment failed",
-                    "HTMLPart": textcontent,
-                    "CustomID": "paymentnotif",
-                }
-            ]
-        }
-        print(message)
-
-
+    textcontent = "An error has occured for your payment. Please try again."
+    message = {
+        "Messages": [
+            {
+                "From": {
+                    "Email": "luden.gamestore@gmail.com",
+                    "Name": "Luden Gamestore",
+                },
+                "To": [
+                    {"Email": email, "Name": name}
+                    
+                ],
+                "Subject": "Payment failed",
+                "TextPart": "Payment failed",
+                "HTMLPart": textcontent,
+                "CustomID": "paymentnotif",
+            }
+        ]
+    }
+    print(message)
     mailjet = Client(auth=(api_key, api_secret), version="v3.1")
     result = mailjet.send.create(data=message)
     # return (result.status_code)
@@ -66,17 +71,15 @@ def send_email(data):
 
 
 
-
-
-
-
 a_queue_name = 'Notification_Log' # queue to be subscribed by Notification_Log microservice
-payment_failure_queue_name = 'Payment_Failure_Notification'
+payment_failure_queue_name = 'Notification_Log_Fail'
 
 def receiveNotificationLog(channel):
     try:
         # set up a consumer and start to wait for coming messages
         channel.basic_consume(queue=a_queue_name, on_message_callback=callback, auto_ack=True)
+        print('notification_log: Consuming from queue:', a_queue_name)
+        channel.basic_consume(queue=payment_failure_queue_name, on_message_callback=callbackfailure, auto_ack=True)
         print('notification_log: Consuming from queue:', a_queue_name)
         channel.start_consuming()  # an implicit loop waiting to receive messages;
              #it doesn't exit by default. Use Ctrl+C in the command window to terminate it.
@@ -93,10 +96,21 @@ def callback(channel, method, properties, body): # required signature for the ca
     processOrderLog(json.loads(body))
     print()
 
+def callbackfailure(channel, method, properties, body): # required signature for the callback; no return
+    print("\nnotification_log: Received a failure notification log by " + __file__)
+    processFailureLog(json.loads(body))
+    print()
+
 def processOrderLog(notification):
     print("notification_log: Recording an notification log:")
     print(notification)
     send_email(notification)
+    print("sent email!")
+
+def processFailureLog(notification):
+    print("notification_log: Recording a failure notification log:")
+    print(notification)
+    send_failure_email(notification)
     print("sent email!")
 
 if __name__ == "__main__":  # execute this program only if it is run as a script (not by 'import')
