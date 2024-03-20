@@ -8,8 +8,8 @@ from flask_cors import CORS
 app = Flask(__name__, static_url_path="", static_folder="public")
 CORS(app)
 
-api_key = "ebf8fab91654b14ea8cb67d7899fd7eb"
-api_secret = "9b1132c0970817650f7e33fb8a345618"
+api_key = "b234bb351a835b67c4f8ce412a8e77ab"
+api_secret = "d20ed987dd240464d6f4bd92af7247de"
 
 def send_email(data):
     email = data['email']

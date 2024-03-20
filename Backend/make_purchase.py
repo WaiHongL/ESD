@@ -15,154 +15,146 @@ db = SQLAlchemy(app)
 CORS(app)
 
 
-#AMQP STUFF
+# AMQP STUFF
 exchangename = "order_topic" # exchange name
 exchangetype="topic" # use a 'topic' exchange to enable interaction
 connection = amqp_connection.create_connection() 
 channel = connection.channel()
 
-#if the exchange is not yet created, exit the program
+# if the exchange is not yet created, exit the program
 if not amqp_connection.check_exchange(channel, exchangename, exchangetype):
     print("\nCreate the 'Exchange' before running this microservice. \nExiting the program.")
     sys.exit(0)  # Exit with a success status
 
 #URLS
+create_game_purchase_URL = "http://localhost:5101/game-purchase/create"
+game_details_URL = "http://localhost:5000/games/"
+update_points_URL = "http://localhost:5101/users/"
 payment_URL = "http://localhost:5666/payment"
+update_game_purchase_URL = "http://localhost:5101/game-purchase/update"
+user_details_URL = "http://localhost:5101/users/"
+delete_game_purchase_URL = "http://localhost:5101/game-purchase/delete"
 notification_URL = "http://localhost:5200/notification"
-user_purchase_URL = "http://localhost:5101/game-purchase"
-user_point_URL = "http://localhost:5600/points/add"
 error_URL = "http://localhost:5100/error"
-userdetails_URL = "http://localhost:5101/userdetail/"
-gamedetails_URL = "http://localhost:5000/gamedetail/"
-update_purchase_table_URL = "http://localhost:5101/update-game-purchase"
+# user_point_URL = "http://localhost:5600/points/add"
 
 
-#USER TABLE
-class User(db.Model):
-    __tablename__ = 'user'
-
-    user_id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String)
-    account_name = db.Column(db.String)
-    password = db.Column(db.String)
-    email = db.Column(db.String)
-    points = db.Column(db.Float)
-
-    def __init__(self, user_id, email, account_name, password, points):
-        self.user_id = user_id
-        self.email = email
-        self.account_name = account_name
-        self.password = password
-        self.points = points
-
-    def json(self):
-        return {
-            "user_id": self.user_id,
-            "email": self.email,
-            "account_name": self.account_name,
-            "password": self.password,
-            "points": self.points
-        }
-
-    
 @app.route("/make-purchase", methods=['POST'])
 def make_purchase():
     # Simple check of input format and data of the request are JSON
     if request.is_json:
         try:
-            #get response body
+            # get response body
             userid_gameid = request.get_json()
-            print(userid_gameid)
             user_id = userid_gameid['user_id']
             game_id = userid_gameid['game_id']
-            #updates gamepurchase table and updates points
-            updateuser = create_purchase(userid_gameid)
-            print('last line')
-            print(updateuser)
-            if(updateuser['code'] == 202):
-                gamedetailsjson = invoke_http(gamedetails_URL + str(userid_gameid['game_id']), method='GET')
-                gamedetails = gamedetailsjson['data']
-                print("printing price")
-                price = gamedetails['price']
-                print(price)                
+
+            # creates game purchase record
+            create_game_purchase_result = create_game_purchase(userid_gameid)
+
+            if(create_game_purchase_result['code'] in range(200, 300)):
+                # gamessjson = invoke_http(game_details_URL + str(userid_gameid['game_id']), method='GET')
+                # gamess = gamessjson['data']
+                # print("printing price")
+                # price = gamess['price']
+                # print(price)                
+
+                # payment
+                game_details = create_game_purchase_result["data"]["game_details_result"]["data"]
                 payment_json = json.dumps({
-                                'price': gamedetails['price'],
-                                'paymentmethod_id': userid_gameid['paymentmethod_id']
+                    'price': game_details["price"],
+                    'paymentmethod_id': userid_gameid['paymentmethod_id']
                 })
-                #payment
-                payment_result = make_payment(payment_json)
-                print('payment done')
-                if payment_result['code'] in range(200, 300):
-                    print('payment successful')
-                    #update gamepurchase table
-                    updatejson = {'user_id': user_id,
-                                  'game_id': game_id,
-                                  'transaction_id': payment_result['confirmation']['id']
 
+                make_payment_result = make_payment(payment_json)["data"]["payment_result"]
+                if make_payment_result['code'] in range(200, 300):
+                    # update game_purchase table
+                    update_json = {
+                        'user_id': user_id,
+                        'game_id': game_id,
+                        'transaction_id': make_payment_result['data']['id']
                     }
-                    print(updatejson)
-                    update_result = update_purchase_table(updatejson)
-                    userdetailsjson = invoke_http(userdetails_URL + str(user_id), method='GET')
-                    userdetails = userdetailsjson['data']
-                    notification_json = {
                     
-                        'price': gamedetails['price'],
-                        'title': gamedetails['title'],
-                        'email': userdetails['email'],
-                        'account_name': userdetails['account_name'],
-                        'transaction_id': payment_result['confirmation']['id'],
-                        'notification_type': 'purchase'
+                    update_game_purchase_result = update_game_purchase(update_json)
+                    if update_game_purchase_result["code"] in range(200, 300):
+                        # # get user details
+                        # user_details_result = get_user_details(user_id)
 
-                    }    
-                    print('processing notification...')
-                    process_notification(notification_json)
-                    return jsonify({
-                        
-                        "sucess": "succes!",
-                        "code": 200
+                        # update points
+                        update_points_result = update_points(user_id, game_details)
 
-                    }), 202
+                        if update_points_result["code"] in range(200, 300):
+                            # userdetailsjson = invoke_http(user_details_URL + str(user_id), method='GET')
+                            user_details = update_points_result['data']["update_points_result"]["data"]
+                            notification_json = {
+                                'price': game_details['price'],
+                                'title': game_details['title'],
+                                'email': user_details['email'],
+                                'account_name': user_details['account_name'],
+                                'transaction_id': make_payment_result['data']['id'],
+                                'notification_type': 'purchase'
+                            }    
+
+                            print('processing notification...')
+                            process_notification(notification_json)
+
+                            print('\n------------------------')
+                            print('\nresult: ', update_game_purchase_result)
+
+                            return jsonify(
+                                {
+                                    "code": 200,
+                                    "data": update_game_purchase_result
+                                }
+                            ), 200
+                        else:
+                            return jsonify(update_points_result), update_points_result["code"]
+                    else:
+                        return jsonify(update_game_purchase_result), update_game_purchase_result["code"]
                 else:
                     #rollback function TBD
-                    try:
-                        point_result = rollback_points(userid_gameid)
-                        record_result = rollback_record(userid_gameid)
-                        print(point_result)
-                        print(record_result)
+                    # try:
+                        # point_result = rollback_points(game_details)
+                        rollback_record_result = rollback_record(user_id, game_id)
+
+                        if rollback_record_result["code"] in range(200, 300):
+                            # userdetailsjson = invoke_http(user_details_URL + str(user_id), method='GET')
+                            user_details_result = get_user_details(user_id)
+
+                            if user_details_result["code"] in range(200, 300):
+                                user_details = user_details_result['data']["user_details_result"]["data"]
+                                notification_json = {
+                                    'price': game_details['price'],
+                                    'title': game_details['title'],
+                                    'email': user_details['email'],
+                                    'account_name': user_details['account_name'],
+                                    'notification_type': 'payment_failure',
+                                }    
+
+                                print('processing notification...')
+                                process_notification(notification_json)
+
+                                return jsonify(
+                                    {
+                                        "code": 500,
+                                        "data": user_details_result
+                                    }
+                                ), 500
+                            else:
+                                return jsonify(user_details_result), user_details_result["code"]
+                        else:
+                            return jsonify(rollback_record_result), rollback_record_result["code"]
                     
-                        userdetailsjson = invoke_http(userdetails_URL + str(user_id), method='GET')
-                        userdetails = userdetailsjson['data']
-                        notification_json = {
-                        
-                            'price': gamedetails['price'],
-                            'title': gamedetails['title'],
-                            'email': userdetails['email'],
-                            'account_name': userdetails['account_name'],
-                            'notification_type': 'payment_failure',
-                            
+                    # except Exception as e:
+                    #     # Unexpected error in code
+                    #     exc_type, exc_obj, exc_tb = sys.exc_info()
+                    #     fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+                    #     ex_str = str(e) + " at " + str(exc_type) + ": " + fname + ": line " + str(exc_tb.tb_lineno)
+                    #     print(ex_str)
 
-                        }    
-                        print('processing notification...')
-                        process_notification(notification_json)
-                        return jsonify({
-                            
-                            "sucess": "succes!",
-                            "code": 200
-
-                        }), 202
-                    except Exception as e:
-                        # Unexpected error in code
-                        exc_type, exc_obj, exc_tb = sys.exc_info()
-                        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-                        ex_str = str(e) + " at " + str(exc_type) + ": " + fname + ": line " + str(exc_tb.tb_lineno)
-                        print(ex_str)
-
-                    return {'code': 200, 'data': {'result': 'rollback success'}}
-                    
-        
-                
-            #NEED TO RETURN 
-
+                    # return {'code': 200, 'data': {'result': 'rollback success'}}
+            else:
+                return jsonify(create_game_purchase_result), create_game_purchase_result["code"]
 
         except Exception as e:
             # Unexpected error in code
@@ -171,129 +163,296 @@ def make_purchase():
             ex_str = str(e) + " at " + str(exc_type) + ": " + fname + ": line " + str(exc_tb.tb_lineno)
             print(ex_str)
 
-            return jsonify({
-                "code": 500,
-                "message": "place_order.py internal error: " + ex_str
-            }), 500
+            return jsonify(
+                {
+                    "code": 500,
+                    "message": "make_purchase.py internal error: " + ex_str
+                }
+            ), 500
 
     # if reached here, not a JSON request.
-    return jsonify({
-        "code": 400,
-        "message": "Invalid JSON input: " + str(request.get_data())
-    }), 400
-
-def update_purchase_table(updatejson):
-    update_purchase = invoke_http(update_purchase_table_URL, method='PUT', json=updatejson)
-    code = update_purchase['code']
-    message = json.dumps(update_purchase)
-    print(message)
-    if code not in range(200, 300):
-        print('\n\n-----Publishing the (update error) message with routing_key=update_purchase.error-----')
-
-        channel.basic_publish(exchange=exchangename, routing_key="update_purchase.error", 
-            body=message, properties=pika.BasicProperties(delivery_mode = 2)) 
-        # make message persistent within the matching queues 
-
-        # - reply from the invocation is not used;
-        # continue even if this invocation fails        
-        print("\nOrder status ({:d}) published to the RabbitMQ Exchange:".format(
-            code), update_purchase)
-
-        # 7. Return error
-        return {
-            "code": 500,
-            "data": {"create_result": update_purchase},
-            "message": "Update failure sent for error handling."
+    return jsonify(
+        {
+            "code": 400,
+            "message": "Invalid JSON input: " + str(request.get_data())
         }
+    ), 400
 
 
-
-
-def create_purchase(userid_gameid):
-    #create entry in purchase_game table
-    print(userid_gameid)
-    createjson = {"user_id": userid_gameid['user_id'],
-                  "game_id": userid_gameid['game_id']
-    }
-    create_purchase_result = invoke_http(user_purchase_URL, method='POST', json=createjson)
-    print('create_purchase_result')
-    print(create_purchase_result)
-    print('code')
-    code = create_purchase_result["code"]
-    message = json.dumps(create_purchase_result)
-    print(message)
-
-
- 
-    if code not in range(200, 300):
-        print('\n\n-----Publishing the (create error) message with routing_key=create_purchase.error-----')
-
-        channel.basic_publish(exchange=exchangename, routing_key="create.error", 
-            body=message, properties=pika.BasicProperties(delivery_mode = 2)) 
-        # make message persistent within the matching queues 
-
-        # - reply from the invocation is not used;
-        # continue even if this invocation fails        
-        print("\nOrder status ({:d}) published to the RabbitMQ Exchange:".format(
-            code), create_purchase_result)
-
-        # 7. Return error
-        return {
-            "code": 500,
-            "data": {"create_result": create_purchase_result},
-            "message": "Purchase creation failure sent for error handling."
-        }
-
-
-
-    # update user points
-    # purchse 2 should have userid and update amt
-    gamedetailsjson = invoke_http(gamedetails_URL + str(userid_gameid['game_id']), method='GET')
-    gamedetails = gamedetailsjson['data']
-    print(gamedetails)
-    pointsjson = {
+def create_game_purchase(userid_gameid):
+    # create entry in game_purchase table
+    create_game_purchase_json = {
         "user_id": userid_gameid['user_id'],
-        "price": gamedetails['price']
+        "game_id": userid_gameid['game_id']
     }
-    print(pointsjson)
-    print(json.dumps(pointsjson))
-   
-    update_points_result = invoke_http(user_point_URL, method='POST', json=pointsjson)
-    print('testing')
-    code = update_points_result["code"]
-    message = json.dumps(update_points_result)
 
+    print('\n-----Invoking user microservice-----')
+    create_game_purchase_result = invoke_http(create_game_purchase_URL, method='POST', json=create_game_purchase_json)
+    print('create_game_purchase_result:', create_game_purchase_result, '\n')
+
+    create_game_purchase_result_code = create_game_purchase_result["code"]
+    create_game_purchase_message = json.dumps(create_game_purchase_result)
  
-    if code not in range(200, 300):
-        print('\n\n-----Publishing the (point error) message with routing_key=point.error-----')
+    if create_game_purchase_result_code not in range(200, 300):
+        print('\n\n-----Publishing the (game purchase creation error) message with routing_key=game.purchase.creation.error-----')
 
-        # channel.basic_publish(exchange=exchangename, routing_key="point.error", 
-        #     body=message, properties=pika.BasicProperties(delivery_mode = 2)) 
+        channel.basic_publish(exchange=exchangename, routing_key="game.purchase.creation.error", 
+            body=create_game_purchase_message, properties=pika.BasicProperties(delivery_mode = 2)) 
+        # make message persistent within the matching queues 
+
+        # - reply from the invocation is not used;
+        # continue even if this invocation fails        
+        print("\nGame purchase creation status ({:d}) published to the RabbitMQ Exchange:".format(
+            create_game_purchase_result_code), create_game_purchase_result)
+
+        # Return error
+        return {
+            "code": 500,
+            "data": {
+                "create_game_purchase_result": create_game_purchase_result
+            },
+            "message": "Game purchase creation error sent for error handling"
+        }
+    
+    # get game details
+    print('\n-----Invoking shop microservice-----')
+    game_details_result = invoke_http(game_details_URL + str(userid_gameid['game_id']), method='GET')
+    print('game_details_result:', game_details_result, '\n')
+
+    game_details_result_code = game_details_result["code"]
+    game_details_message = json.dumps(game_details_result)
+
+    if game_details_result_code not in range(200, 300):
+        print('\n\n-----Publishing the (game details error) message with routing_key=game.details.error-----')
+
+        channel.basic_publish(exchange=exchangename, routing_key="game.details.error", 
+            body=game_details_message, properties=pika.BasicProperties(delivery_mode = 2)) 
+        # make message persistent within the matching queues 
+
+        # - reply from the invocation is not used;
+        # continue even if this invocation fails        
+        print("\nGame details status ({:d}) published to the RabbitMQ Exchange:".format(
+            game_details_result_code), game_details_result)
+
+        # Return error
+        return {
+            "code": 500,
+            "data": { 
+                "game_details_result": game_details_result 
+            },
+            "message": "Game details error sent for error handling"
+        }
+    
+    return {
+        "code": 201,
+        "data": {
+            "create_game_purchase_result": create_game_purchase_result,
+            "game_details_result": game_details_result
+        }
+    }
+
+    # game = game_details_result['data']
+    # points_json = {
+    #     # "user_id": userid_gameid['user_id'],
+    #     "price": game['price'],
+    #     "operation": "add"
+    # }
+    # # print(pointsjson)
+    # # print(json.dumps(pointsjson))
+   
+    # print('\n-----Invoking user microservice-----')
+    # update_points_result = invoke_http(update_points_URL + str(userid_gameid['user_id']) + "/points/update", method='PUT', json=points_json)
+    # print("update_points_result: ", update_points_result, '\n')
+
+    # update_points_result_code = update_points_result["code"]
+    # update_points_message = json.dumps(update_points_result)
+
+    # if update_points_result_code not in range(200, 300):
+    #     print('\n\n-----Publishing the (points error) message with routing_key=points.error-----')
+
+    #     channel.basic_publish(exchange=exchangename, routing_key="points.error", 
+    #         body=update_points_message, properties=pika.BasicProperties(delivery_mode = 2)) 
     #     # make message persistent within the matching queues 
 
     #     # - reply from the invocation is not used;
     #     # continue even if this invocation fails        
-        print("\nOrder status ({:d}) published to the RabbitMQ Exchange:".format(
-            code), update_points_result)
+    #     print("\nPoints update status ({:d}) published to the RabbitMQ Exchange:".format(
+    #         update_points_result_code), update_points_result)
 
-    #     # 7. Return error
-        return {
-            "code": 500,
-            "data": {"update_points_result": update_points_result},
-            "message": "Points update failure sent for error handling."
-        }
+    #     # Return error
+    #     return {
+    #         "code": 500,
+    #         "data": {
+    #             "update_points_result": update_points_result
+    #         },
+    #         "message": "Points update error sent for error handling"
+    #     }
 
-    data = {"code": 202, "data": {"result": "success"}}
-    return data
+    # data = {
+    #     "code": 202, 
+    #     "data": {
+    #         "game_details_result": game_details_result
+    #     }}
+    # return data
+
 
 def make_payment(payment_json):
+    print('\n-----Invoking payment microservice-----')
     payment_result = invoke_http(payment_URL, method='POST', json=payment_json)
-    
-    print(payment_result)
+    print("payment_result: ", payment_result, '\n')
 
     #returns client secret and id
 
-    return payment_result
+    payment_result_code = payment_result["code"]
+    payment_message = json.dumps(payment_result)
+
+    if payment_result_code not in range(200, 300):
+        print('\n\n-----Publishing the (payment error) message with routing_key=payment.error-----')
+
+        channel.basic_publish(exchange=exchangename, routing_key="payment.error", 
+            body=payment_message, properties=pika.BasicProperties(delivery_mode = 2)) 
+        # make message persistent within the matching queues 
+
+        # - reply from the invocation is not used;
+        # continue even if this invocation fails        
+        print("\nPayment status ({:d}) published to the RabbitMQ Exchange:".format(
+            payment_result_code), payment_result)
+
+        # Return error
+        return {
+            "code": 500,
+            "data": {
+                "payment_result": payment_result
+            },
+            "message": "Payment error sent for error handling"
+        }
+
+    return {
+        "code": 200,
+        "data": {
+            "payment_result": payment_result
+        }
+    }
+
+
+def update_game_purchase(update_json):
+    print('\n-----Invoking user microservice-----')
+    update_game_purchase_result = invoke_http(update_game_purchase_URL, method='PUT', json=update_json)
+    print('update_game_purchase_result:', update_game_purchase_result, '\n')
+
+    update_game_purchase_result_code = update_game_purchase_result['code']
+    update_game_purchase_message = json.dumps(update_game_purchase_result)
+
+    if update_game_purchase_result_code not in range(200, 300):
+        print('\n\n-----Publishing the (game purchase update error) message with routing_key=game.purchase.update.error-----')
+
+        channel.basic_publish(exchange=exchangename, routing_key="game.purchase.update.error", 
+            body=update_game_purchase_message, properties=pika.BasicProperties(delivery_mode = 2)) 
+        # make message persistent within the matching queues 
+
+        # - reply from the invocation is not used;
+        # continue even if this invocation fails        
+        print("\nGame purchase update status ({:d}) published to the RabbitMQ Exchange:".format(
+            update_game_purchase_result_code), update_game_purchase_result)
+
+        # Return error
+        return {
+            "code": 500,
+            "data": {
+                "update_game_purchase_result": update_game_purchase_result
+            },
+            "message": "Game purchase update error sent for error handling"
+        }, 500
+    
+    return {
+        "code": 200,
+        "data": {
+            "update_game_purchase_result": update_game_purchase_result
+        }
+    }
+
+
+def update_points(user_id, game_details):
+    # gamessjson = invoke_http(game_details_URL + str(userid_gameid['game_id']), method='GET')
+    # gamess = gamessjson['data']
+    points_json = {
+        # "user_id": user_id,
+        "price": game_details["price"],
+        "operation": "add"
+    }
+
+    print('\n-----Invoking user microservice-----')
+    update_points_result = invoke_http(update_points_URL + str(user_id) + "/points/update", method='PUT', json=points_json)
+    print("update_points_result: ", update_points_result, '\n')
+
+    update_points_result_code = update_points_result["code"]
+    update_points_message = json.dumps(update_points_result)
+
+    if update_points_result_code not in range(200, 300):
+        print('\n\n-----Publishing the (points update error) message with routing_key=points.update.error-----')
+
+        channel.basic_publish(exchange=exchangename, routing_key="points.update.error", 
+            body=update_points_message, properties=pika.BasicProperties(delivery_mode = 2)) 
+        # make message persistent within the matching queues 
+
+        # - reply from the invocation is not used;
+        # continue even if this invocation fails        
+        print("\nPoints update status ({:d}) published to the RabbitMQ Exchange:".format(
+            update_points_result_code), update_points_result)
+
+        # Return error
+        return {
+            "code": 500,
+            "data": {
+                "update_points_result": update_points_result
+            },
+            "message": "Points update error sent for error handling"
+        }
+
+    return {
+        "code": 200, 
+        "data": {
+            "update_points_result": update_points_result
+        }
+    }
+
+
+def get_user_details(user_id):
+    print('\n-----Invoking user microservice-----')
+    user_details_result = invoke_http(user_details_URL + str(user_id), method='GET')
+    print('user_details_result:', user_details_result, '\n')
+
+    user_details_result_code = user_details_result['code']
+    user_details_message = json.dumps(user_details_result)
+    # print(message)
+
+    if user_details_result_code not in range(200, 300):
+        print('\n\n-----Publishing the (user details error) message with routing_key=user.details.error-----')
+
+        channel.basic_publish(exchange=exchangename, routing_key="user.details.error", 
+            body=user_details_message, properties=pika.BasicProperties(delivery_mode = 2)) 
+        # make message persistent within the matching queues 
+
+        # - reply from the invocation is not used;
+        # continue even if this invocation fails        
+        print("\nUser details status ({:d}) published to the RabbitMQ Exchange:".format(
+            user_details_result_code), user_details_result)
+
+        # Return error
+        return {
+            "code": 500,
+            "data": {
+                "user_details_result": user_details_result
+            },
+            "message": "User details error sent for error handling"
+        }
+    
+    return {
+        "code": 200,
+        "data": {
+            "user_details_result": user_details_result
+        }
+    }
 
 
 def process_notification(notification_json):
@@ -301,77 +460,62 @@ def process_notification(notification_json):
 
     print('\n\n-----Publishing the notification with routing_key=purchase.notification-----')
 
-    try:
-        channel.basic_publish(exchange=exchangename, routing_key="purchase.notification", 
-            body=json.dumps(message), properties=pika.BasicProperties(delivery_mode = 2)) 
-        print("published")
+    # try:
+    channel.basic_publish(exchange=exchangename, routing_key="purchase.notification", 
+        body=json.dumps(message), properties=pika.BasicProperties(delivery_mode = 2)) 
+        # print("published")
     # make message persistent within the matching queues 
 
     # - reply from the invocation is not used;
     # continue even if this invocation fails        
-    except Exception as e:
-        # Unexpected error in code
-        exc_type, exc_obj, exc_tb = sys.exc_info()
-        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-        ex_str = str(e) + " at " + str(exc_type) + ": " + fname + ": line " + str(exc_tb.tb_lineno)
-        print(ex_str)
+    # except Exception as e:
+    #     # Unexpected error in code
+    #     exc_type, exc_obj, exc_tb = sys.exc_info()
+    #     fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+    #     ex_str = str(e) + " at " + str(exc_type) + ": " + fname + ": line " + str(exc_tb.tb_lineno)
+    #     print(ex_str)
  
-def rollback_points(userid_gameid):
-    gamedetailsjson = invoke_http(gamedetails_URL + str(userid_gameid['game_id']), method='GET')
 
-    gamedetails = gamedetailsjson['data']
-    print(gamedetails)
-    pointsjson = {
-        "user_id": userid_gameid['user_id'],
-        "price": str(-float(gamedetails['price']))
+def rollback_record(user_id, game_id):
+    delete_game_purchase_json = {
+        "user_id": user_id,
+        "game_id": game_id
     }
-    print(pointsjson)
-    update_points_result = invoke_http(user_point_URL, method='POST', json=pointsjson)
-    print(update_points_result)
-    code = update_points_result["code"]
-    message = json.dumps(update_points_result)
-    print(message)
 
-    if code not in range(200, 300):
-        print('\n\n-----Publishing the (point error) message with routing_key=point.error-----')
+    print('\n-----Invoking user microservice-----')
+    delete_game_purchase_result = invoke_http(delete_game_purchase_URL, method='DELETE', json=delete_game_purchase_json)
+    print('delete_game_purchase_result:', delete_game_purchase_result, '\n')
 
-        # channel.basic_publish(exchange=exchangename, routing_key="point.error", 
-        #     body=message, properties=pika.BasicProperties(delivery_mode = 2)) 
-    #     # make message persistent within the matching queues 
+    delete_game_purchase_result_code = delete_game_purchase_result["code"]
+    delete_game_purchase_message = json.dumps(delete_game_purchase_result)
 
-    #     # - reply from the invocation is not used;
-    #     # continue even if this invocation fails        
-        print("\nOrder status ({:d}) published to the RabbitMQ Exchange:".format(
-            code), update_points_result)
+    if delete_game_purchase_result_code not in range(200, 300):
+        print('\n\n-----Publishing the (game purchase deletion error) message with routing_key=game.purchase.deletion.error-----')
 
-    #     # 7. Return error
+        channel.basic_publish(exchange=exchangename, routing_key="game.purchase.deletion.error", 
+            body=delete_game_purchase_message, properties=pika.BasicProperties(delivery_mode = 2)) 
+        # make message persistent within the matching queues 
+
+        # - reply from the invocation is not used;
+        # continue even if this invocation fails        
+        print("\nGame purchase deletion status ({:d}) published to the RabbitMQ Exchange:".format(
+            delete_game_purchase_result_code), delete_game_purchase_result)
+
+        # Return error
         return {
             "code": 500,
-            "data": {"update_points_result": update_points_result},
-            "message": "Points update failure sent for error handling."
+            "data": { 
+                "delete_game_purchase_result": delete_game_purchase_result 
+            },
+            "message": "Game purchase deletion error sent for error handling"
         }
-
-    data = {"code": 202, "data": {"result": "success"}}
-    return data
-
-def rollback_record(userid_gameid):
-    game_id = userid_gameid['game_id']
-    user_id = userid_gameid['game_id']
-    delete_result = invoke_http(user_purchase_URL + "/" + str(user_id) + "/" + str(game_id), method='DELETE')
-    return delete_result
-
-
-
-
-
-
-
-
-
-
-
-
-
+    
+    return {
+        "code": 200,
+        "data": {
+            "delete_game_purchase_result": delete_game_purchase_result
+        }
+    }
 
 
 # Execute this program if it is run as a main script (not by 'import')

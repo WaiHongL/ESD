@@ -1,45 +1,65 @@
 import stripe
 import os, sys
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 import json
+
 stripe.api_key = "sk_test_51LrjcfK1WW7DRh3qSpVCT1CWMxeC8bpxPOQdTWJ6SyFCJCSpt6opHUXb1QqB65u8zvxdrmkzYqNcZy2TBHoSzjX000cRwCOEA6"
+
 app = Flask(__name__)
 CORS(app)
+
 @app.route("/payment", methods=['POST'])
 def payment():
-    data = request.get_json()
-    print(json.loads(data))
-    data = json.loads(data)
-    paymentmethod_id = data['paymentmethod_id']
-    price = data['price']
+    if request.is_json:
+        data = request.get_json()
+        # print(json.loads(data))
+        data = json.loads(data)
+        paymentmethod_id = data['paymentmethod_id']
+        price = data['price']
 
-    try:
-        paymentintent = stripe.PaymentIntent.create(
-        amount=int(float(price) * 100),
-        currency="usd",
-        automatic_payment_methods={"enabled": True},
-        payment_method= paymentmethod_id
-        )
-        paymentintend_id = paymentintent['id']
-        confirmation = stripe.PaymentIntent.confirm(
-        paymentintend_id,
-        payment_method=paymentmethod_id,
-        return_url="https://www.google.com",
-        )
-        print(confirmation)
-        return {"confirmation": confirmation,
-                "code": 201
+        try:
+            paymentintent = stripe.PaymentIntent.create(
+                amount=int(float(price) * 100),
+                currency="usd",
+                automatic_payment_methods={"enabled": True},
+                payment_method= paymentmethod_id
+            )
+            paymentintend_id = paymentintent['id']
+            confirmation = stripe.PaymentIntent.confirm(
+                paymentintend_id,
+                payment_method=paymentmethod_id,
+                return_url="https://www.google.com",
+            )
+            # print(confirmation)
+            return jsonify(
+                {   
+                    "code": 200,
+                    "data": confirmation
+                }
+            ), 200
+
+        except Exception as e:
+            # Unexpected error in code
+            # exc_type, exc_obj, exc_tb = sys.exc_info()
+            # fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            # ex_str = str(e) + " at " + str(exc_type) + ": " + fname + ": line " + str(exc_tb.tb_lineno)
+
+            return jsonify(
+                {
+                    "code": 500,
+                    "message": "An error occurred while processing payment"
+                }
+            ), 500
+    
+    return jsonify(
+        {
+            "code": 400, 
+            "message": "Invalid JSON input: " + str(request.get_data())
         }
+    ), 400
 
-    except Exception as e:
-        # Unexpected error in code
-        exc_type, exc_obj, exc_tb = sys.exc_info()
-        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-        ex_str = str(e) + " at " + str(exc_type) + ": " + fname + ": line " + str(exc_tb.tb_lineno)
-        print(ex_str)
-        return {"code": 400}
 
 @app.route("/refund", methods=['POST'])
 def refund():

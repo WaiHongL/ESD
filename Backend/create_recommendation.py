@@ -35,10 +35,12 @@ def create_recommendations(userId):
         print('\nresult: ', result)
         return jsonify(result), result["code"]
     except Exception as e:
-        return jsonify({
-            "code": 500,
-            "message": "create_recommendation.py internal error"
-        }), 500
+        return jsonify(
+            {
+                "code": 500,
+                "message": "create_recommendation.py internal error"
+            }
+        ), 500
 
 def process_recommendation(userId):
     wishlist_and_purchase_URL = "http://localhost:5101/users/" + str(userId) + "/wishlist-and-purchases"

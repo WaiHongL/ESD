@@ -13,18 +13,15 @@ db = SQLAlchemy(app)
 class Game(db.Model):
     __tablename__ = 'game'
 
-    game_id = db.Column(db.Integer, primary_key=True)
+    game_id = db.Column(db.Integer, nullable=False, primary_key=True)
     title = db.Column(db.String(255), nullable=False)
     genre = db.Column(db.String(255), nullable=False)
     price = db.Column(db.Numeric(precision=10, scale=2), nullable=False)
-    points = db.Column(db.Integer, primary_key=True)
 
-    def __init__(self, game_id, title, genre, price, points):
-        self.game_id = game_id
+    def __init__(self, title, genre, price):
         self.title = title
         self.genre = genre
         self.price = price
-        self.points = points
 
     def json(self):
         return {
@@ -32,7 +29,6 @@ class Game(db.Model):
             "title": self.title,
             "genre": self.genre,
             "price": self.price,
-            "points": self.points
         }
 
 class Customizations(db.Model):
@@ -43,8 +39,7 @@ class Customizations(db.Model):
     border_color = db.Column(db.String(255), nullable=False)
     credits = db.Column(db.Integer, nullable=False)
 
-    def __init__(self, customization_id, tier, border_color, credits):
-        self.customization_id = customization_id
+    def __init__(self, tier, border_color, credits):
         self.tier = tier
         self.border_color = border_color
         self.credits = credits
@@ -59,11 +54,48 @@ class Customizations(db.Model):
     
 # GET ALL GAMES AND GAMES BY GENRE
 @app.route("/games")
-def get_all_games():
+def get_games():
     # CHECK IF "GENRE" IS IN QUERY PARAMS
     if (request.args.get("genre")):
         genre = request.args.get("genre")
-        gameList = db.session.scalars(db.select(Game).filter_by(genre=genre)).all()
+
+        try:
+            gameList = db.session.scalars(db.select(Game).filter_by(genre=genre)).all()
+
+            if len(gameList):
+                return jsonify(
+                    {
+                        "code": 200,
+                        "data": {
+                            "games": [game.json() for game in gameList]
+                        }
+                    }
+                ), 200
+
+            return jsonify(
+                {
+                    "code": 404,
+                    "data": {
+                        "genre": genre
+                    },
+                    "message": "There are no games that matches the genre"
+                }
+            ), 404
+        
+        except Exception as e:
+            return jsonify(
+                {
+                    "code": 500,
+                    "data": {
+                        "genre": genre
+                    },
+                    "message": "An error occurred while getting games that matches the genre"
+                }
+            ), 500
+    
+    # FOR FRONTEND
+    try:
+        gameList = db.session.scalars(db.select(Game)).all()
 
         if len(gameList):
             return jsonify(
@@ -73,34 +105,22 @@ def get_all_games():
                         "games": [game.json() for game in gameList]
                     }
                 }
-            )
-
+            ), 200
+        
         return jsonify(
             {
                 "code": 404,
-                "message": "There are no games that matches the genre."
+                "message": "There are no games"
             }
         ), 404
     
-    # FOR FRONTEND
-    gameList = db.session.scalars(db.select(Game)).all()
-
-    if len(gameList):
+    except Exception as e:
         return jsonify(
             {
-                "code": 200,
-                "data": {
-                    "games": [game.json() for game in gameList]
-                }
+                "code": 500,
+                "message": "An error occurred while getting games"
             }
-        )
-    
-    return jsonify(
-        {
-            "code": 404,
-            "message": "There are no games."
-        }
-    ), 404
+        ), 500
 
 
 # GET GAME GENRES
@@ -130,7 +150,7 @@ def get_games_genre():
         genres = []
         for game_id in games_id_arr:
             game = db.session.scalars(db.select(Game).filter_by(game_id=game_id).limit(1)).first()
-            if (game):
+            if game:
                 genre = game.genre
                 genres.append(genre)
 
@@ -140,86 +160,125 @@ def get_games_genre():
                     "code": 200,
                     "data": genres
                 }
-            )
+            ), 200
         else:
             return jsonify(
                 {
                     "code": 404,
-                    "data": "There are no game genres."
+                    "data": "There are no game genres"
                 }
-            )
+            ), 404
         
-    return jsonify({
-        "code": 400,
-        "message": "Invalid JSON input: " + str(request.get_data())
-    })
+    return jsonify(
+        {
+            "code": 400,
+            "message": "Invalid JSON input: " + str(request.get_data())
+        }
+    ), 400
 
 
-#GET GAME DETAILS
-@app.route("/gamedetail/<int:gameId>")
+# GET GAME DETAILS
+@app.route("/games/<int:gameId>")
 def get_game_details(gameId):
-    game = db.session.scalars(db.select(Game).filter_by(game_id=gameId)).one()
-    if (game):
-        print(game)
+    try:
+        game = db.session.scalars(db.select(Game).filter_by(game_id=gameId)).one()
+        if (game):
+            # print(game)
+            return jsonify(
+                {
+                    "code": 200,
+                    "data": game.json()
+                }
+            ), 200
+        
         return jsonify(
             {
-                "code": 200,
+                "code": 404,
                 "data": {
-                    'game_id': game.game_id,
-                    'title': game.title,
-                    'price': game.price
-                }
+                    "game_id": gameId
+                },
+                "message": "Game does not exist"
             }
-        )
-    return jsonify(
-        {
-            "code": 404,
-            "message": "There is no such game."
-        }
-    ), 404
+        ), 404
+    
+    except Exception as e:
+        return jsonify(
+            {
+                "code": 500,
+                "data": {
+                    "game_id": gameId
+                },
+                "message": "An error occurred while getting game details"
+            }
+        ), 500
 
 
+# GET ALL CUSTOMIZATIONS
 @app.route("/customizations")
-def get_all_customizations():
-    # try: 
-    customization_list = db.session.scalars(db.select(Customizations)).all()
+def get_customizations():
+    try: 
+        customization_list = db.session.scalars(db.select(Customizations)).all()
 
-    if len(customization_list):
-        return jsonify(
-            {
-                "code": 200,
-                "data": {
-                    "customizations": [customization.json() for customization in customization_list]
+        if len(customization_list):
+            return jsonify(
+                {
+                    "code": 200,
+                    "data": {
+                        "customizations": [customization.json() for customization in customization_list]
+                    }
                 }
-            }
-        )
-    
-    return jsonify(
-        {
-            "code": 404,
-            "message": "There are no customizations."
-        }
-    ), 404
-
-# GET CUSTOMIZATIONS BY ID
-@app.route("/customizations/<int:customizationId>")
-def get_customization_by_id(customizationId):
-    customization = db.session.scalars(db.select(Customizations).filter_by(customization_id=customizationId)).one()
-
-    if customization:
+            ), 200
+        
         return jsonify(
             {
-                "code": 200,
-                "data": customization.json()
+                "code": 404,
+                "message": "There are no customizations"
             }
-        )
+        ), 404
     
-    return jsonify(
-        {
-            "code": 404,
-            "message": "Customization does not exist."
-        }
-    ), 404
+    except Exception as e:
+        return jsonify(
+            {
+                "code": 500,
+                "message": "An error occurred while getting customizations"
+            }
+        ), 500
+
+
+# GET CUSTOMIZATION DETAILS
+@app.route("/customizations/<int:customizationId>")
+def get_customization_details(customizationId):
+    try: 
+        customization = db.session.scalars(db.select(Customizations).filter_by(customization_id=customizationId)).one()
+
+        if customization:
+            return jsonify(
+                {
+                    "code": 200,
+                    "data": customization.json()
+                }
+            ), 200
+        
+        return jsonify(
+            {
+                "code": 404,
+                "data": {
+                    "customization_id": customizationId
+                },
+                "message": "Customization does not exist"
+            }
+        ), 404
+    
+    except Exception as e:
+        return jsonify(
+            {
+                "code": 500,
+                "data": {
+                    "customization_id": customizationId
+                },
+                "message": "An error occurred while getting customization details"
+            }
+        ), 500
 
 
 if __name__ == '__main__':

@@ -28,7 +28,8 @@ const games = ref([]);
 function getAllGames() {
 	axios.get("http://localhost:5000/games")
 		.then((res) => {
-			games.value = res.data.data.games;
+			const data = res.data.data;
+			games.value = data.games;
 		})
 		.catch((err) => {
 			console.log(err);
@@ -40,7 +41,8 @@ const recommendedGames = ref([]);
 function getRecommendedGames() {
 	axios.get("http://localhost:5500/recommendations/1")
 		.then((res) => {
-			recommendedGames.value = res.data.data.games;
+			const data = res.data.data;
+			recommendedGames.value = data.games;
 		})
 		.catch((err) => {
 			console.log(err);
@@ -156,10 +158,11 @@ onMounted(() => {
 .recommendations-container__games-container,
 .all-games-container__games-container {
 	display: flex;
-	gap: 75px;
+	gap: 5%;
 }
 
 .all-games-container__games-container {
 	flex-wrap: wrap;
+	row-gap: 50px;
 }
 </style>

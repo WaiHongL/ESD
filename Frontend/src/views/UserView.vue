@@ -12,7 +12,6 @@ function displayCustomizationModal(bool) {
 }
 
 // DISPLAY SELECTED CUSTOMIZATION
-const selectedCustomizationId = ref(null);
 const selectedTier = ref(null);
 const selectedBorderColor = ref(null);
 
@@ -23,7 +22,7 @@ function handleCustomizationChange(customization) {
 
     selectedTier.value = tier;
     selectedBorderColor.value = borderColor;
-    
+
     displayCustomizationModal(false);
 }
 
@@ -62,7 +61,8 @@ async function getWishlistAndPurchases() {
 async function getGameById(gameId, type) {
     axios.get("http://localhost:5000/gamedetail/" + gameId)
         .then(res => {
-            type == "wishlist" ? wishlist.value.push(res.data.data) : purchases.value.push(res.data.data);
+            const data = res.data.data
+            type == "wishlist" ? wishlist.value.push(data) : purchases.value.push(data);
         })
         .catch(err => {
             console.log(err);
@@ -70,12 +70,16 @@ async function getGameById(gameId, type) {
 }
 
 // GET USER POINTS
+const userName = ref(null);
 const points = ref(null);
+const selectedCustomizationId = ref(null);
 async function getUserDetails() {
     axios.get("http://localhost:5101/users/1")
         .then(res => {
-            points.value = res.data.data.points;
-            selectedCustomizationId.value = res.data.data.selected_customization_id;
+            const data = res.data.data;
+            userName.value = data
+            points.value = data.points;
+            selectedCustomizationId.value = data.selected_customization_id;
         })
         .catch(err => {
             console.log(err);
@@ -101,7 +105,7 @@ async function getUserCustomizations() {
                 .then(res => {
                     customizations.value.push(res.data.data);
 
-                    if(id == selectedCustomizationId.value) {
+                    if (id == selectedCustomizationId.value) {
                         selectedTier.value = res.data.data.tier;
                         selectedBorderColor.value = res.data.data.border_color;
                     }
@@ -134,8 +138,8 @@ onMounted(async () => {
                     </div>
                 </div>
 
-                <img @click="displayCustomizationModal(true)" class="user-img"
-                    :class="'border-' + selectedBorderColor" src="../assets/images/user/user.jpg" />
+                <img @click="displayCustomizationModal(true)" class="user-img" :class="'border-' + selectedBorderColor"
+                    src="../assets/images/user/user.jpg" />
             </div>
         </div>
 
@@ -152,10 +156,8 @@ onMounted(async () => {
                     class="customization-modal-container__customization-container">
                     <div class="customization-modal-container__border" :class="'border-' + customization.border_color">
                         {{ customization.tier }}</div>
-                    <div class="customization-modal-container__btn-container">
-                        <button @click="handleCustomizationChange(customization)"
-                            class="btn btn-primary mx-auto">Select</button>
-                    </div>
+                    <button @click="handleCustomizationChange(customization)"
+                        class="btn btn-primary">Select</button>
                 </div>
             </div>
         </div>
@@ -240,26 +242,26 @@ h1 {
 .customization-modal-container__customization-container {
     width: 150px;
     margin-top: 120px;
+    text-align: center;
 }
 
 .customization-modal-container__border {
     height: 120px;
     border-width: 5px;
     border-style: solid;
-    border-radius: 5px 5px 0 0;
+    border-radius: 5px;
     display: flex;
     justify-content: center;
     align-items: center;
+    margin-bottom: 20px;
 }
 
 .customization-modal-container__btn-container {
-    border: 1px solid rgba(0, 0, 0, 0.2);
-    border-radius: 0 0 5px 5px;
     text-align: center;
     padding: 20px;
 }
 
-.customization-modal-container__btn-container > button {
+.customization-modal-container__btn-container>button {
     font-size: 14px;
 }
 

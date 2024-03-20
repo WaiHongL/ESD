@@ -80,7 +80,7 @@ async submitCheckout(){
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ paymentmethod_id: result.paymentMethod.id,
-        "user_id": "3",
+        "user_id": "6",
         "game_id": "2"
        }),
     });
@@ -106,7 +106,7 @@ if (data['code'] == 400) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ paymentMethodid: result.paymentMethod.id,
-        "user_id": "3",
+        "user_id": "6",
         "game_id": "2"
        }),
     });
