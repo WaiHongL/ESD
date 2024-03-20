@@ -11,13 +11,15 @@ ERROR_MICROSERVICE_URL = 'http://localhost:5445/error'
 
 @app.route('/refund', methods=['POST'])
 def process_refund():
+    #Pull data first
     data = request.json
     user_id = data['user_id']
     game_id = data['game_id']
     points_to_deduct = data.get('points_to_deduct')
 
-    # Step 1: Retrieve user gameplay time
+    # Step 1: Retrieve user's gameplay time, GET request to fetch
     gameplay_time_response = requests.get(f"{USER_MICROSERVICE_URL}/gameplay-time/{user_id}/{game_id}")
+    #testing if gameplay status code is successful
     if gameplay_time_response.status_code != 200:
         return jsonify({"error": "Failed to get gameplay time."}), 500
     gameplay_time = gameplay_time_response.json().get('data', {}).get('gameplay_time')
@@ -33,13 +35,13 @@ def process_refund():
         requests.post(f"{ERROR_MICROSERVICE_URL}/log", json=error_data)
         return jsonify({"error": "Refund ineligible due to gameplay time."}), 400
 
-    # Step 3: Get user points
+    # Step 3: Get user points, invoke GET to fetch it
     user_points_response = requests.get(f"{POINTS_MICROSERVICE_URL}/points/{user_id}")
     if user_points_response.status_code != 200:
         return jsonify({"error": "Failed to get user points."}), 500
     user_points = user_points_response.json().get('points')
 
-    # Step 4: Check if points are sufficient
+    # Step 4: Check if points are sufficient, need the points to deduct from points.py
     if user_points < points_to_deduct:
         return jsonify({"error": "Insufficient points."}), 400
 
