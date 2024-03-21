@@ -17,6 +17,7 @@ def process_refund():
     #Pull data first
     data = request.json
     user_id = data['user_id']
+    
     game_id = data['game_id']
     points_to_deduct = data.get('points_to_deduct')
 
