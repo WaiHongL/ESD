@@ -96,33 +96,8 @@ export default {
       //   }
       // });
 
-      if (data['code'] == 400) {
-        console.error('Error:', data['code']);
-        // Handle payment failure
-        const response = await fetch('http://localhost:5100/payment-fail', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ paymentMethodid: result.paymentMethod.id,
-              "user_id": "6",
-              "game_id": "2"
-            }),
-          });
 
-      } else {
-        console.log('Payment successful');
-        //show payment success modal??
-      }
         });
-        
-
-          // Send payment intent ID to backend
-          
-
-          // Handle response from backend as needed
-          
-          
         } catch (error) {
           console.log('sian')
           console.error('Error:', error);
