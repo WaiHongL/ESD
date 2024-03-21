@@ -278,6 +278,58 @@ def get_customizations(userId):
         ), 500
     
 
+# DELETE CUSTOMIZATION RECORDS
+@app.route("/customizations/delete", methods=["DELETE"])
+def delete_customization():
+    if request.is_json:
+        try:
+            data = request.get_json()
+            user_id = data["user_id"]
+            to_remove_list = data["to_remove_list"]
+            # Query the database for the purchase entry
+            print(user_id)
+            print(to_remove_list)
+            customizationpurchase = CustomizationPurchase.query.filter(CustomizationPurchase.customization_id.in_(to_remove_list), CustomizationPurchase.user_id == user_id).delete()
+            print(customizationpurchase)
+            
+            # Check if the purchase entry exists
+            if customizationpurchase:
+                # Delete the purchase entry
+                
+                db.session.commit()
+                return jsonify(
+                    {
+                        "code": 200, 
+                        "message": "Customization Purchase entry deleted successfully"
+                    }
+                ), 200
+            else:
+                return jsonify(
+                    {
+                        "code": 404, 
+                        "message": "Customization Purchase entry not found"
+                    }
+                ), 404
+            
+        except Exception as e:
+            return jsonify(
+                {
+                    "code": 500,
+                    "message": "An error occurred deleting the customization purchase"
+                }
+            ), 500
+        
+    return jsonify(
+        {
+            "code": 400, 
+            "data": {
+                "user_id": user_id
+            },
+            "message": "Invalid JSON input: " + str(request.get_data())
+        }
+    ), 400
+
+
 # CREATE A PURCHASE RECORD IN GAME PURCHASE TABLE
 @app.route("/game-purchase/create", methods=["POST"])
 def create_game_purchase():
