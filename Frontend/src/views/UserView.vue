@@ -59,7 +59,7 @@ async function getWishlistAndPurchases() {
 }
 
 async function getGameById(gameId, type) {
-    axios.get("http://localhost:5000/gamedetail/" + gameId)
+    axios.get("http://localhost:5000/games/" + gameId)
         .then(res => {
             const data = res.data.data
             type == "wishlist" ? wishlist.value.push(data) : purchases.value.push(data);
