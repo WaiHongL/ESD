@@ -41,9 +41,42 @@ def process_refund():
         return jsonify({"error": "Failed to get user points."}), 500
     user_points = user_points_response.json().get('points')
 
+<<<<<<< Updated upstream
     # Step 4: Check if points are sufficient, need the points to deduct from points.py
+=======
+    #Get game points
+    game_response = requests.get(f"{USER_MICROSERVICE_URL}/games/{game_id}")
+    if game_response.status_code == 200:
+        game_data = game_response.json()
+        game_points = game_data.get('points')
+    
+    #get customization points
+    # customization_response = requests.get(f"{USER_MICROSERVICE_URL}/customizations/{customization_id}")
+    # if customization_response.status_code == 200:
+    #     customization_data = customization_response.json()
+    #     customization_credits = customization_data.get('credits')
+
+    #     Check if points are sufficient and adjust accordingly
+    #     user_points = points_update_response.json().get('points')
+    #     if user_points - game_points > customization_credits:
+    #         # Deduct game points
+    #         update_points_data = {'user_id': user_id, 'points_to_deduct': game_points}
+    #         points_update_response = requests.post(POINTS_MICROSERVICE_URL, json=update_points_data)
+    #         if points_update_response.status_code != 200:
+    #             return jsonify({"error": "Failed to update points."}), 500
+    #     elif user_points - game_points + customization_credits < customization_credits:
+    #         # Adjust points for both game and customization
+    #         total_points_to_deduct = game_points - customization_credits
+    #         update_points_data = {'user_id': user_id, 'points_to_deduct': total_points_to_deduct}
+    #         points_update_response = requests.post(POINTS_MICROSERVICE_URL, json=update_points_data)
+    #         if points_update_response.status_code != 200:
+    #             return jsonify({"error": "Failed to update points."}), 500
+        
+    # Step 4: Check if points are sufficient
+>>>>>>> Stashed changes
     if user_points < points_to_deduct:
         return jsonify({"error": "Insufficient points."}), 400
+
 
     # Step 5: Deduct points for the refund
     update_points_data = {'user_id': user_id, 'points_to_deduct': points_to_deduct}
