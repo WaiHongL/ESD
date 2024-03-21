@@ -8,6 +8,8 @@ import axios from "axios";
 const cart = ref([]);
 // FORCE HEADER TO RE-RENDER
 const cartKey = ref(0);
+
+// HANDLE WHEN ADD TO CART BUTTON IS CLICKED
 function addToCart(gameData) {
 	cart.value.push(gameData);
 	displayAddToCartOverlay();

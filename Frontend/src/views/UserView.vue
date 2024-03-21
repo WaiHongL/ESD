@@ -2,8 +2,15 @@
 import Header from "../components/Header.vue";
 import Footer from "../components/Footer.vue";
 import Game from "../components/home/Game.vue";
+import PurchasedGame from "../components/user/PurchasedGame.vue";
 import axios from "axios";
 import { onMounted, ref } from "vue";
+
+// HANDLE REFUND UPON CLICK OF REFUND BUTTON
+// CHANGE FUNCTION HERE TO CALL COMPLEX MICROSERVICE
+function handleRefund(gameData) {
+	console.log("siao liao no more game")
+}
 
 // DISPLAY CUSTOMIZATION MODAL WHEN CLICKED
 const isCustomizationModelVisible = ref(false);
@@ -181,8 +188,8 @@ onMounted(async () => {
             <div class="fs-4 fw-bold mb-3">My Purchases</div>
 
             <div class="purchase-container__games-container">
-                <Game v-for="(game, index) in purchases" :key="index" :title="game.title" :genre="game.genre"
-                    :price="game.price" />
+                <PurchasedGame v-for="(game, index) in purchases" :key="index" :title="game.title" :genre="game.genre" @handle-refund = "handleRefund" />
+
             </div>
         </div>
     </main>
