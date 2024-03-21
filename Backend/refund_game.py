@@ -93,7 +93,7 @@ def process_refund():
         update_points_result = invoke_http(f"{USER_MICROSERVICE_URL}/users/{user_id}/points/update",methods=['PUT'], json=points_to_change)
         #error handling
 
-        #invoke user.py endpoint to update points and delete customoizations from customization table
+        #invoke user.py endpoint to update points and delete customizations from customization table
      
 
    
