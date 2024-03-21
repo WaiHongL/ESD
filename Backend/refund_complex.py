@@ -41,9 +41,9 @@ def process_refund():
         return jsonify({"error": "Failed to get user points."}), 500
     user_points = user_points_response.json().get('points')
 
-<<<<<<< Updated upstream
     # Step 4: Check if points are sufficient, need the points to deduct from points.py
-=======
+
+    
     #Get game points
     game_response = requests.get(f"{USER_MICROSERVICE_URL}/games/{game_id}")
     if game_response.status_code == 200:
@@ -73,10 +73,8 @@ def process_refund():
     #             return jsonify({"error": "Failed to update points."}), 500
         
     # Step 4: Check if points are sufficient
->>>>>>> Stashed changes
     if user_points < points_to_deduct:
         return jsonify({"error": "Insufficient points."}), 400
-
 
     # Step 5: Deduct points for the refund
     update_points_data = {'user_id': user_id, 'points_to_deduct': points_to_deduct}
