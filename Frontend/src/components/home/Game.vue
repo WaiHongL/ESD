@@ -5,6 +5,7 @@ const props = defineProps({
     title: String,
     genre: String,
     price: Number,
+    disabled: Boolean,
 });
 
 // GET IMAGE SOURCE
@@ -36,13 +37,14 @@ const imgSrc = computed(() => {
                 <div class="card-price">${{ price }}</div>
 
                 <div class="d-flex">
-                    <button class="btn bg-danger d-flex justify-content-center align-items-center me-2">
-                        <span class="material-symbols-outlined text-white">favorite</span>
+                    <button class="btn bg-danger py-2 me-2">
+                        <span
+                            class="material-symbols-outlined text-white d-flex align-items-center border-0">favorite</span>
                     </button>
 
-                    <button @click="$emit('addToCart', { title, genre, price })"
-                        class="btn bg-primary justify-content-center align-items-center">
-                        <span class="material-symbols-outlined text-white">shopping_bag</span>
+                    <button @click="$emit('addToCart', { title, genre, price })" class="btn bg-primary py-2 border-0"
+                        :disabled="disabled">
+                        <span class="material-symbols-outlined text-white d-flex align-items-center">shopping_bag</span>
                     </button>
                 </div>
             </div>

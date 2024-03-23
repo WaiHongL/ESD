@@ -5,30 +5,30 @@ import Game from "../components/home/Game.vue";
 import { onMounted, ref } from "vue";
 import axios from "axios";
 
-const cart = ref([]);
-// FORCE HEADER TO RE-RENDER
-const cartKey = ref(0);
+// const cart = ref([]);
+// // FORCE HEADER TO RE-RENDER
+// const cartKey = ref(0);
 
-// HANDLE WHEN ADD TO CART BUTTON IS CLICKED
-function addToCart(gameData) {
-	cart.value.push(gameData);
-	displayAddToCartOverlay();
-	cartKey.value += 1;
-}
+// // HANDLE WHEN ADD TO CART BUTTON IS CLICKED
+// function addToCart(gameData) {
+// 	cart.value.push(gameData);
+// 	displayAddToCartOverlay();
+// 	cartKey.value += 1;
+// }
 
-// DISPLAY ADD TO CART CONFIRMATION
-const isAddToCartOverlayVisible = ref(false);
-function displayAddToCartOverlay() {
-	isAddToCartOverlayVisible.value = true;
-	setTimeout(() => {
-		isAddToCartOverlayVisible.value = false;
-	}, 2000);
-}
+// // DISPLAY ADD TO CART CONFIRMATION
+// const isAddToCartOverlayVisible = ref(false);
+// function displayAddToCartOverlay() {
+// 	isAddToCartOverlayVisible.value = true;
+// 	setTimeout(() => {
+// 		isAddToCartOverlayVisible.value = false;
+// 	}, 2000);
+// }
 
 // GET ALL AVAILABLE GAMES
 const games = ref([]);
-function getAllGames() {
-	axios.get("http://localhost:5000/games")
+async function getAllGames() {
+	await axios.get("http://localhost:5000/games")
 		.then((res) => {
 			const data = res.data.data;
 			games.value = data.games;
@@ -51,14 +51,37 @@ function getRecommendedGames() {
 		});
 }
 
-onMounted(() => {
-	getAllGames();
+// GET USER PURCHASES
+const purchases = ref([]);
+let purchaseData;
+async function getPurchases() {
+	await axios.get("http://localhost:5101/users/1/wishlist-and-purchases")
+		.then(res => {
+			const data = res.data.data;
+			purchaseData = data.purchases;
+		})
+		.catch(err => {
+			console.log(err);
+		});
+
+	if (purchaseData != undefined) {
+		for (const purchaseId of purchaseData) {
+			const gameId = purchaseId.game_id;
+			purchases.value.push(gameId);
+		}
+	}
+}
+
+onMounted(async () => {
+	await getPurchases();
+	await getAllGames();
 	getRecommendedGames();
 });
 </script>
 
 <template>
-	<Header :key="cartKey" :cart="cart" :isAddToCartOverlayVisible="isAddToCartOverlayVisible"></Header>
+	<!-- <Header :key="cartKey" :cart="cart" :isAddToCartOverlayVisible="isAddToCartOverlayVisible"></Header> -->
+	<Header></Header>
 
 	<main>
 		<div class="background-container">
@@ -76,8 +99,10 @@ onMounted(() => {
 			<div class="recommendations-container__title">Recommendations</div>
 			<div class="recommendations-container__games-container"
 				:class="{ 'justify-content-center': recommendedGames.length == 0 }">
+				<!-- <Game v-if="recommendedGames.length" v-for="(game, index) in recommendedGames" :key="index"
+					@add-to-cart="addToCart" :title="game.title" :genre="game.genre" :price="game.price" /> -->
 				<Game v-if="recommendedGames.length" v-for="(game, index) in recommendedGames" :key="index"
-					@add-to-cart="addToCart" :title="game.title" :genre="game.genre" :price="game.price" />
+					:title="game.title" :genre="game.genre" :price="game.price" />
 				<div v-else class="fs-5 text-muted">Loading recommendations...</div>
 			</div>
 		</div>
@@ -86,8 +111,10 @@ onMounted(() => {
 		<div class="all-games-container">
 			<div class="all-games-container__title">All Games</div>
 			<div class="all-games-container__games-container">
-				<Game v-for="(game, index) in games" :key="index" @add-to-cart="addToCart" :title="game.title"
-					:genre="game.genre" :price="game.price" />
+				<!-- <Game v-for="(game, index) in games" :key="index" @add-to-cart="addToCart" :title="game.title"
+					:genre="game.genre" :price="game.price" /> -->
+				<Game v-for="(game, index) in games" :key="index" :title="game.title" :genre="game.genre"
+					:price="game.price" :disabled="purchases.includes(game.game_id)"/>
 			</div>
 		</div>
 	</main>

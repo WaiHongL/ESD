@@ -5,6 +5,7 @@ const props = defineProps({
   tier: String,
   borderColor: String,
   credits: Number,
+  disabled: Boolean,
 });
 
 const borderColor = computed(() => {
@@ -25,7 +26,7 @@ const borderColor = computed(() => {
       </div>
       
       <div class="text-center">
-        <button @click="$emit('addToCart', { tier, price })" class="btn btn-primary">Add to Cart</button>
+        <button @click="$emit('addToCart', { tier, price })" class="btn btn-primary" :disabled="disabled">Add to Cart</button>
       </div>
     </div>
   </div>

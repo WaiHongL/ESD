@@ -5,23 +5,23 @@ import Tier from "../components/customizations/Tier.vue";
 import { onMounted, ref } from "vue";
 import axios from "axios";
 
-const cart = ref([]);
-// FORCE HEADER TO RE-RENDER
-const cartKey = ref(0);
-function addToCart(customizationData) {
-    cart.value.push(customizationData);
-    displayAddToCartOverlay();
-    cartKey.value += 1;
-}
+// const cart = ref([]);
+// // FORCE HEADER TO RE-RENDER
+// const cartKey = ref(0);
+// function addToCart(customizationData) {
+//     cart.value.push(customizationData);
+//     displayAddToCartOverlay();
+//     cartKey.value += 1;
+// }
 
-// DISPLAY ADD TO CART CONFIRMATION
-const isAddToCartOverlayVisible = ref(false);
-function displayAddToCartOverlay() {
-    isAddToCartOverlayVisible.value = true;
-    setTimeout(() => {
-        isAddToCartOverlayVisible.value = false;
-    }, 2000);
-}
+// // DISPLAY ADD TO CART CONFIRMATION
+// const isAddToCartOverlayVisible = ref(false);
+// function displayAddToCartOverlay() {
+//     isAddToCartOverlayVisible.value = true;
+//     setTimeout(() => {
+//         isAddToCartOverlayVisible.value = false;
+//     }, 2000);
+// }
 
 // GET ALL AVAILABLE CUSTOMIZATIONS
 const customizations = ref([])
@@ -35,7 +35,29 @@ function getAllCustomizations() {
         });
 }
 
-onMounted(() => {
+// GET USER CUSTOMIZATIONS
+const purchases = ref([]);
+let purchaseData;
+async function getPurchases() {
+    await axios.get("http://localhost:5101/users/1/customizations")
+        .then(res => {
+            const data = res.data.data;
+            purchaseData = data;
+        })
+        .catch(err => {
+            console.log(err);
+        });
+
+    if (purchaseData != undefined) {
+        for (const purchaseId of purchaseData) {
+            const customizationId = purchaseId.customization_id;
+            purchases.value.push(customizationId);
+        }
+    }
+}
+
+onMounted(async () => {
+    await getPurchases();
     getAllCustomizations();
 })
 </script>
@@ -50,8 +72,11 @@ onMounted(() => {
         <div class="tiers-container">
             <div class="tiers-container__title">Tiers</div>
             <div class="d-flex justify-content-between">
-                <Tier v-for="(customization, index) in customizations" :key="index" @add-to-cart="addToCart"
-                    :tier="customization.tier" :borderColor="customization.border_color" :credits="customization.credits"></Tier>
+                <!-- <Tier v-for="(customization, index) in customizations" :key="index" @add-to-cart="addToCart"
+                    :tier="customization.tier" :borderColor="customization.border_color" :credits="customization.credits"></Tier> -->
+                <Tier v-for="(customization, index) in customizations" :key="index" :tier="customization.tier"
+                    :borderColor="customization.border_color" :credits="customization.credits"
+                    :disabled="purchases.includes(customization.customization_id)"></Tier>
             </div>
         </div>
     </main>
