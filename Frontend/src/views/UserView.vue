@@ -7,9 +7,20 @@ import axios from "axios";
 import { onMounted, ref } from "vue";
 
 // HANDLE REFUND UPON CLICK OF REFUND BUTTON
-// CHANGE FUNCTION HERE TO CALL COMPLEX MICROSERVICE
 function handleRefund(gameData) {
-	console.log("siao liao no more game")
+	console.log("weifeng smelly")
+    displayRefundOverlay();
+    // CALL REFUND COMPLEX MICROSERVICE HERE
+}
+
+// DISPLAY REFUND MODAL
+const isRefundModalVisible = ref(false);
+function displayRefundOverlay() {
+	isRefundModalVisible.value = true;
+	setTimeout(() => {
+		isRefundModalVisible.value = false;
+	}, 5000);
+    // Currently Modal timeout after 5s, change to actual refund completion once complex refund.py is done
 }
 
 // DISPLAY CUSTOMIZATION MODAL WHEN CLICKED
@@ -192,6 +203,9 @@ onMounted(async () => {
 
             </div>
         </div>
+
+        <!-- REFUND MODAL -->
+        <div v-if="isRefundModalVisible" class="refund-overlay">Refund is being processed...</div>
     </main>
 
     <Footer></Footer>
@@ -293,5 +307,23 @@ h1 {
 
 .purchase-container {
     margin-bottom: 100px;
+}
+
+.refund-overlay {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+    width: 300px;
+    height: 150px;
+    background-color: white;
+    color: black;
+    border-radius: 10px;
+    border: 3px solid black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
 }
 </style>
