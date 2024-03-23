@@ -26,10 +26,6 @@ const imgSrc = computed(() => {
     }
     return src;
 });
-
-console.log(props.title + " isWishlist: " + props.isWishlist);
-console.log(props.title + " isWishlistDisabled: " + props.isWishlistDisabled);
-console.log(props.title + " isPurchaseDisabled: " + props.isPurchaseDisabled);
 </script>
 
 <template>

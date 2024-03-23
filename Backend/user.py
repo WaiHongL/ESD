@@ -164,7 +164,7 @@ def update_points(userId):
             return jsonify(
                 {
                     "code": 500,
-                    "message": "An error occurred while adding user points"
+                    "message": "An error occurred while updating user points"
                 }
             ), 500
         
@@ -268,6 +268,7 @@ def create_wishlist():
         }
     ), 400
 
+
 # DELETE FROM WISHLIST
 @app.route("/users/wishlist/delete", methods=["DELETE"])
 def delete_wishlist(): 
@@ -359,6 +360,53 @@ def get_customizations(userId):
                 "message": "An error occurred while getting user customizations"
             }
         ), 500
+    
+
+# UPDATE USER SELECTED CUSTOMIZATION
+@app.route("/users/customizations/update", methods=["PUT"])
+def update_customization():
+    if request.is_json:
+        try:
+            data = request.get_json()
+            user_id = data["user_id"]
+            customization_id = data["customization_id"]
+
+            user = User.query.get(user_id)
+
+            if user:
+                user.selected_customization_id = customization_id
+                db.session.commit()
+                return jsonify(
+                    {
+                        "code": 200,
+                        "data": user.json()
+                    }
+                ), 200
+            
+            return jsonify(
+                {
+                    "code": 404, 
+                    "data": {
+                        "user_id": user_id
+                    },
+                    "message": "User does not exist"
+                }
+            ), 404
+
+        except Exception as e:
+            return jsonify(
+                {
+                    "code": 500,
+                    "message": "An error occurred while updating user selected customization"
+                }
+            ), 500
+        
+    return jsonify(
+        {
+            "code": 400, 
+            "message": "Invalid JSON input: " + str(request.get_data())
+        }
+    ), 400
     
 
 # DELETE CUSTOMIZATION RECORDS

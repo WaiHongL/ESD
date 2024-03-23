@@ -35,8 +35,22 @@ const selectedBorderColor = ref(null);
 
 // HANDLE CUSTOMIZATION CHANGE
 function handleCustomizationChange(customization) {
+    const id = customization.customization_id;
     const tier = customization.tier;
     const borderColor = customization.border_color;
+
+    const axiosData = {
+        "user_id": 1,
+        "customization_id": id
+    }
+
+    axios.put("http://localhost:5101/users/customizations/update", axiosData)
+        .then(res => {
+            console.log(res);
+        })
+        .catch(err => {
+            console.log(err);
+        })
 
     selectedTier.value = tier;
     selectedBorderColor.value = borderColor;
@@ -117,8 +131,6 @@ async function getWishlistAndPurchases() {
     } else {
         purchases.value = [];
     }
-
-    console.log(purchases.value);
 }
 
 async function getGameById(gameId, type) {
