@@ -1,11 +1,15 @@
 <script setup>
-import { computed } from "vue";
+import axios from "axios";
+import { computed, ref } from "vue";
 
 const props = defineProps({
+    id: Number,
     title: String,
     genre: String,
     price: Number,
-    disabled: Boolean,
+    isWishlist: Boolean,
+    isWishlistDisabled: Boolean,
+    isPurchaseDisabled: Boolean,
 });
 
 // GET IMAGE SOURCE
@@ -22,6 +26,10 @@ const imgSrc = computed(() => {
     }
     return src;
 });
+
+console.log(props.title + " isWishlist: " + props.isWishlist);
+console.log(props.title + " isWishlistDisabled: " + props.isWishlistDisabled);
+console.log(props.title + " isPurchaseDisabled: " + props.isPurchaseDisabled);
 </script>
 
 <template>
@@ -37,13 +45,15 @@ const imgSrc = computed(() => {
                 <div class="card-price">${{ price }}</div>
 
                 <div class="d-flex">
-                    <button class="btn bg-danger py-2 me-2">
-                        <span
-                            class="material-symbols-outlined text-white d-flex align-items-center border-0">favorite</span>
+                    <button @click="$emit('handleWishlist',{ id, isWishlist})" class="btn py-2 me-2 border-0" :class="{ 'btn-success': isWishlist, 'btn-danger': !isWishlist }" :disabled="isWishlistDisabled">
+                        <span class="material-symbols-outlined text-white d-flex align-items-center">favorite</span>
                     </button>
 
-                    <button @click="$emit('addToCart', { title, genre, price })" class="btn bg-primary py-2 border-0"
+                    <!-- <button @click="$emit('addToCart', { title, genre, price })" class="btn bg-primary py-2 border-0"
                         :disabled="disabled">
+                        <span class="material-symbols-outlined text-white d-flex align-items-center">shopping_bag</span>
+                    </button> -->
+                    <button class="btn bg-primary py-2 border-0" :disabled="isPurchaseDisabled">
                         <span class="material-symbols-outlined text-white d-flex align-items-center">shopping_bag</span>
                     </button>
                 </div>

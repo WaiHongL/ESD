@@ -124,6 +124,56 @@ def get_user_details_new(userId):
                 "message": "An error occurred while getting user details"
             }
         ), 500
+    
+
+# UPDATE USER POINTS
+@app.route("/users/<int:userId>/points/update", methods=["PUT"])
+def update_points(userId):
+    if request.is_json:
+        try:
+            points_json = request.get_json()
+
+            user = User.query.get(userId)
+
+            if user:
+                if points_json["operation"] == "add":
+                    user.points  = user.points + (float(points_json["price"]) * 100)
+                else:
+                    user.points  = user.points - (float(points_json["price"]) * 100)
+
+
+                db.session.commit()
+                return jsonify(
+                    {
+                        "code": 200,
+                        "data": user.json()
+                    }
+                ), 200
+            
+            return jsonify(
+                {
+                    "code": 404, 
+                    "data": {
+                        "user_id": userId
+                    },
+                    "message": "User does not exist"
+                }
+            ), 404
+
+        except Exception as e:
+            return jsonify(
+                {
+                    "code": 500,
+                    "message": "An error occurred while adding user points"
+                }
+            ), 500
+        
+    return jsonify(
+        {
+            "code": 400, 
+            "message": "Invalid JSON input: " + str(request.get_data())
+        }
+    ), 400
 
 
 # GET USER WISHLIST AND PURCHASES
@@ -185,48 +235,32 @@ def get_wishlist_and_purchase(userId):
         ), 500
     
 
-# UPDATE USER POINTS
-@app.route("/users/<int:userId>/points/update", methods=["PUT"])
-def update_points(userId):
+# ADD TO WISHLIST
+@app.route("/users/wishlist/create", methods=["POST"])
+def create_wishlist():
     if request.is_json:
+        data = request.get_json()
+        wish = Wishlist(**data)
+
         try:
-            points_json = request.get_json()
+            db.session.add(wish)
+            db.session.commit()
 
-            user = User.query.get(userId)
-
-            if user:
-                if points_json["operation"] == "add":
-                    user.points  = user.points + (float(points_json["price"]) * 100)
-                else:
-                    user.points  = user.points - (float(points_json["price"]) * 100)
-
-
-                db.session.commit()
-                return jsonify(
-                    {
-                        "code": 200,
-                        "data": user.json()
-                    }
-                ), 200
-            
             return jsonify(
                 {
-                    "code": 404, 
-                    "data": {
-                        "user_id": userId
-                    },
-                    "message": "User does not exist"
+                    "code": 201, 
+                    "data": wish.json()
                 }
-            ), 404
+            ), 201
 
         except Exception as e:
             return jsonify(
                 {
                     "code": 500,
-                    "message": "An error occurred while adding user points"
+                    "message": "An error occurred while creating the wishlist record"
                 }
             ), 500
-        
+    
     return jsonify(
         {
             "code": 400, 
@@ -234,6 +268,55 @@ def update_points(userId):
         }
     ), 400
 
+# DELETE FROM WISHLIST
+@app.route("/users/wishlist/delete", methods=["DELETE"])
+def delete_wishlist(): 
+    if request.is_json:
+        try:
+            data = request.get_json()
+            print(data)
+            user_id = data["user_id"]
+            game_id = data["game_id"]
+
+            wish = Wishlist.query.filter_by(user_id=user_id, game_id=game_id).first()
+            
+            # Check if the purchase entry exists
+            if wish:
+                # Delete the purchase entry
+                db.session.delete(wish)
+                db.session.commit()
+                return jsonify(
+                    {
+                        "code": 200, 
+                        "message": "Wish record deleted successfully"
+                    }
+                ), 200
+            else:
+                return jsonify(
+                    {
+                        "code": 404, 
+                        "message": "Wish record not found"
+                    }
+                ), 404
+            
+        except Exception as e:
+            return jsonify(
+                {
+                    "code": 500,
+                    "message": "An error occurred deleting the wish record"
+                }
+            ), 500
+        
+    return jsonify(
+        {
+            "code": 400, 
+            "data": {
+                "user_id": user_id
+            },
+            "message": "Invalid JSON input: " + str(request.get_data())
+        }
+    ), 400
+    
 
 # GET USER CUSTOMIZATIONS
 @app.route("/users/<int:userId>/customizations")

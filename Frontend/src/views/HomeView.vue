@@ -25,6 +25,36 @@ import axios from "axios";
 // 	}, 2000);
 // }
 
+// HANDLE WISHLIST
+async function handleWishlist(data) {
+	const axiosData = {
+		"user_id": 1,
+		"game_id": data.id
+	};
+
+	if (!data.isWishlist) {
+		await axios.post("http://localhost:5101/users/wishlist/create", axiosData)
+			.then(res => {
+				console.log(res);
+			})
+			.catch(err => {
+				console.log(err);
+			})
+	} else {
+		await axios.delete("http://localhost:5101/users/wishlist/delete", { data: axiosData })
+			.then(res => {
+				console.log(res);
+			})
+			.catch(err => {
+				console.log(err);
+			})
+	}
+	// console.log("Wishlist before: " + wishlist.value);
+	await getWishlistAndPurchases();
+	// console.log("Wishlist after: " + wishlist.value);
+	getRecommendedGames();
+}
+
 // GET ALL AVAILABLE GAMES
 const games = ref([]);
 async function getAllGames() {
@@ -41,6 +71,7 @@ async function getAllGames() {
 // GET RECOMMENDED GAMES
 const recommendedGames = ref([]);
 function getRecommendedGames() {
+	recommendedGames.value = [];
 	axios.get("http://localhost:5500/recommendations/1")
 		.then((res) => {
 			const data = res.data.data;
@@ -51,29 +82,55 @@ function getRecommendedGames() {
 		});
 }
 
-// GET USER PURCHASES
+// GET WISHLIST AND PURCHASES
+const wishlist = ref([]);
+let wishlistData;
 const purchases = ref([]);
 let purchaseData;
-async function getPurchases() {
+async function getWishlistAndPurchases() {
 	await axios.get("http://localhost:5101/users/1/wishlist-and-purchases")
 		.then(res => {
 			const data = res.data.data;
+			wishlistData = data.wishlist;
 			purchaseData = data.purchases;
 		})
 		.catch(err => {
 			console.log(err);
 		});
 
+	if (wishlistData != undefined) {
+		for (const wishlistId of wishlistData) {
+			const gameId = wishlistId.game_id;
+
+			if (!wishlist.value.includes(gameId)) { // HANDLE ADD WISHLIST
+				wishlist.value.push(gameId);
+			} else if (wishlist.value.length > wishlistData.length) { // HANDLE DELETE WISHLIST
+				wishlist.value = [];
+				wishlist.value.push(gameId);
+			}
+		}
+	} else { // HANDLE NO GAMES IN WISHLIST AFTER DELETION
+		wishlist.value = [];
+	}
+
 	if (purchaseData != undefined) {
 		for (const purchaseId of purchaseData) {
 			const gameId = purchaseId.game_id;
-			purchases.value.push(gameId);
+
+			if (!purchases.value.includes(gameId)) {
+				purchases.value.push(gameId);
+			} else if (purchases.value.length > purchaseData.length) {
+				purchases.value = [];
+				purchases.value.push(gameId);
+			}
 		}
+	} else {
+		purchases.value = [];
 	}
 }
 
 onMounted(async () => {
-	await getPurchases();
+	await getWishlistAndPurchases();
 	await getAllGames();
 	getRecommendedGames();
 });
@@ -101,8 +158,13 @@ onMounted(async () => {
 				:class="{ 'justify-content-center': recommendedGames.length == 0 }">
 				<!-- <Game v-if="recommendedGames.length" v-for="(game, index) in recommendedGames" :key="index"
 					@add-to-cart="addToCart" :title="game.title" :genre="game.genre" :price="game.price" /> -->
+				<!-- <Game v-if="recommendedGames.length" v-for="(game, index) in recommendedGames" :key="index"
+					:id="game.game_id" :title="game.title" :genre="game.genre" :price="game.price" /> -->
 				<Game v-if="recommendedGames.length" v-for="(game, index) in recommendedGames" :key="index"
-					:title="game.title" :genre="game.genre" :price="game.price" />
+					:id="game.game_id" :title="game.title" :genre="game.genre" :price="game.price"
+					@handle-wishlist="handleWishlist" :isWishlist="wishlist.includes(game.game_id)"
+					:isWishlistDisabled="purchases.includes(game.game_id)"
+					:isPurchaseDisabled="purchases.includes(game.game_id)" />
 				<div v-else class="fs-5 text-muted">Loading recommendations...</div>
 			</div>
 		</div>
@@ -110,11 +172,13 @@ onMounted(async () => {
 		<!-- ALL AVAILABLE GAMES -->
 		<div class="all-games-container">
 			<div class="all-games-container__title">All Games</div>
-			<div class="all-games-container__games-container">
+			<div class="all-games-container__games-container" :key="wishlistKey">
 				<!-- <Game v-for="(game, index) in games" :key="index" @add-to-cart="addToCart" :title="game.title"
 					:genre="game.genre" :price="game.price" /> -->
-				<Game v-for="(game, index) in games" :key="index" :title="game.title" :genre="game.genre"
-					:price="game.price" :disabled="purchases.includes(game.game_id)"/>
+				<Game v-for="(game, index) in games" :key="index" :id="game.game_id" :title="game.title"
+					:genre="game.genre" :price="game.price" @handle-wishlist="handleWishlist"
+					:isWishlist="wishlist.includes(game.game_id)" :isWishlistDisabled="purchases.includes(game.game_id)"
+					:isPurchaseDisabled="purchases.includes(game.game_id)" />
 			</div>
 		</div>
 	</main>

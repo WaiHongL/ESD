@@ -8,7 +8,7 @@ import { onMounted, ref } from "vue";
 
 // HANDLE REFUND UPON CLICK OF REFUND BUTTON
 function handleRefund(gameData) {
-	console.log("weifeng smelly")
+    console.log("weifeng smelly")
     displayRefundOverlay();
     // CALL REFUND COMPLEX MICROSERVICE HERE
 }
@@ -16,10 +16,10 @@ function handleRefund(gameData) {
 // DISPLAY REFUND MODAL
 const isRefundModalVisible = ref(false);
 function displayRefundOverlay() {
-	isRefundModalVisible.value = true;
-	setTimeout(() => {
-		isRefundModalVisible.value = false;
-	}, 5000);
+    isRefundModalVisible.value = true;
+    setTimeout(() => {
+        isRefundModalVisible.value = false;
+    }, 5000);
     // Currently Modal timeout after 5s, change to actual refund completion once complex refund.py is done
 }
 
@@ -44,6 +44,33 @@ function handleCustomizationChange(customization) {
     displayCustomizationModal(false);
 }
 
+// HANDLE WISHLIST
+async function handleWishlist(data) {
+    const axiosData = {
+        "user_id": 1,
+        "game_id": data.id
+    };
+
+    if (!data.isWishlist) {
+        await axios.post("http://localhost:5101/users/wishlist/create", axiosData)
+            .then(res => {
+                console.log(res);
+            })
+            .catch(err => {
+                console.log(err);
+            })
+    } else {
+        await axios.delete("http://localhost:5101/users/wishlist/delete", { data: axiosData })
+            .then(res => {
+                console.log(res);
+            })
+            .catch(err => {
+                console.log(err);
+            })
+    }
+    await getWishlistAndPurchases();
+}
+
 // GET WISHLIST AND PURCHASES
 const wishlist = ref([]);
 let wishlistData;
@@ -64,16 +91,34 @@ async function getWishlistAndPurchases() {
     if (wishlistData != undefined) {
         for (const wishlistId of wishlistData) {
             const gameId = wishlistId.game_id;
-            await getGameById(gameId, "wishlist");
+
+            if (!wishlist.value.some(wish => wish.game_id == gameId)) {
+                await getGameById(gameId, "wishlist");
+            } else if (wishlist.value.length > wishlistData.length) {
+                wishlist.value = [];
+                await getGameById(gameId, "wishlist");
+            }
         }
+    } else {
+        wishlist.value = [];
     }
 
     if (purchaseData != undefined) {
         for (const purchaseId of purchaseData) {
             const gameId = purchaseId.game_id;
-            await getGameById(gameId, "purchases");
+
+            if (!purchases.value.some(purchase => purchase.game_id == gameId)) {
+                await getGameById(gameId, "purchases");
+            } else if (purchases.value.length > wishlistData.length) {
+                purchases.value = [];
+                await getGameById(gameId, "purchases");
+            }
         }
+    } else {
+        purchases.value = [];
     }
+
+    console.log(purchases.value);
 }
 
 async function getGameById(gameId, type) {
@@ -174,8 +219,7 @@ onMounted(async () => {
                     class="customization-modal-container__customization-container">
                     <div class="customization-modal-container__border" :class="'border-' + customization.border_color">
                         {{ customization.tier }}</div>
-                    <button @click="handleCustomizationChange(customization)"
-                        class="btn btn-primary">Select</button>
+                    <button @click="handleCustomizationChange(customization)" class="btn btn-primary">Select</button>
                 </div>
             </div>
         </div>
@@ -189,8 +233,11 @@ onMounted(async () => {
             <div class="fs-4 fw-bold mb-3">My Wishlist</div>
 
             <div class="wishlist-container__games-container">
-                <Game v-for="(game, index) in wishlist" :key="index" :title="game.title" :genre="game.genre"
-                    :price="game.price" />
+                <Game v-for="(game, index) in wishlist" :key="index" :id="game.game_id" :title="game.title"
+                    :genre="game.genre" :price="game.price" @handle-wishlist="handleWishlist"
+                    :isWishlist="wishlist.some(wish => wish.game_id == game.game_id)"
+                    :isWishlistDisabled="purchases.includes(game.game_id)"
+                    :isPurchaseDisabled="purchases.includes(game.game_id)" />
             </div>
         </div>
 
@@ -199,7 +246,8 @@ onMounted(async () => {
             <div class="fs-4 fw-bold mb-3">My Purchases</div>
 
             <div class="purchase-container__games-container">
-                <PurchasedGame v-for="(game, index) in purchases" :key="index" :title="game.title" :genre="game.genre" @handle-refund = "handleRefund" />
+                <PurchasedGame v-for="(game, index) in purchases" :key="index" :title="game.title" :genre="game.genre"
+                    @handle-refund="handleRefund" />
 
             </div>
         </div>
@@ -324,6 +372,6 @@ h1 {
     display: flex;
     justify-content: center;
     align-items: center;
-    
+
 }
 </style>
