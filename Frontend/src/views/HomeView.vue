@@ -70,9 +70,11 @@ async function getAllGames() {
 
 // GET RECOMMENDED GAMES
 const recommendedGames = ref([]);
-function getRecommendedGames() {
+const isRecommendedGamesLoading = ref(false);
+async function getRecommendedGames() {
+	isRecommendedGamesLoading.value = true;
 	recommendedGames.value = [];
-	axios.get("http://localhost:5500/recommendations/1")
+	await axios.get("http://localhost:5500/recommendations/1")
 		.then((res) => {
 			const data = res.data.data;
 			recommendedGames.value = data.games;
@@ -80,6 +82,7 @@ function getRecommendedGames() {
 		.catch((err) => {
 			console.log(err);
 		});
+	isRecommendedGamesLoading.value = false;
 }
 
 // GET WISHLIST AND PURCHASES
@@ -133,6 +136,7 @@ onMounted(async () => {
 	await getWishlistAndPurchases();
 	await getAllGames();
 	getRecommendedGames();
+	console.log(recommendedGames.value);
 });
 </script>
 
@@ -160,12 +164,15 @@ onMounted(async () => {
 					@add-to-cart="addToCart" :title="game.title" :genre="game.genre" :price="game.price" /> -->
 				<!-- <Game v-if="recommendedGames.length" v-for="(game, index) in recommendedGames" :key="index"
 					:id="game.game_id" :title="game.title" :genre="game.genre" :price="game.price" /> -->
-				<Game v-if="recommendedGames.length" v-for="(game, index) in recommendedGames" :key="index"
-					:id="game.game_id" :title="game.title" :genre="game.genre" :price="game.price"
-					@handle-wishlist="handleWishlist" :isWishlist="wishlist.includes(game.game_id)"
-					:isWishlistDisabled="purchases.includes(game.game_id)"
+
+				<div v-if="isRecommendedGamesLoading" class="fs-5 text-muted">Loading recommendations...</div>
+				<Game v-else-if="!isRecommendedGamesLoading && recommendedGames.length"
+					v-for="(game, index) in recommendedGames" :key="index" :id="game.game_id" :title="game.title"
+					:genre="game.genre" :price="game.price" @handle-wishlist="handleWishlist"
+					:isWishlist="wishlist.includes(game.game_id)" :isWishlistDisabled="purchases.includes(game.game_id)"
 					:isPurchaseDisabled="purchases.includes(game.game_id)" />
-				<div v-else class="fs-5 text-muted">Loading recommendations...</div>
+				<div v-else class="fs-5 text-muted">No recommendations</div>
+
 			</div>
 		</div>
 

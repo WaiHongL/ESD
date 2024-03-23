@@ -70,6 +70,14 @@ def process_recommendation(userId):
             "data": { "wishlist_and_purchase_result": wishlist_and_purchase_result },
             "message": "Wishlist and purchase error sent for error handling."
         }
+    
+    # GET GAME IDS OF PURCHASES
+    wishlist_and_purchase_data = wishlist_and_purchase_result["data"]
+    purchase_ids = []
+    if "purchases" in wishlist_and_purchase_data:
+        purchases = wishlist_and_purchase_data["purchases"]
+        for purchase in purchases:
+            purchase_ids.append(purchase["game_id"])
 
 
     # INVOKE SHOP MICROSERVICE TO GET GAMES GENRE
@@ -153,6 +161,17 @@ def process_recommendation(userId):
             "data": { "game_by_genre_result": game_by_genre_result },
             "message": "Game by genre error sent for error handling."
         }
+    
+    # FILTER GAMES ALREADY PURCHASED
+    game_by_genre_data = game_by_genre_result["data"]
+    recommended_games = []
+    if "games" in game_by_genre_data:
+        games = game_by_genre_data["games"]
+        for game in games:
+            if (game["game_id"] not in purchase_ids):
+                recommended_games.append(game)
+    
+    game_by_genre_result["data"]["games"] = recommended_games
 
     return game_by_genre_result
 
