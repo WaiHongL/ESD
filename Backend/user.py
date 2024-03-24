@@ -613,7 +613,7 @@ def delete_game_purchase():
 #         )
 #     return jsonify({"code": 404, "message": "There is no such user."}), 404
 
-
+#Get gameplay time of game
 @app.route("/gameplay-time/<int:userId>/<int:gameId>", methods = ["GET"])
 def get_purchase_records(userId, gameId):
     record = db.session.scalars(db.select(GamePurchase).filter_by(user_id=userId,game_id=gameId)).one()
