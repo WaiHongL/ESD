@@ -14,8 +14,8 @@ import { useRouter } from 'vue-router';
 //   isCartVisible.value = bool;
 // }
 
-// gets the router instance
-const router = useRouter();
+// // gets the router instance
+// const router = useRouter();
 
 // function sendDataToBackend(data) {
 //     axios.post('http://localhost:4242/receive', data)
@@ -27,15 +27,14 @@ const router = useRouter();
 //         });
 // }
 
-// handle checkout button click
-async function handleCheckout() {
-    if (props.cart && props.cart.length > 0) {
-        // await sendDataToBackend(props.cart);
-        console.log(props.cart)
-        router.push({ name: 'Checkout', query: { cart: JSON.stringify(props.cart) } }); // Navigate to Checkout.vue and send over shopping cart
-    }
-}
-
+// // handle checkout button click
+// async function handleCheckout() {
+//     if (props.cart && props.cart.length > 0) {
+//         // await sendDataToBackend(props.cart);
+//         console.log(props.cart)
+//         router.push({ name: 'Checkout', query: { cart: JSON.stringify(props.cart) } }); // Navigate to Checkout.vue and send over shopping cart
+//     }
+// }
 </script>
 
 <template>

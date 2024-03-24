@@ -1,4 +1,5 @@
 <script setup>
+import router from "@/router";
 import axios from "axios";
 import { computed, ref } from "vue";
 
@@ -26,6 +27,16 @@ const imgSrc = computed(() => {
     }
     return src;
 });
+
+// HANDLE PURCHASE
+function handlePurchase() {
+    router.push({
+        name: "Checkout",
+        params: {
+            gameId: props.id
+        }
+    })
+}
 </script>
 
 <template>
@@ -49,7 +60,7 @@ const imgSrc = computed(() => {
                         :disabled="disabled">
                         <span class="material-symbols-outlined text-white d-flex align-items-center">shopping_bag</span>
                     </button> -->
-                    <button class="btn bg-primary py-2 border-0" :disabled="isPurchaseDisabled">
+                    <button @click="handlePurchase()" class="btn bg-primary py-2 border-0" :disabled="isPurchaseDisabled">
                         <span class="material-symbols-outlined text-white d-flex align-items-center">shopping_bag</span>
                     </button>
                 </div>

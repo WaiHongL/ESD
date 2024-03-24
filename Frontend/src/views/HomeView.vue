@@ -136,7 +136,6 @@ onMounted(async () => {
 	await getWishlistAndPurchases();
 	await getAllGames();
 	getRecommendedGames();
-	console.log(recommendedGames.value);
 });
 </script>
 

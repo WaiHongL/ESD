@@ -27,7 +27,7 @@ const borderColor = computed(() => {
       
       <div class="text-center">
         <!-- <button @click="$emit('addToCart', { tier, price })" class="btn btn-primary" :disabled="disabled">Add to Cart</button> -->
-        <button class="btn btn-primary" :disabled="disabled">Add to Cart</button>
+        <button class="btn btn-primary" :disabled="disabled">Purchase</button>
       </div>
     </div>
   </div>
