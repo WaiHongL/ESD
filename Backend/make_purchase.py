@@ -125,7 +125,7 @@ def make_purchase():
                             }    
 
                             print('processing notification...')
-                            # process_notification(notification_json)
+                            process_notification(notification_json)
 
                             print('\n------------------------')
                             print('\nresult: ', update_game_purchase_result)
@@ -160,7 +160,7 @@ def make_purchase():
                                 }    
 
                                 print('processing notification...')
-                                # process_fail_notification(notification_json)
+                                process_fail_notification(notification_json)
 
                                 # remove password key
                                 # print("here: ", user_details_result)
