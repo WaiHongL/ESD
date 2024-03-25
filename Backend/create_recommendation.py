@@ -28,7 +28,7 @@ common_genre_URL = "http://localhost:5300/recommend/genre"
 
 # CREATE RECOMMENDATION
 @app.route("/recommendations/<int:userId>")
-def create_recommendations(userId):
+def create_recommendation(userId):
     try:
         result = process_recommendation(userId)
         print('\n------------------------')

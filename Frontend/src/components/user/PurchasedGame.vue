@@ -2,6 +2,7 @@
 import { computed } from "vue";
 
 const props = defineProps({
+    id: Number,
     title: String,
     genre: String,
     price: Number,
@@ -34,7 +35,7 @@ const imgSrc = computed(() => {
 
             <div class="d-flex justify-content-end align-items-center">
                 <div></div>
-                <button @click="$emit('handleRefund', { title, genre, price })"
+                <button @click="$emit('handleRefund', { id, title, genre, price })"
                     class="btn bg-primary ml-auto">
                     <span class="text-white">Refund</span>
                 </button>

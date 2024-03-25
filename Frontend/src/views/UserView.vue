@@ -8,6 +8,7 @@ import { onMounted, ref } from "vue";
 
 // HANDLE REFUND UPON CLICK OF REFUND BUTTON
 function handleRefund(gameData) {
+    console.log(gameData);
     console.log("weifeng smelly")
     displayRefundOverlay();
     // CALL REFUND COMPLEX MICROSERVICE HERE
@@ -258,7 +259,7 @@ onMounted(async () => {
             <div class="fs-4 fw-bold mb-3">My Purchases</div>
 
             <div class="purchase-container__games-container">
-                <PurchasedGame v-for="(game, index) in purchases" :key="index" :title="game.title" :genre="game.genre"
+                <PurchasedGame v-for="(game, index) in purchases" :key="index" :id="game.game_id" :title="game.title" :genre="game.genre"
                     @handle-refund="handleRefund" />
 
             </div>
