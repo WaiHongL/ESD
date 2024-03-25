@@ -10,7 +10,7 @@ CORS(app)
 USER_MICROSERVICE_URL = 'http://localhost:5101'
 PAYMENT_MICROSERVICE_URL = 'http://localhost:5666/payment'
 ERROR_MICROSERVICE_URL = 'http://localhost:5445/error' 
-SHOP_CUSTOMIZATION_MICROSERVICE_URL = 'http://localhost:5000/customizations'
+SHOP_CUSTOMIZATION_MICROSERVICE_URL = 'http://localhost:5000'
 
 def log_error(user_id, error_message):
     #Function to log errors to the Error Microservice.
@@ -27,8 +27,15 @@ def process_refund():
             print(data)
             user_id = data['user_id']
             game_id = data['game_id']
-            points_to_deduct = data['points_to_deduct'] 
-            print(data)
+            gamedetail = invoke_http(f"{SHOP_CUSTOMIZATION_MICROSERVICE_URL}/games/{game_id}", method='GET')
+            if gamedetail['code'] not in range(200,300):
+                log_error(game_id, "Failed to get game")
+                return jsonify({"error": "Failed to get game."}), 500
+            print(gamedetail)
+
+            points_to_deduct = gamedetail['data']['points']
+            print("points to deduct:")
+            print(points_to_deduct)
 
             # Step 1: Retrieve user's gameplay time
             gameplay_time_response = invoke_http(f"{USER_MICROSERVICE_URL}/gameplay-time/{user_id}/{game_id}", method='GET')
@@ -36,6 +43,7 @@ def process_refund():
                 log_error(user_id, "Failed to get gameplay time")
                 return jsonify({"error": "Failed to get gameplay time."}), 500
             gameplay_time = gameplay_time_response['data']['gameplay_time']
+            print("gameplay time:")
             print(gameplay_time)
 
             # Step 2: Check for refund eligibility
@@ -49,8 +57,10 @@ def process_refund():
             if user_response['code'] not in range(200,300):
                 log_error(user_id, "Failed to get user")
                 return jsonify({"error": "Failed to get user."}), 500
-            print(user_response)
+          
+    
             user_points = user_response['data']['points']
+            print("user points:")
             print(user_points)
 
             # Step 4: Check if points are sufficient
@@ -64,6 +74,7 @@ def process_refund():
                     return jsonify({"error": "Failed to update user points."}), 500
             else:
                 remaining = points_to_deduct - user_points
+                print("remaining points to deduct:")
                 print(remaining)
 
                 user_item_purchase_history = invoke_http(f"{USER_MICROSERVICE_URL}/users/{user_id}/customizations", method='GET')
@@ -74,8 +85,9 @@ def process_refund():
                     return jsonify({"error": "Failed to retrieve user item purchase history."}), 500
                 
                 user_item_purchase_history_list = user_item_purchase_history['data']
+                print("items user owns:")
                 print(user_item_purchase_history_list)
-                customizations = invoke_http(SHOP_CUSTOMIZATION_MICROSERVICE_URL, method='GET')
+                customizations = invoke_http(f"{SHOP_CUSTOMIZATION_MICROSERVICE_URL}/customizations", method='GET')
                 if customizations['code'] not in range(200,300):
                     log_error(user_id, "Failed to retrieve customizations")
                     return jsonify({"error": "Failed to retrieve customizations."}), 500
@@ -84,6 +96,7 @@ def process_refund():
                 customizations_dict={}
                 for customization in customizations_list:
                     customizations_dict[customization['customization_id']] = customization['credits']
+                print("custom dict:")
                 print(customizations_dict)
 
 
@@ -91,12 +104,13 @@ def process_refund():
                 for item in user_item_purchase_history_list:
                     item_tuple = (item['customization_id'],customizations_dict[item['customization_id']])
                     list_to_run.append(item_tuple)
+                print("all of user items:")
                 print(list_to_run)
 
                 to_remove_list=[]
 
                 print(list_to_run[-1][1])
-                while (remaining > list_to_run[-1][1]) and len(list_to_run) > 0:
+                while (remaining > 0) and (len(list_to_run) > 0):
                     print("remaining:")
                     print(remaining)
                     print('last item pointa')
@@ -105,32 +119,36 @@ def process_refund():
                     last_customization = list_to_run.pop() 
                     to_remove_list.append(last_customization[0])
                     print(to_remove_list)
-
+                print('items to remove:')
                 print(to_remove_list)
-                if(len(list_to_run) > 0):
+                
 
-                    new_points = list_to_run[-1][1] - remaining
-                    print(new_points)
-                    change_points = new_points - user_points
+                
+                
+                change_points = user_points + remaining
+                print('points to deduct')
+                print(change_points)
+                operation='minus'
+          
+           
 
-
-                    if change_points>=0:
-                        operation = 'add'
-                    else:
-                        operation='minus'
 
                 customizations_to_delete = {'user_id':user_id,'to_remove_list':to_remove_list}
-                delete_customizations = invoke_http(f"{USER_MICROSERVICE_URL}/customizations/delete", methods=['DELETE'],json = customizations_to_delete)
-                if delete_customizations.get('code') != 200:
-                    log_error(user_id, "Failed to delete customizations")
-                    return jsonify({"error": "Failed to delete customizations."}), 500
-                
+                delete_customizations = invoke_http(f"{USER_MICROSERVICE_URL}/customizations/delete", method='DELETE',json = customizations_to_delete)
+                print(delete_customizations)
+                if delete_customizations['code'] not in range(200,300):
+                        log_error(user_id, "Failed to delete customizations")
+                        return jsonify({"error": "Failed to delete customizations."}), 500
+                print('items deleted successfully')
                 points_to_change = {'operation':operation,'price':abs(change_points/100)}
-                update_points_result = invoke_http(f"{USER_MICROSERVICE_URL}/users/{user_id}/points/update",methods=['PUT'], json=points_to_change)
-                if update_points_result.get('code') != 200:
-                    log_error(user_id, "Failed to update points after deleting customizations")
-                    return jsonify({"error": "Failed to update points after deleting customizations."}), 500
-
+                update_points_result = invoke_http(f"{USER_MICROSERVICE_URL}/users/{user_id}/points/update",method='PUT', json=points_to_change)
+                print(update_points_result)
+                if update_points_result['code'] not in range(200,300):
+                        log_error(user_id, "Failed to update points after deleting customizations")
+                        return jsonify({"error": "Failed to update points after deleting customizations."}), 500
+                print('points deducted successfully')
+                print('success')
+               
                 #invoke user.py endpoint to update points and delete customizations from customization table
             
 

@@ -17,11 +17,13 @@ class Game(db.Model):
     title = db.Column(db.String(255), nullable=False)
     genre = db.Column(db.String(255), nullable=False)
     price = db.Column(db.Numeric(precision=10, scale=2), nullable=False)
+    points = db.Column(db.Integer, nullable=False)
 
-    def __init__(self, title, genre, price):
+    def __init__(self, title, genre, price, points):
         self.title = title
         self.genre = genre
         self.price = price
+        self.points = points
 
     def json(self):
         return {
@@ -29,6 +31,7 @@ class Game(db.Model):
             "title": self.title,
             "genre": self.genre,
             "price": self.price,
+            "points": self.points
         }
 
 class Customizations(db.Model):
