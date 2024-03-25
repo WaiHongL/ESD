@@ -632,7 +632,10 @@ def get_purchase_records(userId, gameId):
         )
     return jsonify({"code": 404, "message": "There is no such record."}), 404
 
-
+# Get payment ID for refund
+# @app.route("/purchase-id/<int:userId>/<int:gameId>", methods = ["GET"])
+# def get_purchase_id(userId,gameId):
+#     record = db.session.scalars(db.select(GamePurchase).filter_by(user_id=userId,game_id=gameId)).one()
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5101, debug=True)
 

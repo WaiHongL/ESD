@@ -27,7 +27,7 @@ def process_refund():
             print(data)
             user_id = data['user_id']
             game_id = data['game_id']
-            purchase_id = data['purchase_id']
+            #purchase_id = data['purchase_id']
             gamedetail = invoke_http(f"{SHOP_CUSTOMIZATION_MICROSERVICE_URL}/games/{game_id}", method='GET')
             if gamedetail['code'] not in range(200,300):
                 log_error(game_id, "Failed to get game")
@@ -38,12 +38,15 @@ def process_refund():
             print("points to deduct:")
             print(points_to_deduct)
 
-            # Step 1: Retrieve user's gameplay time
+            # Step 1: Retrieve user's gameplay time and purchase id
             gameplay_time_response = invoke_http(f"{USER_MICROSERVICE_URL}/gameplay-time/{user_id}/{game_id}", method='GET')
             if gameplay_time_response['code'] not in range(200,300):
                 log_error(user_id, "Failed to get gameplay time")
                 return jsonify({"error": "Failed to get gameplay time."}), 500
             gameplay_time = gameplay_time_response['data']['gameplay_time']
+            print(gameplay_time_response)
+            purchase_id = gameplay_time_response['data']['payment_intent']
+            print(2)
             print("gameplay time:")
             print(gameplay_time)
 
@@ -160,7 +163,8 @@ def process_refund():
             if payment_response['code'] != 200:
                 return jsonify({"error": "Failed to process refund through Stripe."}), 500
 
-
+            # Step 7: Send email notification to user
+            
 
             # If everything is successful, return confirmation
             return jsonify({"message": "Refund processed successfully."}), 200
