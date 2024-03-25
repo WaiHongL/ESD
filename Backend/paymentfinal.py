@@ -63,12 +63,36 @@ def payment():
 
 @app.route("/refund", methods=['POST'])
 def refund():
-    refund_obj = stripe.Refund.create(payment_intent="pi_3Ov8sDK1WW7DRh3q1ypxFZr2")
-    status = refund_obj['status']
-    if status == 'succeeded':
-        return #refund successful
-    else:
-        return #refund fail
+    if request.is_json:
+        try:
+            data = request.get_json()
+            #data = json.loads(data)
+            print(data)
+            pi = data['payment_intent']
+            print(pi)
+            refund_obj = stripe.Refund.create(payment_intent=pi)
+            status = refund_obj['status']
+            if status == 'succeeded':
+                return jsonify(
+                {   
+                    "code": 200,
+                    "data": 'Refund successful'
+                }
+            ), 200
+            else:
+                return jsonify(
+                {   
+                    "code": 500,
+                    "data": 'Refund failed (Stripe error)'
+                }
+            ), 200
+        except Exception as e:
+            return jsonify(
+                {
+                    "code": 500,
+                    "message": "An error occurred while refunding payment"
+                }
+            ), 500
 
 
 if __name__ == '__main__':

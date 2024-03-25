@@ -8,7 +8,7 @@ CORS(app)
 
 # Define the microservices URLs
 USER_MICROSERVICE_URL = 'http://localhost:5101'
-PAYMENT_MICROSERVICE_URL = 'http://localhost:5666/payment'
+PAYMENT_MICROSERVICE_URL = 'http://localhost:5666'
 ERROR_MICROSERVICE_URL = 'http://localhost:5445/error' 
 SHOP_CUSTOMIZATION_MICROSERVICE_URL = 'http://localhost:5000'
 
@@ -27,6 +27,7 @@ def process_refund():
             print(data)
             user_id = data['user_id']
             game_id = data['game_id']
+            purchase_id = data['purchase_id']
             gamedetail = invoke_http(f"{SHOP_CUSTOMIZATION_MICROSERVICE_URL}/games/{game_id}", method='GET')
             if gamedetail['code'] not in range(200,300):
                 log_error(game_id, "Failed to get game")
@@ -122,17 +123,11 @@ def process_refund():
                 print('items to remove:')
                 print(to_remove_list)
                 
-
-                
-                
                 change_points = user_points + remaining
                 print('points to deduct')
                 print(change_points)
                 operation='minus'
           
-           
-
-
                 customizations_to_delete = {'user_id':user_id,'to_remove_list':to_remove_list}
                 delete_customizations = invoke_http(f"{USER_MICROSERVICE_URL}/customizations/delete", method='DELETE',json = customizations_to_delete)
                 print(delete_customizations)
@@ -148,22 +143,30 @@ def process_refund():
                         return jsonify({"error": "Failed to update points after deleting customizations."}), 500
                 print('points deducted successfully')
                 print('success')
-               
-                #invoke user.py endpoint to update points and delete customizations from customization table
             
-
-        
-
+            # Step 5: Delete purchase record
+            del_json = {'user_id':user_id,'game_id':game_id}
+            delete_purchase_record = invoke_http(f"{USER_MICROSERVICE_URL}/game-purchase/delete", method = 'DELETE', json = del_json)
+            print(delete_purchase_record)
+            if delete_purchase_record['code'] != 200:
+                return jsonify({"error": "Failed to delete purchase record."}), 500
+            # the error handling above cannot uncomment. If i uncomment, it doesnt run to the next part
+            
             # Step 6: Process the refund through Stripe
-            payment_intent_id = gameplay_time_response.json().get('data', {}).get('payment_intent')
+            payment_intent_id = purchase_id
             refund_data = {'payment_intent': payment_intent_id}
             payment_response = invoke_http(f"{PAYMENT_MICROSERVICE_URL}/refund",method='POST', json=refund_data)
-            if payment_response.status_code != 200:
+            print(payment_response)
+            if payment_response['code'] != 200:
                 return jsonify({"error": "Failed to process refund through Stripe."}), 500
+
+
 
             # If everything is successful, return confirmation
             return jsonify({"message": "Refund processed successfully."}), 200
         except:
             return {'code': '400'}
+        
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5200, debug=True)
