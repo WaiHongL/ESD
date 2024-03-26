@@ -19,16 +19,9 @@ SHOP_CUSTOMIZATION_MICROSERVICE_URL = 'http://localhost:5000'
 #amqp stuff
 exchangename = "order_topic" # exchange name
 exchangetype="topic" # use a 'topic' exchange to enable interaction
-queue_name = 'Notification_Refund'
 connection = amqp_connection.create_connection() 
 channel = connection.channel()
-channel.exchange_declare(exchange=exchangename, exchange_type=exchangetype, durable=True) 
-channel.queue_declare(queue=queue_name, durable=True) # 'durable' makes the queue survive broker restarts
-#bind Refund queue
-channel.queue_bind(exchange=exchangename, queue=queue_name, routing_key='refund')
-# bind the queue to the exchange via the key
-# routing_key with 'refund' will be matched
-# if the exchange is not yet created, exit the program
+# # if the exchange is not yet created, exit the program
 if not amqp_connection.check_exchange(channel, exchangename, exchangetype):
     print("\nCreate the 'Exchange' before running this microservice. \nExiting the program.")
     sys.exit(0)  # Exit with a success status
@@ -41,10 +34,10 @@ def log_error(user_id, error_message):
 def process_refund_notification(notification_json):
     message = notification_json
 
-    print('\n\n-----Publishing the notification with routing_key=refund-----')
+    print('\n\n-----Publishing the notification with routing_key=refund.notification-----')
 
     try:
-        channel.basic_publish(exchange=exchangename, routing_key="refund", 
+        channel.basic_publish(exchange=exchangename, routing_key="refund.notification", 
             body=json.dumps(message), properties=pika.BasicProperties(delivery_mode = 2)) 
         print("published")
     # make message persistent within the matching queues 
@@ -209,11 +202,11 @@ def process_refund():
             # Step 7: Send email notification to user
 
             notification_json = {
-                                'price': gamedetail['data']['price'],
-                                'title': gamedetail['data']['title'],
+                                'game_price': gamedetail['data']['price'],
+                                'game_title': gamedetail['data']['title'],
                                 'email': user_response['data']['email'],
                                 'account_name': user_response['data']['account_name'],
-                                'transaction_id': payment_intent_id
+                                'purchase_id': payment_intent_id
                             }    
             print(notification_json)
 
