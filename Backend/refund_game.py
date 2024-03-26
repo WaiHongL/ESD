@@ -2,6 +2,10 @@ from flask import Flask, request, jsonify
 from invokes import invoke_http
 from flask_cors import CORS
 import requests
+import pika
+import amqp_connection
+import os, sys
+import json
 
 app = Flask(__name__)
 CORS(app)
@@ -12,10 +16,47 @@ PAYMENT_MICROSERVICE_URL = 'http://localhost:5666'
 ERROR_MICROSERVICE_URL = 'http://localhost:5445/error' 
 SHOP_CUSTOMIZATION_MICROSERVICE_URL = 'http://localhost:5000'
 
+#amqp stuff
+exchangename = "order_topic" # exchange name
+exchangetype="topic" # use a 'topic' exchange to enable interaction
+queue_name = 'Notification_Refund'
+connection = amqp_connection.create_connection() 
+channel = connection.channel()
+channel.exchange_declare(exchange=exchangename, exchange_type=exchangetype, durable=True) 
+channel.queue_declare(queue=queue_name, durable=True) # 'durable' makes the queue survive broker restarts
+#bind Refund queue
+channel.queue_bind(exchange=exchangename, queue=queue_name, routing_key='refund')
+# bind the queue to the exchange via the key
+# routing_key with 'refund' will be matched
+# if the exchange is not yet created, exit the program
+if not amqp_connection.check_exchange(channel, exchangename, exchangetype):
+    print("\nCreate the 'Exchange' before running this microservice. \nExiting the program.")
+    sys.exit(0)  # Exit with a success status
+
 def log_error(user_id, error_message):
     #Function to log errors to the Error Microservice.
     error_data = {'user_id': user_id, 'error_message': error_message}
     invoke_http(f"{ERROR_MICROSERVICE_URL}/log", method='POST', json=error_data)
+
+def process_refund_notification(notification_json):
+    message = notification_json
+
+    print('\n\n-----Publishing the notification with routing_key=refund-----')
+
+    try:
+        channel.basic_publish(exchange=exchangename, routing_key="refund", 
+            body=json.dumps(message), properties=pika.BasicProperties(delivery_mode = 2)) 
+        print("published")
+    # make message persistent within the matching queues 
+
+    # - reply from the invocation is not used;
+    # continue even if this invocation fails        
+    except Exception as e:
+        # Unexpected error in code
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        ex_str = str(e) + " at " + str(exc_type) + ": " + fname + ": line " + str(exc_tb.tb_lineno)
+        print(ex_str)
 
 @app.route('/refund', methods=['POST'])
 def process_refund():
@@ -160,10 +201,24 @@ def process_refund():
             refund_data = {'payment_intent': payment_intent_id}
             payment_response = invoke_http(f"{PAYMENT_MICROSERVICE_URL}/refund",method='POST', json=refund_data)
             print(payment_response)
+            print("done!")
             if payment_response['code'] != 200:
                 return jsonify({"error": "Failed to process refund through Stripe."}), 500
+            print("processing notif")
 
             # Step 7: Send email notification to user
+
+            notification_json = {
+                                'price': gamedetail['data']['price'],
+                                'title': gamedetail['data']['title'],
+                                'email': user_response['data']['email'],
+                                'account_name': user_response['data']['account_name'],
+                                'transaction_id': payment_intent_id
+                            }    
+            print(notification_json)
+
+            print('processing notification...')
+            process_refund_notification(notification_json)
             
 
             # If everything is successful, return confirmation
