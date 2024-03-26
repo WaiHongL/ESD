@@ -15,7 +15,7 @@ api_secret = "d20ed987dd240464d6f4bd92af7247de"
 def send_email(data):
     email = data['email']
     name = data['account_name'] 
-    textcontent = "You have bought {} for ${}\n Transaction ID: {}".format(data['title'], data['price'], data['transaction_id'])
+    textcontent = "You have bought {} for ${}\n Transaction ID: {}".format(data['game_title'], data['game_price'], data['purchase_id'])
     message = {
         "Messages": [
             {
@@ -25,7 +25,6 @@ def send_email(data):
                 },
                 "To": [
                     {"Email": email, "Name": name}
-                    
                 ],
                 "Subject": "Game purchased",
                 "TextPart": "Purchase notification",
@@ -42,7 +41,6 @@ def send_email(data):
 
 #Purchase fail notif
 def send_failure_email(data):
-       
     email = data['email']
     name = data['account_name']
     textcontent = "An error has occured for your payment. Please try again."
@@ -55,7 +53,6 @@ def send_failure_email(data):
                 },
                 "To": [
                     {"Email": email, "Name": name}
-                    
                 ],
                 "Subject": "Payment failed",
                 "TextPart": "Payment failed",
@@ -72,10 +69,9 @@ def send_failure_email(data):
 
 #Refund notif
 def send_refund_email(data):
-       
     email = data['email']
     name = data['account_name']
-    textcontent = f"<h1>Hello {name}</h1> </br> We've issued the refund to your bank account. Depending on the bank's processing time, it can take anywhere from 5-10 business days to show up on your bank account. Thank you! </br> <h3>{data['title']}</h3> </br> Transaction ID: {data['transaction_id']} </br> Total refund: {data['price']} to your bank account"
+    textcontent = f"<h1>Hello {name}</h1> </br> We've issued the refund to your bank account. Depending on the bank's processing time, it can take anywhere from 5-10 business days to show up on your bank account. Thank you! </br> <h3>{data['game_title']}</h3> </br> Transaction ID: {data['purchase_id']} </br> Total refund: {data['game_price']} to your bank account"
     message = {
         "Messages": [
             {

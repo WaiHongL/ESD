@@ -59,7 +59,7 @@ function handleSubmit() {
                 console.log(res.error.message);
             } else {
                 const axiosData = {
-                    "paymentmethod_id": res.paymentMethod.id,
+                    "purchase_id": res.paymentMethod.id,
                     "user_id": "6", // TO BE CHANGED
                     "game_id": gameId,
                 }

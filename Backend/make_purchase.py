@@ -93,7 +93,7 @@ def make_purchase():
                 game_details = create_game_purchase_result["data"]["game_details_result"]["data"]
                 payment_json = json.dumps({
                     'price': game_details["price"],
-                    'paymentmethod_id': userid_gameid['paymentmethod_id']
+                    'purchase_id': userid_gameid['purchase_id']
                 })
 
                 make_payment_result = make_payment(payment_json)["data"]["payment_result"]
@@ -117,11 +117,11 @@ def make_purchase():
                             # userdetailsjson = invoke_http(user_details_URL + str(user_id), method='GET')
                             user_details = update_points_result['data']["update_points_result"]["data"]
                             notification_json = {
-                                'price': game_details['price'],
-                                'title': game_details['title'],
+                                'game_price': game_details['price'],
+                                'game_title': game_details['title'],
                                 'email': user_details['email'],
                                 'account_name': user_details['account_name'],
-                                'transaction_id': make_payment_result['data']['id']
+                                'purchase_id': make_payment_result['data']['id']
                             }    
 
                             print('processing notification...')
@@ -153,8 +153,8 @@ def make_purchase():
                             if user_details_result["code"] in range(200, 300):
                                 user_details = user_details_result['data']["user_details_result"]["data"]
                                 notification_json = {
-                                    'price': game_details['price'],
-                                    'title': game_details['title'],
+                                    'game_price': game_details['price'],
+                                    'game_title': game_details['title'],
                                     'email': user_details['email'],
                                     'account_name': user_details['account_name']
                                 }    

@@ -16,7 +16,7 @@ def payment():
         data = request.get_json()
         # print(json.loads(data))
         data = json.loads(data)
-        paymentmethod_id = data['paymentmethod_id']
+        purchase_id = data['purchase_id']
         price = data['price']
 
         try:
@@ -24,12 +24,12 @@ def payment():
                 amount=int(float(price) * 100),
                 currency="usd",
                 automatic_payment_methods={"enabled": True},
-                payment_method= paymentmethod_id
+                payment_method=purchase_id
             )
             paymentintend_id = paymentintent['id']
             confirmation = stripe.PaymentIntent.confirm(
                 paymentintend_id,
-                payment_method=paymentmethod_id,
+                payment_method=purchase_id,
                 return_url="https://www.google.com",
             )
             # print(confirmation)
