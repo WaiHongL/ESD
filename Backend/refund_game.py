@@ -73,13 +73,13 @@ def process_refund():
             print(points_to_deduct)
 
             # Step 1: Retrieve user's gameplay time and purchase id
-            gameplay_time_response = invoke_http(f"{USER_MICROSERVICE_URL}/gameplay-time/{user_id}/{game_id}", method='GET')
-            if gameplay_time_response['code'] not in range(200,300):
+            game_purchase_response = invoke_http(f"{USER_MICROSERVICE_URL}/game-purchase/{user_id}/{game_id}", method='GET')
+            if game_purchase_response['code'] not in range(200,300):
                 log_error(user_id, "Failed to get gameplay time")
                 return jsonify({"error": "Failed to get gameplay time."}), 500
-            gameplay_time = gameplay_time_response['data']['gameplay_time']
-            print(gameplay_time_response)
-            purchase_id = gameplay_time_response['data']['payment_intent']
+            gameplay_time = game_purchase_response['data']['gameplay_time']
+            print(game_purchase_response)
+            purchase_id = game_purchase_response['data']['payment_intent']
             print(2)
             print("gameplay time:")
             print(gameplay_time)
