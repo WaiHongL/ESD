@@ -7,11 +7,37 @@ import axios from "axios";
 import { onMounted, ref } from "vue";
 
 // HANDLE REFUND UPON CLICK OF REFUND BUTTON
-function handleRefund(gameData) {
+async function handleRefund(gameData) {
     console.log(gameData);
-    console.log("weifeng smelly")
+    var game_Id = gameData.id
+    var axiosData = {
+                "user_id": "1", // TO BE CHANGED
+                "game_id": game_Id,
+            }
     displayRefundOverlay();
     // CALL REFUND COMPLEX MICROSERVICE HERE
+    await axios.post("http://localhost:5200/refund", axiosData)
+                    .then(res => {
+                        if (res.data.code == 200) {
+                            console.log('yay')
+                            // router.push("/");
+                            // isPaymentProcessing.value = false;
+                        } else {
+                            // isPaymentUnsuccessful.value = true;
+                            // setTimeout(() => {
+                            //     isPaymentUnsuccessful.value = false;
+                            //     isPaymentProcessing.value = false;
+                            // }, 5000);
+                        }
+                    })
+                    .catch(err => {
+                        // console.log(err);
+                        // isPaymentUnsuccessful.value = true;
+                        // setTimeout(() => {
+                        //     isPaymentUnsuccessful.value = false;
+                        //     isPaymentProcessing.value = false;
+                        // }, 5000);
+                    })
 }
 
 // DISPLAY REFUND MODAL
