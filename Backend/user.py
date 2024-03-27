@@ -1,9 +1,20 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
+from flasgger import Swagger
+
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
+
+# Initialize flasgger for API Documentation
+app.config['SWAGGER'] = {
+    'title': 'User microservice API',
+    'version': 1.0,
+    "openapi": "3.0.2",
+    'description': 'Allows create, retrieve, update, and delete of users'
+}
+swagger = Swagger(app)
 
 app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+mysqlconnector://root:pSSSS+]q8zZ-pjF@34.124.211.169/user"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -97,6 +108,15 @@ class CustomizationPurchase(db.Model):
 # GET USER DETAILS 
 @app.route("/users/<int:userId>")
 def get_user_details_new(userId):
+    """
+    Get user details by user ID
+    ---
+    responses:
+        200:
+            description: Return user details
+        404:
+            description: User not found
+    """
     try:
         user = db.session.scalars(db.select(User).filter_by(user_id=userId)).one()
         if user:
@@ -129,6 +149,30 @@ def get_user_details_new(userId):
 # UPDATE USER POINTS
 @app.route("/users/<int:userId>/points/update", methods=["PUT"])
 def update_points(userId):
+    """
+    Update user points
+    ---
+    requestBody:
+        description: Points update operation
+        required: true
+        content:
+            application/json:
+                schema:
+                    properties:
+                        operation: 
+                            type: string
+                            description: Operation type (add or subtract)
+                        price: 
+                            type: number
+                            description: Price for the operation
+    responses:
+        200:
+            description: Points updated successfully
+        404:
+            description: User not found
+        500:
+            description: Internal server error
+    """
     if request.is_json:
         try:
             points_json = request.get_json()
@@ -179,6 +223,19 @@ def update_points(userId):
 # GET USER WISHLIST AND PURCHASES
 @app.route("/users/<int:userId>/wishlist-and-purchases")
 def get_wishlist_and_purchase(userId):
+    """
+    Get user wishlist and purchases
+    ---
+    parameters:
+        -   in: path
+            name: userId
+            required: true
+    responses:
+        200:
+            description: Return user wishlist and purchases
+        404:
+            description: User not found or no wishlist/purchases
+    """    
     try:
         user = db.session.scalars(db.select(User).filter_by(user_id=userId)).all()
 
@@ -238,6 +295,17 @@ def get_wishlist_and_purchase(userId):
 # ADD TO WISHLIST
 @app.route("/users/wishlist/create", methods=["POST"])
 def create_wishlist():
+    """
+    Create a wishlist entry
+    ---
+    responses:
+        201:
+            description: Wishlist entry created
+        400:
+            description: Invalid JSON input
+        500:
+            description: Internal server error
+    """
     if request.is_json:
         data = request.get_json()
         wish = Wishlist(**data)
@@ -272,6 +340,17 @@ def create_wishlist():
 # DELETE FROM WISHLIST
 @app.route("/users/wishlist/delete", methods=["DELETE"])
 def delete_wishlist(): 
+    """
+    Delete a wishlist entry
+    ---
+    responses:
+        200:
+            description: Wishlist entry deleted
+        404:
+            description: Wishlist entry not found
+        500:
+            description: Internal server error
+    """    
     if request.is_json:
         try:
             data = request.get_json()
@@ -322,6 +401,19 @@ def delete_wishlist():
 # GET USER CUSTOMIZATIONS
 @app.route("/users/<int:userId>/customizations")
 def get_customizations(userId):
+    """
+    Get user customizations
+    ---
+    parameters:
+        -   in: path
+            name: userId
+            required: true
+    responses:
+        200:
+            description: Return user customizations
+        404:
+            description: User not found or no customizations
+    """
     try:
         user = db.session.scalars(db.select(User).filter_by(user_id=userId)).all()
 
@@ -365,6 +457,30 @@ def get_customizations(userId):
 # UPDATE USER SELECTED CUSTOMIZATION
 @app.route("/users/customizations/update", methods=["PUT"])
 def update_customization():
+    """
+    Update user selected customization
+    ---
+    requestBody:
+        description: Customization update details
+        required: true
+        content:
+            application/json:
+                schema:
+                    properties:
+                        user_id: 
+                            type: integer
+                            description: User ID
+                        customization_id: 
+                            type: integer
+                            description: Customization ID
+    responses:
+        200:
+            description: Customization updated successfully
+        404:
+            description: User not found
+        500:
+            description: Internal server error
+    """
     if request.is_json:
         try:
             data = request.get_json()
@@ -412,6 +528,17 @@ def update_customization():
 # DELETE CUSTOMIZATION RECORDS
 @app.route("/customizations/delete", methods=["DELETE"])
 def delete_customization():
+    """
+    Delete customization purchase records
+    ---
+    responses:
+        200:
+            description: Customization purchase records deleted
+        404:
+            description: Customization purchase records not found
+        500:
+            description: Internal server error
+    """
     if request.is_json:
         try:
             data = request.get_json()
@@ -464,6 +591,36 @@ def delete_customization():
 # CREATE A PURCHASE RECORD IN GAME PURCHASE TABLE
 @app.route("/game-purchase/create", methods=["POST"])
 def create_game_purchase():
+    """
+    Create a game purchase record
+    ---
+    requestBody:
+        description: Game purchase details
+        required: true
+        content:
+            application/json:
+                schema:
+                    properties:
+                        user_id: 
+                            type: integer
+                            description: User ID
+                        game_id: 
+                            type: integer
+                            description: Game ID
+                        purchase_id: 
+                            type: string
+                            description: Purchase ID
+                        gameplay_time: 
+                            type: integer
+                            description: Gameplay time in minutes
+    responses:
+        201:
+            description: Game purchase record created
+        400:
+            description: Invalid JSON input
+        500:
+            description: Internal server error
+    """
     if request.is_json:
         # print("user service")
         data = request.get_json(force=True)
@@ -501,6 +658,36 @@ def create_game_purchase():
 # UPDATE PURCHASE RECORD IN GAME PURCHASE TABLE
 @app.route("/game-purchase/update", methods=["PUT"])
 def update_game_purchase():
+    """
+    Update a game purchase record
+    ---
+    requestBody:
+        description: Game purchase update details
+        required: true
+        content:
+            application/json:
+                schema:
+                    properties:
+                        user_id: 
+                            type: integer
+                            description: User ID
+                        game_id: 
+                            type: integer
+                            description: Game ID
+                        purchase_id: 
+                            type: string
+                            description: Purchase ID
+                        gameplay_time: 
+                            type: integer
+                            description: Gameplay time in minutes
+    responses:
+        200:
+            description: Game purchase record updated successfully
+        404:
+            description: Game purchase record not found
+        500:
+            description: Internal server error
+    """
     if request.is_json:
         try:
             data = request.get_json(force=True)
@@ -549,6 +736,30 @@ def update_game_purchase():
 # DELETE A PURCHASE RECORD
 @app.route("/game-purchase/delete", methods=["DELETE"])
 def delete_game_purchase():
+    """
+    Delete a game purchase record
+    ---
+    requestBody:
+        description: Game purchase delete details
+        required: true
+        content:
+            application/json:
+                schema:
+                    properties:
+                        user_id: 
+                            type: integer
+                            description: User ID
+                        game_id: 
+                            type: integer
+                            description: Game ID
+    responses:
+        200:
+            description: Game purchase record deleted successfully
+        404:
+            description: Game purchase record not found
+        500:
+            description: Internal server error
+    """
     if request.is_json:
         try:
             data = request.get_json()
@@ -616,6 +827,58 @@ def delete_game_purchase():
 #Get gameplay time of game
 @app.route("/gameplay-time/<int:userId>/<int:gameId>", methods = ["GET"])
 def get_purchase_records(userId, gameId):
+    """
+    Get gameplay time of a game purchased by a user
+    ---
+    parameters:
+        -   in: path
+            name: userId
+            required: true
+            description: User ID
+            type: integer
+        -   in: path
+            name: gameId
+            required: true
+            description: Game ID
+            type: integer
+    responses:
+        200:
+            description: Gameplay time retrieved successfully
+            content:
+                application/json:
+                    schema:
+                        properties:
+                            code:
+                                type: integer
+                                description: HTTP status code
+                            data:
+                                type: object
+                                properties:
+                                    user_id:
+                                        type: integer
+                                        description: User ID
+                                    game_id:
+                                        type: integer
+                                        description: Game ID
+                                    payment_intent:
+                                        type: string
+                                        description: Purchase ID
+                                    gameplay_time:
+                                        type: integer
+                                        description: Gameplay time in minutes
+        404:
+            description: No purchase record found for the specified user and game
+            content:
+                application/json:
+                    schema:
+                        properties:
+                            code:
+                                type: integer
+                                description: HTTP status code
+                            message:
+                                type: string
+                                description: Error message
+    """
     record = db.session.scalars(db.select(GamePurchase).filter_by(user_id=userId,game_id=gameId)).one()
     if record:
         print(record)
@@ -636,6 +899,7 @@ def get_purchase_records(userId, gameId):
 # @app.route("/purchase-id/<int:userId>/<int:gameId>", methods = ["GET"])
 # def get_purchase_id(userId,gameId):
 #     record = db.session.scalars(db.select(GamePurchase).filter_by(user_id=userId,game_id=gameId)).one()
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5101, debug=True)
 
