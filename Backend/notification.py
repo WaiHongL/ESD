@@ -14,16 +14,16 @@ api_secret = "d20ed987dd240464d6f4bd92af7247de"
 
 
 # Path to your image file
-image_path = "..\\Frontend\\src\\assets\\images\\home\\luden_logo.jpg"
+#image_path = "..\\Frontend\\src\\assets\\images\\home\\luden_logo.jpg"
 
 # Read the image file and encode it in base64
-with open(image_path, 'rb') as image_file:
-    encoded_image = base64.b64encode(image_file.read()).decode('utf-8')
+# with open(image_path, 'rb') as image_file:
+#     encoded_image = base64.b64encode(image_file.read()).decode('utf-8')
 #Purchase Notif
 def send_email(data):
     email = data['email']
     name = data['account_name'] 
-    img = "../Frontend/src/assets/images/home/ludengame.png"
+    # img = "../Frontend/src/assets/images/home/ludengame.png"
     textcontent = """
     
         <!DOCTYPE html>
@@ -34,7 +34,7 @@ def send_email(data):
         <body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4;">
             <div style="max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; border-radius: 5px;">
                 <div style="text-align: center; margin-bottom: 20px;">
-                    <img src="{}" alt="Luden Gamestore Logo" style="max-width: 150px; height: auto;">
+                    <img src="" alt="Luden Gamestore Logo" style="max-width: 150px; height: auto;">
                 </div>
                 <div style="background-color: #d4edda; border-color: #c3e6cb; border-radius: 5px; padding: 20px; margin-bottom: 20px;">
                     <h2 style="color: #155724; margin: 0 0 15px;">Congratulations on Your Purchase!</h2>
@@ -50,7 +50,7 @@ def send_email(data):
             </div>
         </body>
         </html>
-        """.format(img, data['game_title'], data['game_price'], data['purchase_id'])
+        """.format(data['game_title'], data['game_price'], data['purchase_id'])
     message = {
         "Messages": [
             {
@@ -87,7 +87,7 @@ def send_failure_email(data):
 <body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4;">
     <div style="max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; border-radius: 5px;">
         <div style="text-align: center; margin-bottom: 20px;">
-            <img src="data:image/jpeg;base64,{encoded_image}" alt="Luden Gamestore Logo" style="max-width: 150px; height: auto;">
+            <img src="" alt="Luden Gamestore Logo" style="max-width: 150px; height: auto;">
         </div>
         <div style="background-color: #f9dede; border-color: #f5c6cb; border-radius: 5px; padding: 20px; margin-bottom: 20px;">
             <h2 style="color: #d8000c; margin: 0 0 15px;">Payment Failure</h2>
@@ -139,7 +139,7 @@ def send_refund_email(data):
 <body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4;">
     <div style="max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; border-radius: 5px;">
         <div style="text-align: center; margin-bottom: 20px;">
-            <img src="../Frontend/src/assets/images/home/ludengame.png" alt="Luden Gamestore Logo" style="max-width: 150px; height: auto;">
+            <img src="" alt="Luden Gamestore Logo" style="max-width: 150px; height: auto;">
         </div>
         <div style="background-color: #d4edda; border-color: #c3e6cb; border-radius: 5px; padding: 20px; margin-bottom: 20px;">
             <h2 style="color: #155724; margin: 0 0 15px;">Refund Processed Successfully</h2>
