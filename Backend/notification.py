@@ -4,6 +4,7 @@ import amqp_connection
 import json
 import pika
 from flask_cors import CORS
+import base64
 
 app = Flask(__name__, static_url_path="", static_folder="public")
 CORS(app)
@@ -11,11 +12,45 @@ CORS(app)
 api_key = "b234bb351a835b67c4f8ce412a8e77ab"
 api_secret = "d20ed987dd240464d6f4bd92af7247de"
 
+
+# Path to your image file
+#image_path = "..\\Frontend\\src\\assets\\images\\home\\luden_logo.jpg"
+
+# Read the image file and encode it in base64
+# with open(image_path, 'rb') as image_file:
+#     encoded_image = base64.b64encode(image_file.read()).decode('utf-8')
 #Purchase Notif
 def send_email(data):
     email = data['email']
     name = data['account_name'] 
-    textcontent = "You have bought {} for ${}\n Transaction ID: {}".format(data['game_title'], data['game_price'], data['purchase_id'])
+    # img = "../Frontend/src/assets/images/home/ludengame.png"
+    textcontent = """
+    
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Game Purchase Confirmation</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; border-radius: 5px;">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <img src="" alt="Luden Gamestore Logo" style="max-width: 150px; height: auto;">
+                </div>
+                <div style="background-color: #d4edda; border-color: #c3e6cb; border-radius: 5px; padding: 20px; margin-bottom: 20px;">
+                    <h2 style="color: #155724; margin: 0 0 15px;">Congratulations on Your Purchase!</h2>
+                    <p style="margin: 0 0 15px;">You have successfully purchased <strong>{}</strong> for <strong>${}</strong>.</p>
+                    <p style="margin: 0 0 15px;">Your Transaction ID is: <strong>{}</strong></p>
+                </div>
+                <div style="text-align: center;">
+                    <a href="http://localhost:5173/user" style="display: inline-block; background-color: #007bff; color: #ffffff; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-size: 16px;">Download Your Game</a>
+                </div>
+                <div style="text-align: center; margin-top: 20px;">
+                    <p style="color: #6c757d; margin: 0;">If you have any questions, please contact our support team.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """.format(data['game_title'], data['game_price'], data['purchase_id'])
     message = {
         "Messages": [
             {
@@ -43,7 +78,31 @@ def send_email(data):
 def send_failure_email(data):
     email = data['email']
     name = data['account_name']
-    textcontent = "An error has occured for your payment. Please try again."
+    textcontent = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Payment Failure Notification</title>
+</head>
+<body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4;">
+    <div style="max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; border-radius: 5px;">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <img src="" alt="Luden Gamestore Logo" style="max-width: 150px; height: auto;">
+        </div>
+        <div style="background-color: #f9dede; border-color: #f5c6cb; border-radius: 5px; padding: 20px; margin-bottom: 20px;">
+            <h2 style="color: #d8000c; margin: 0 0 15px;">Payment Failure</h2>
+            <p style="margin: 0 0 15px;">An error has occurred with your payment. Please try again.</p>
+        </div>
+        <div style="text-align: center;">
+            <a href="http://localhost:5173/" style="display: inline-block; background-color: #007bff; color: #ffffff; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-size: 16px;">Go to Shop</a>
+        </div>
+        <div style="text-align: center; margin-top: 20px;">
+            <p style="color: #6c757d; margin: 0;">If you have any questions, please contact our support team.</p>
+        </div>
+    </div>
+</body>
+</html>
+"""
     message = {
         "Messages": [
             {
@@ -71,7 +130,34 @@ def send_failure_email(data):
 def send_refund_email(data):
     email = data['email']
     name = data['account_name']
-    textcontent = f"<h1>Hello {name}</h1> </br> We've issued the refund to your bank account. Depending on the bank's processing time, it can take anywhere from 5-10 business days to show up on your bank account. Thank you! </br> <h3>{data['game_title']}</h3> </br> Transaction ID: {data['purchase_id']} </br> Total refund: {data['game_price']} to your bank account"
+    textcontent = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Refund Confirmation</title>
+</head>
+<body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4;">
+    <div style="max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; border-radius: 5px;">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <img src="" alt="Luden Gamestore Logo" style="max-width: 150px; height: auto;">
+        </div>
+        <div style="background-color: #d4edda; border-color: #c3e6cb; border-radius: 5px; padding: 20px; margin-bottom: 20px;">
+            <h2 style="color: #155724; margin: 0 0 15px;">Refund Processed Successfully</h2>
+            <p style="margin: 0 0 15px;">Hello {name},</p>
+            <p style="margin: 0 0 15px;">We're pleased to inform you that the refund for your purchase has been successfully processed and will be credited to your bank account. Depending on your bank's processing time, it may take anywhere from 5-10 business days for the refund to appear in your account.</p>
+            <p style="margin: 0 0 15px;">Thank you for your understanding and patience. We hope you'll consider Luden Gamestore for your future gaming needs.</p>
+            <h3 style="margin: 0 0 15px;">Refund Details:</h3>
+            <p style="margin: 0 0 15px;">Game Title: <strong>{data['game_title']}</strong></p>
+            <p style="margin: 0 0 15px;">Transaction ID: <strong>{data['purchase_id']}</strong></p>
+            <p style="margin: 0 0 15px;">Total Refund: <strong>${data['game_price']}</strong></p>
+        </div>
+        <div style="text-align: center; margin-top: 20px;">
+            <p style="color: #6c757d; margin: 0;">If you have any questions or need further assistance, please contact our support team.</p>
+        </div>
+    </div>
+</body>
+</html>
+"""
     message = {
         "Messages": [
             {

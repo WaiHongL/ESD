@@ -6,6 +6,7 @@ import amqp_connection
 import json
 import pika
 import sys
+from urllib.parse import quote
 
 app = Flask(__name__)
 CORS(app)
@@ -137,7 +138,17 @@ def process_recommendation(userId):
     # INVOKE GAME MICROSERVICE TO GET GAMES THAT MATCHES COMMON GENRE
     print("\n-----Invoking game microservice-----")
     genre = common_genre_result["data"]
-    game_by_genre_URL = "http://localhost:5000/games?genre=" + genre
+    game_by_genre_URL = "http://localhost:5000/games?genre="
+
+    if type(genre) is list:
+        for i in range(len(genre)):
+            if i == 0:
+                game_by_genre_URL += quote(genre[i])
+            else:
+                game_by_genre_URL += "&genre=" + quote(genre[i])
+    else:
+        game_by_genre_URL += quote(genre)
+
     game_by_genre_result = invoke_http(game_by_genre_URL)
     print("game_by_genre_result:", game_by_genre_result)
 

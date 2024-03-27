@@ -17,6 +17,20 @@ def get_common_genre():
             else:
                 genre_dict[genre] += 1
 
+        # CHECKS IF ALL GENRES ONLY HAVE ONE COUNT
+        is_one_count = True
+        for genre, count in genre_dict.items():
+            if count > 1:
+                is_one_count = False
+
+        if is_one_count:
+            return jsonify(
+                {
+                    "code": 200,
+                    "data": genre_data
+                }
+            )
+
         # CHECKS IF GENRE_DATA IS EMPTY
         try:
             common_genre = max(genre_dict, key=genre_dict.get)

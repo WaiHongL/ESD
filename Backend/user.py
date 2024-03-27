@@ -825,7 +825,7 @@ def delete_game_purchase():
 #     return jsonify({"code": 404, "message": "There is no such user."}), 404
 
 #Get gameplay time of game
-@app.route("/gameplay-time/<int:userId>/<int:gameId>", methods = ["GET"])
+@app.route("/game-purchase/<int:userId>/<int:gameId>", methods = ["GET"])
 def get_purchase_records(userId, gameId):
     """
     Get gameplay time of a game purchased by a user
