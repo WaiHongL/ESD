@@ -1,9 +1,36 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
+from flasgger import Swagger
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, supports_credentials=True)
+
+# Initialize flasgger for API Documentation
+app.config['SWAGGER'] = {
+    'title': 'Recommend microservice API',
+    'version': 2.0,
+    "openapi": "3.0.2",
+    'description': 'Allows create, retrieve, update, and delete of shop items',
+    'tags': {
+        'Games': 'Operations related to game management',
+        'Customizations': 'Operations related to customizations',
+    },
+    'ui_params': {
+        'apisSorter': 'alpha',
+        'operationsSorter': 'alpha',
+        'tagsSorter': 'alpha',
+    },
+    'ui_params_text': '''{
+        "tagsSorter": (a, b) => {
+            const order = ['Users', 'Customisations'];
+            return order.indexOf(a) - order.indexOf(b);
+        }
+    }''',
+    
+}
+
+swagger = Swagger(app)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:pSSSS+]q8zZ-pjF:@34.142.233.183/shop'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -58,6 +85,17 @@ class Customizations(db.Model):
 # GET ALL GAMES AND GAMES BY GENRE
 @app.route("/games")
 def get_games():
+    """
+    Get all games
+    ---
+    tags:
+        - ['Games']  
+    responses:
+        200:
+            description: Returned game details successfully
+        404:
+            description: Games not found
+    """
     # CHECK IF "GENRE" IS IN QUERY PARAMS
     if (request.args.get("genre")):
         genre = request.args.get("genre")
@@ -129,6 +167,30 @@ def get_games():
 # GET GAME GENRES
 @app.route("/games/genre", methods=["POST"])
 def get_games_genre():
+    """
+    Get games genres
+    ---
+    tags:
+        - ['Games']  
+    requestBody:
+        description: Games Genre 
+        required: true
+        content:
+            application/json:
+                schema:
+                    properties:
+                        game_id: 
+                            type: integer
+                            description: Game ID
+                        customization_id: 
+                            type: integer
+                            description: Customization ID
+    responses:
+        200:
+            description: Returned game genres successfully
+        404:
+            description: Game genres not found
+    """
     if request.is_json:
         data = request.get_json()["data"]
         wishlist_data = []
@@ -146,7 +208,7 @@ def get_games_genre():
 
         for data in data_arr:
             for key, value in data.items():
-                if (key == "game_id" or key == "item_id") and value not in games_id_arr:
+                if (key == "game_id" or key == "customization_id") and value not in games_id_arr:
                     games_id_arr.append(value)
 
         # GET GENRES
@@ -183,6 +245,21 @@ def get_games_genre():
 # GET GAME DETAILS
 @app.route("/games/<int:gameId>")
 def get_game_details(gameId):
+    """
+    Get games genres
+    ---
+    parameters:
+        -   in: path
+            name: gameId
+            required: true 
+    tags:
+        - ['Games']  
+    responses:
+        200:
+            description: Return game details
+        404:
+            description: Game details not found
+    """
     try:
         game = db.session.scalars(db.select(Game).filter_by(game_id=gameId)).one()
         if (game):
@@ -219,6 +296,17 @@ def get_game_details(gameId):
 # GET ALL CUSTOMIZATIONS
 @app.route("/customizations")
 def get_customizations():
+    """
+    Get all customizations
+    ---
+    tags:
+        - ['Customizations']  
+    responses:
+        200:
+            description: Returned customizations successfully
+        404:
+            description: Games not found
+    """
     try: 
         customization_list = db.session.scalars(db.select(Customizations)).all()
 
@@ -251,6 +339,21 @@ def get_customizations():
 # GET CUSTOMIZATION DETAILS
 @app.route("/customizations/<int:customizationId>")
 def get_customization_details(customizationId):
+    """
+    Get customization details
+    ---
+    parameters:
+        -   in: path
+            name: customizationId
+            required: true 
+    tags:
+        - ['Customizations']  
+    responses:
+        200:
+            description: Returned customization details successfully
+        404:
+            description: Games not found
+    """
     try: 
         customization = db.session.scalars(db.select(Customizations).filter_by(customization_id=customizationId)).one()
 

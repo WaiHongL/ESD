@@ -3,11 +3,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from flasgger import Swagger
 
-
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
-
-# Defining tags for api documentation
 
 # Initialize flasgger for API Documentation
 app.config['SWAGGER'] = {
@@ -27,19 +24,12 @@ app.config['SWAGGER'] = {
     },
     'ui_params_text': '''{
         "tagsSorter": (a, b) => {
-            const order = ['Users', 'Customisations'];
+            const order = ['Users', 'Customizations'];
             return order.indexOf(a) - order.indexOf(b);
         }
     }''',
     
 }
-
-# # Allows overriding any of the uiparams
-#     # This is useful to override other stuff not provided by the above aliases
-#     'ui_params': {
-#         'apisSorter': 'alpha',
-#         'operationsSorter': 'alpha',
-#     },
 
 swagger = Swagger(app)
 
@@ -140,9 +130,13 @@ def get_user_details_new(userId):
     ---
     tags:
         - ['Users']
+    parameters:
+        -   in: path
+            name: userId
+            required: true    
     responses:
         200:
-            description: Return user details
+            description: Returned user details successfully
         404:
             description: User not found
     """
@@ -178,32 +172,32 @@ def get_user_details_new(userId):
 # UPDATE USER POINTS
 @app.route("/users/<int:userId>/points/update", methods=["PUT"])
 def update_points(userId):
-    """
-    Update user points
-    ---
-    tags:
-        - ['Users']
-    requestBody:
-        description: Points update operation
-        required: true
-        content:
-            application/json:
-                schema:
-                    properties:
-                        operation: 
-                            type: string
-                            description: Operation type (add or subtract)
-                        price: 
-                            type: number
-                            description: Price for the operation
-    responses:
-        200:
-            description: Points updated successfully
-        404:
-            description: User not found
-        500:
-            description: Internal server error
-    """
+    # """
+    # Update user points
+    # ---
+    # tags:
+    #     - ['Users']
+    # requestBody:
+    #     description: Points update operation
+    #     required: true
+    #     content:
+    #         application/json:
+    #             schema:
+    #                 properties:
+    #                     operation: 
+    #                         type: string
+    #                         description: Operation type (add or subtract)
+    #                     price: 
+    #                         type: number
+    #                         description: Price for the operation
+    # responses:
+    #     200:
+    #         description: Points updated successfully
+    #     404:
+    #         description: User not found
+    #     500:
+    #         description: Internal server error
+    # """
     if request.is_json:
         try:
             points_json = request.get_json()
@@ -215,7 +209,6 @@ def update_points(userId):
                     user.points  = user.points + (float(points_json["price"]) * 100)
                 else:
                     user.points  = user.points - (float(points_json["price"]) * 100)
-
 
                 db.session.commit()
                 return jsonify(
@@ -265,7 +258,7 @@ def get_wishlist_and_purchase(userId):
             required: true
     responses:
         200:
-            description: Return user wishlist and purchases
+            description: Returned user wishlist and purchases successfully
         404:
             description: User not found or no wishlist/purchases
     """    
@@ -329,7 +322,7 @@ def get_wishlist_and_purchase(userId):
 @app.route("/users/wishlist/create", methods=["POST"])
 def create_wishlist():
     """
-    Create a wishlist entry
+    Create wishlist record
     ---
     tags:
         - ['Users']
@@ -382,7 +375,7 @@ def delete_wishlist():
         - ['Users']
     responses:
         200:
-            description: Wishlist entry deleted
+            description: Wishlist entry deleted 
         404:
             description: Wishlist entry not found
         500:
@@ -405,7 +398,7 @@ def delete_wishlist():
                 return jsonify(
                     {
                         "code": 200, 
-                        "message": "Wish record deleted successfully"
+                        "message": "Wish record deleted"
                     }
                 ), 200
             else:
@@ -449,7 +442,7 @@ def get_customizations(userId):
             required: true
     responses:
         200:
-            description: Return user customizations
+            description: Returned user customizations successfully
         404:
             description: User not found or no customizations
     """
@@ -667,10 +660,7 @@ def create_game_purchase():
             description: Internal server error
     """
     if request.is_json:
-        # print("user service")
         data = request.get_json(force=True)
-        # print(data)
-        # print(type(data))
         game = GamePurchase(**data)
 
         try:

@@ -1,12 +1,63 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from flasgger import Swagger
 
 app = Flask(__name__)
 CORS(app)
+
+# Initialize flasgger for API Documentation
+app.config['SWAGGER'] = {
+    'title': 'Shop microservice API',
+    'version': 2.0,
+    "openapi": "3.0.2",
+    'description': 'Allows create, retrieve, update, and delete of shop items',
+    'tags': {
+        'Recommendation': 'Operations related to recommendation of games',
+    },
+    'ui_params': {
+        'apisSorter': 'alpha',
+        'operationsSorter': 'alpha',
+        'tagsSorter': 'alpha',
+    },
+    'ui_params_text': '''{
+        "tagsSorter": (a, b) => {
+            const order = ['Users', 'Customisations'];
+            return order.indexOf(a) - order.indexOf(b);
+        }
+    }''',
     
+}
+
+swagger = Swagger(app) 
+   
 # GET COMMON GENRE
 @app.route("/recommend/genre", methods=["POST"])
 def get_common_genre():
+    """
+    Recommends game genres to user
+    ---
+    tags:
+        - ['Recommendation']
+    requestBody:
+        description: List of genres
+        required: true
+        content:
+            application/json:
+                schema:
+                    properties:
+                        data:
+                            type: array
+                            items:
+                                type: string
+                                description: Game genre
+    responses:
+        200:
+            description: Most common genre returned successfully
+        400:
+            description: Invalid JSON input
+        404:
+            description: No common genres found
+    """
     if request.get_json():
         genre_data = request.get_json()["data"]
         genre_dict = {}
