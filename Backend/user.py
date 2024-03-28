@@ -7,13 +7,40 @@ from flasgger import Swagger
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
 
+# Defining tags for api documentation
+
 # Initialize flasgger for API Documentation
 app.config['SWAGGER'] = {
     'title': 'User microservice API',
-    'version': 1.0,
+    'version': 2.0,
     "openapi": "3.0.2",
-    'description': 'Allows create, retrieve, update, and delete of users'
+    'description': 'Allows create, retrieve, update, and delete of users',
+    'tags': {
+        'Users': 'Operations related to user management',
+        'Customizations': 'Operations related to customizations',
+        'Game Purchase': 'Operations related to game purchases',
+    },
+    'ui_params': {
+        'apisSorter': 'alpha',
+        'operationsSorter': 'alpha',
+        'tagsSorter': 'alpha',
+    },
+    'ui_params_text': '''{
+        "tagsSorter": (a, b) => {
+            const order = ['Users', 'Customisations'];
+            return order.indexOf(a) - order.indexOf(b);
+        }
+    }''',
+    
 }
+
+# # Allows overriding any of the uiparams
+#     # This is useful to override other stuff not provided by the above aliases
+#     'ui_params': {
+#         'apisSorter': 'alpha',
+#         'operationsSorter': 'alpha',
+#     },
+
 swagger = Swagger(app)
 
 app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+mysqlconnector://root:pSSSS+]q8zZ-pjF@34.124.211.169/user"
@@ -111,6 +138,8 @@ def get_user_details_new(userId):
     """
     Get user details by user ID
     ---
+    tags:
+        - ['Users']
     responses:
         200:
             description: Return user details
@@ -152,6 +181,8 @@ def update_points(userId):
     """
     Update user points
     ---
+    tags:
+        - ['Users']
     requestBody:
         description: Points update operation
         required: true
@@ -226,6 +257,8 @@ def get_wishlist_and_purchase(userId):
     """
     Get user wishlist and purchases
     ---
+    tags:
+        - ['Users']
     parameters:
         -   in: path
             name: userId
@@ -298,6 +331,8 @@ def create_wishlist():
     """
     Create a wishlist entry
     ---
+    tags:
+        - ['Users']
     responses:
         201:
             description: Wishlist entry created
@@ -343,6 +378,8 @@ def delete_wishlist():
     """
     Delete a wishlist entry
     ---
+    tags:
+        - ['Users']
     responses:
         200:
             description: Wishlist entry deleted
@@ -404,6 +441,8 @@ def get_customizations(userId):
     """
     Get user customizations
     ---
+    tags:
+        - ['Users']
     parameters:
         -   in: path
             name: userId
@@ -460,6 +499,8 @@ def update_customization():
     """
     Update user selected customization
     ---
+    tags:
+        - ['Users']
     requestBody:
         description: Customization update details
         required: true
@@ -531,6 +572,8 @@ def delete_customization():
     """
     Delete customization purchase records
     ---
+    tags:
+        - ['Customizations']
     responses:
         200:
             description: Customization purchase records deleted
@@ -594,6 +637,8 @@ def create_game_purchase():
     """
     Create a game purchase record
     ---
+    tags:
+        - ['Game-purchase']
     requestBody:
         description: Game purchase details
         required: true
@@ -661,6 +706,8 @@ def update_game_purchase():
     """
     Update a game purchase record
     ---
+    tags:
+        - ['Game-purchase']
     requestBody:
         description: Game purchase update details
         required: true
@@ -739,6 +786,8 @@ def delete_game_purchase():
     """
     Delete a game purchase record
     ---
+    tags:
+        - ['Game-purchase']
     requestBody:
         description: Game purchase delete details
         required: true
@@ -827,58 +876,6 @@ def delete_game_purchase():
 #Get gameplay time of game
 @app.route("/game-purchase/<int:userId>/<int:gameId>", methods = ["GET"])
 def get_purchase_records(userId, gameId):
-    """
-    Get gameplay time of a game purchased by a user
-    ---
-    parameters:
-        -   in: path
-            name: userId
-            required: true
-            description: User ID
-            type: integer
-        -   in: path
-            name: gameId
-            required: true
-            description: Game ID
-            type: integer
-    responses:
-        200:
-            description: Gameplay time retrieved successfully
-            content:
-                application/json:
-                    schema:
-                        properties:
-                            code:
-                                type: integer
-                                description: HTTP status code
-                            data:
-                                type: object
-                                properties:
-                                    user_id:
-                                        type: integer
-                                        description: User ID
-                                    game_id:
-                                        type: integer
-                                        description: Game ID
-                                    payment_intent:
-                                        type: string
-                                        description: Purchase ID
-                                    gameplay_time:
-                                        type: integer
-                                        description: Gameplay time in minutes
-        404:
-            description: No purchase record found for the specified user and game
-            content:
-                application/json:
-                    schema:
-                        properties:
-                            code:
-                                type: integer
-                                description: HTTP status code
-                            message:
-                                type: string
-                                description: Error message
-    """
     record = db.session.scalars(db.select(GamePurchase).filter_by(user_id=userId,game_id=gameId)).one()
     if record:
         print(record)
