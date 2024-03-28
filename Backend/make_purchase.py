@@ -6,8 +6,20 @@ import pika
 import json
 import amqp_connection
 from flask_sqlalchemy import SQLAlchemy
+from flasgger import Swagger
 
 app = Flask(__name__)
+# Initialize flasgger for API Documentation
+app.config['SWAGGER'] = {
+    'title': 'Make_Purchase Microservice API',
+    'version': 2.0,
+    "openapi": "3.0.2",
+    'description': 'Orchestrate the process of making a purchase of a game.',
+    'tags': {
+        'Make_Purchase': 'Operations related to making a purchase of a game',
+    },
+}
+swagger = Swagger(app)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:pSSSS+]q8zZ-pjF@34.124.211.169/user'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -15,15 +27,14 @@ db = SQLAlchemy(app)
 CORS(app)
 
 
-# AMQP STUFF
-
+# AMQP connection setup
 exchangename = "order_topic" # exchange name
 exchangetype="topic" # use a 'topic' exchange to enable interaction
 connection = amqp_connection.create_connection() 
 channel = connection.channel()
 channel.exchange_declare(exchange=exchangename, exchange_type=exchangetype, durable=True) 
 
-# if the exchange is not yet created, exit the program
+# If the exchange is not yet created, exit the program
 if not amqp_connection.check_exchange(channel, exchangename, exchangetype):
     print("\nCreate the 'Exchange' before running this microservice. \nExiting the program.")
     sys.exit(0)  # Exit with a success status
@@ -39,9 +50,64 @@ delete_game_purchase_URL = "http://localhost:5101/game-purchase/delete"
 error_URL = "http://localhost:5100/error"
 # user_point_URL = "http://localhost:5600/points/add"
 
-
 @app.route("/make-purchase", methods=['POST'])
 def make_purchase():
+    """
+    Makes a purchase for a game.
+    ---
+    tags:
+      - Purchases
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          properties:
+            user_id:
+              type: integer
+              description: The ID of the user making the purchase.
+            game_id:
+              type: integer
+              description: The ID of the game being purchased.
+            purchase_id:
+              type: string
+              description: The ID of the purchase.
+    responses:
+      200:
+        description: Purchase made successfully.
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              description: The HTTP status code.
+            data:
+              type: object
+              description: The result of the purchase operation.
+      400:
+        description: Invalid JSON input.
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              description: The HTTP status code.
+            message:
+              type: string
+              description: A message describing the error.
+      500:
+        description: Internal server error.
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              description: The HTTP status code.
+            message:
+              type: string
+              description: A message describing the error.
+    """
     # Simple check of input format and data of the request are JSON
     if request.is_json:
         try:

@@ -7,25 +7,13 @@ CORS(app)
 
 # Initialize flasgger for API Documentation
 app.config['SWAGGER'] = {
-    'title': 'Shop microservice API',
+    'title': 'Recommend microservice API',
     'version': 2.0,
     "openapi": "3.0.2",
-    'description': 'Allows create, retrieve, update, and delete of shop items',
+    'description': 'Recommends games to users based on aggregation and comparison of genres',
     'tags': {
-        'Recommendation': 'Operations related to recommendation of games',
-    },
-    'ui_params': {
-        'apisSorter': 'alpha',
-        'operationsSorter': 'alpha',
-        'tagsSorter': 'alpha',
-    },
-    'ui_params_text': '''{
-        "tagsSorter": (a, b) => {
-            const order = ['Users', 'Customisations'];
-            return order.indexOf(a) - order.indexOf(b);
-        }
-    }''',
-    
+        'Recommend': 'Operations related to recommendation of games',
+    },    
 }
 
 swagger = Swagger(app) 
@@ -37,7 +25,7 @@ def get_common_genre():
     Recommends game genres to user
     ---
     tags:
-        - ['Recommendation']
+        - ['Recommend']
     requestBody:
         description: List of genres
         required: true

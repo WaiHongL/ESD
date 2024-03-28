@@ -19,6 +19,7 @@ api_secret = "d20ed987dd240464d6f4bd92af7247de"
 # Read the image file and encode it in base64
 # with open(image_path, 'rb') as image_file:
 #     encoded_image = base64.b64encode(image_file.read()).decode('utf-8')
+
 #Purchase Notif
 def send_email(data):
     email = data['email']
@@ -79,30 +80,30 @@ def send_failure_email(data):
     email = data['email']
     name = data['account_name']
     textcontent = f"""
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Payment Failure Notification</title>
-</head>
-<body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4;">
-    <div style="max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; border-radius: 5px;">
-        <div style="text-align: center; margin-bottom: 20px;">
-            <img src="" alt="Luden Gamestore Logo" style="max-width: 150px; height: auto;">
-        </div>
-        <div style="background-color: #f9dede; border-color: #f5c6cb; border-radius: 5px; padding: 20px; margin-bottom: 20px;">
-            <h2 style="color: #d8000c; margin: 0 0 15px;">Payment Failure</h2>
-            <p style="margin: 0 0 15px;">An error has occurred with your payment. Please try again.</p>
-        </div>
-        <div style="text-align: center;">
-            <a href="http://localhost:5173/" style="display: inline-block; background-color: #007bff; color: #ffffff; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-size: 16px;">Go to Shop</a>
-        </div>
-        <div style="text-align: center; margin-top: 20px;">
-            <p style="color: #6c757d; margin: 0;">If you have any questions, please contact our support team.</p>
-        </div>
-    </div>
-</body>
-</html>
-"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Payment Failure Notification</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; border-radius: 5px;">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <img src="" alt="Luden Gamestore Logo" style="max-width: 150px; height: auto;">
+                </div>
+                <div style="background-color: #f9dede; border-color: #f5c6cb; border-radius: 5px; padding: 20px; margin-bottom: 20px;">
+                    <h2 style="color: #d8000c; margin: 0 0 15px;">Payment Failure</h2>
+                    <p style="margin: 0 0 15px;">An error has occurred with your payment. Please try again.</p>
+                </div>
+                <div style="text-align: center;">
+                    <a href="http://localhost:5173/" style="display: inline-block; background-color: #007bff; color: #ffffff; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-size: 16px;">Go to Shop</a>
+                </div>
+                <div style="text-align: center; margin-top: 20px;">
+                    <p style="color: #6c757d; margin: 0;">If you have any questions, please contact our support team.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
     message = {
         "Messages": [
             {
@@ -131,33 +132,33 @@ def send_refund_email(data):
     email = data['email']
     name = data['account_name']
     textcontent = f"""
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Refund Confirmation</title>
-</head>
-<body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4;">
-    <div style="max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; border-radius: 5px;">
-        <div style="text-align: center; margin-bottom: 20px;">
-            <img src="" alt="Luden Gamestore Logo" style="max-width: 150px; height: auto;">
-        </div>
-        <div style="background-color: #d4edda; border-color: #c3e6cb; border-radius: 5px; padding: 20px; margin-bottom: 20px;">
-            <h2 style="color: #155724; margin: 0 0 15px;">Refund Processed Successfully</h2>
-            <p style="margin: 0 0 15px;">Hello {name},</p>
-            <p style="margin: 0 0 15px;">We're pleased to inform you that the refund for your purchase has been successfully processed and will be credited to your bank account. Depending on your bank's processing time, it may take anywhere from 5-10 business days for the refund to appear in your account.</p>
-            <p style="margin: 0 0 15px;">Thank you for your understanding and patience. We hope you'll consider Luden Gamestore for your future gaming needs.</p>
-            <h3 style="margin: 0 0 15px;">Refund Details:</h3>
-            <p style="margin: 0 0 15px;">Game Title: <strong>{data['game_title']}</strong></p>
-            <p style="margin: 0 0 15px;">Transaction ID: <strong>{data['purchase_id']}</strong></p>
-            <p style="margin: 0 0 15px;">Total Refund: <strong>${data['game_price']}</strong></p>
-        </div>
-        <div style="text-align: center; margin-top: 20px;">
-            <p style="color: #6c757d; margin: 0;">If you have any questions or need further assistance, please contact our support team.</p>
-        </div>
-    </div>
-</body>
-</html>
-"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Refund Confirmation</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; border-radius: 5px;">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <img src="" alt="Luden Gamestore Logo" style="max-width: 150px; height: auto;">
+                </div>
+                <div style="background-color: #d4edda; border-color: #c3e6cb; border-radius: 5px; padding: 20px; margin-bottom: 20px;">
+                    <h2 style="color: #155724; margin: 0 0 15px;">Refund Processed Successfully</h2>
+                    <p style="margin: 0 0 15px;">Hello {name},</p>
+                    <p style="margin: 0 0 15px;">We're pleased to inform you that the refund for your purchase has been successfully processed and will be credited to your bank account. Depending on your bank's processing time, it may take anywhere from 5-10 business days for the refund to appear in your account.</p>
+                    <p style="margin: 0 0 15px;">Thank you for your understanding and patience. We hope you'll consider Luden Gamestore for your future gaming needs.</p>
+                    <h3 style="margin: 0 0 15px;">Refund Details:</h3>
+                    <p style="margin: 0 0 15px;">Game Title: <strong>{data['game_title']}</strong></p>
+                    <p style="margin: 0 0 15px;">Transaction ID: <strong>{data['purchase_id']}</strong></p>
+                    <p style="margin: 0 0 15px;">Total Refund: <strong>${data['game_price']}</strong></p>
+                </div>
+                <div style="text-align: center; margin-top: 20px;">
+                    <p style="color: #6c757d; margin: 0;">If you have any questions or need further assistance, please contact our support team.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
     message = {
         "Messages": [
             {
@@ -204,7 +205,6 @@ def receiveNotificationLog(channel):
 
     except KeyboardInterrupt:
         print("notification_log: Program interrupted by user.") 
-
 
 def callback(channel, method, properties, body): # required signature for the callback; no return
     print("\nnotification_log: Received an notification log by " + __file__)

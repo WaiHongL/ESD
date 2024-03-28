@@ -8,7 +8,7 @@ CORS(app, supports_credentials=True)
 
 # Initialize flasgger for API Documentation
 app.config['SWAGGER'] = {
-    'title': 'Recommend microservice API',
+    'title': 'Shop microservice API',
     'version': 2.0,
     "openapi": "3.0.2",
     'description': 'Allows create, retrieve, update, and delete of shop items',
