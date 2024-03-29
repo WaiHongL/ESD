@@ -1,8 +1,9 @@
 FROM python:3-slim
+ADD . /flasgger
 WORKDIR /usr/src/app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-COPY ./shop.py .
+COPY ./shop.py ./
 CMD [ "python", "./shop.py" ]
 
 # docker build -t g4t3/shop:1.0 -f shop.dockerfile .

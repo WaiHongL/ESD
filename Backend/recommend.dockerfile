@@ -2,7 +2,7 @@ FROM python:3-slim
 WORKDIR /usr/src/app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-COPY ./recommend.py .
+COPY ./recommend.py ./
 CMD [ "python", "./recommend.py" ]
 
 # docker build -t g4t3/user:1.0 -f user.dockerfile .

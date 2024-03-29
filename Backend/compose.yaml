@@ -1,0 +1,193 @@
+version: "3.8"
+
+volumes:
+  rabbitmq_data:
+
+services:
+ 
+  ###################################
+  # User: The User microservice
+  ###################################
+  user:
+    build:
+      context: ./
+      dockerfile: user.dockerfile
+    image: ngcaijun/user:esd
+    restart: always
+    environment:
+      PYTHONUNBUFFERED: 1
+      dbURL: mysql+mysqlconnector://root:pSSSS+]q8zZ-pjF@34.124.211.169/user
+
+ 
+  #######################################################
+  # Shop: The Shop microservice
+  #######################################################
+  shop:
+    build:
+      context: ./
+      dockerfile: shop.dockerfile
+    image: ngcaijun/shop:esd
+    restart: always
+    environment:
+      PYTHONUNBUFFERED: 1
+      dbURL: mysql+mysqlconnector://root:pSSSS+]q8zZ-pjF:@34.142.233.183/shop
+
+  #######################################################
+  # Recommend: The Recommend microservice
+  #######################################################
+  recommend:
+    build:
+      context: ./
+      dockerfile: recommend.dockerfile
+    image: ngcaijun/recommend:esd
+    restart: always
+    environment:
+      PYTHONUNBUFFERED: 1
+  
+  #######################################################
+  # Payment: The Payment microservice
+  #######################################################
+  paymentfinal:
+    build:
+      context: ./
+      dockerfile: payment.dockerfile
+    image: ngcaijun/paymentfinal:esd
+    restart: always
+    environment:
+      PYTHONUNBUFFERED: 1
+  
+  #######################################################
+  # Error: The Error microservice
+  #######################################################
+  error:
+    build:
+      context: ./
+      dockerfile: error.dockerfile
+    image: ngcaijun/error:esd
+    restart: always
+    environment:
+      PYTHONUNBUFFERED: 1
+  
+  #######################################################
+  # Notification: The Notification microservice
+  #######################################################
+  notification:
+    build:
+      context: ./
+      dockerfile: notification.dockerfile
+    image: ngcaijun/notification:esd
+    restart: always
+    environment:
+      PYTHONUNBUFFERED: 1
+
+  # ######################################################
+  # #AMQP_SETUP: The AMQP Setup File needs to run once
+  # ######################################################
+  # amqp_setup:
+  #   build:
+  #     context: ./
+  #     dockerfile: amqp_setup.dockerfile
+  #   image: ngcaijun/amqp_setup:esd
+  #   restart: always
+  #   environment:
+  #     PYTHONUNBUFFERED: 1
+
+  ######################################################
+  #AMQP_CONNECTION: The AMQP Setup File needs to run once
+  ######################################################
+  amqp_connection:
+    build:
+      context: ./
+      dockerfile: amqp_connection.dockerfile
+    image: ngcaijun/amqp_connection:esd
+    restart: always
+    environment:
+      PYTHONUNBUFFERED: 1
+
+
+  ####################################
+  # RabbitMQ: The messaging broker   
+  ####################################
+  rabbitmq:
+    image: rabbitmq:3-management
+    hostname: esd-rabbit
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes: 
+      #- ./rabbitmq.config:/etc/rabbitmq/rabbitmq.config
+      #- ./rabbitmq_definitions.json:/etc/rabbitmq/rabbitmq_definitions.json
+      - rabbitmq_data:/var/lib/rabbitmq
+
+  ###############################################
+  # Create Reccomendation: The Create Reccomendation microservice
+  ###############################################
+  create_reccomendation:
+    build:
+      context: ./
+      dockerfile: create_recommendation.dockerfile
+    image: ngcaijun/create_recommendation:esd
+    restart: always
+    depends_on:
+      recommend:
+        condition: service_completed_successfully
+      shop:
+        condition: service_completed_successfully
+      user:
+        condition: service_completed_successfully
+      error:
+        condition: service_completed_successfully
+    ports:
+      - "5500:5500"
+     #ensure that dependency containers are expected to 
+    #run to successful completion before starting a dependent service.
+    environment:
+      PYTHONUNBUFFERED: 1
+
+  ###############################################
+  # Make Purchase: The Make Purchase microservice
+  ###############################################
+  make_purchase:
+    build:
+      context: ./
+      dockerfile: make_purchase.dockerfile
+    image: ngcaijun/make_purchase:esd
+    restart: always
+    depends_on:
+      - shop
+      - user
+      - paymentfinal
+      - notification
+      - error
+
+    ports:
+      - "5100:5500"
+    #condition: service_completed_successfully #ensure that dependency containers are expected to 
+    #run to successful completion before starting a dependent service.
+    environment:
+      PYTHONUNBUFFERED: 1
+
+  ###############################################
+  # Make Purchase: The Make Purchase microservice
+  ###############################################
+  refund_game:
+    build:
+      context: ./
+      dockerfile: refund_game.dockerfile
+    image: ngcaijun/refund_game:esd
+    restart: always
+    depends_on:
+      - shop
+      - user
+      - paymentfinal
+      - notification
+      - error
+
+    ports:
+      - "5200:5500"
+    #condition: service_completed_successfully #ensure that dependency containers are expected to 
+    #run to successful completion before starting a dependent service.
+    environment:
+      PYTHONUNBUFFERED: 1
+  

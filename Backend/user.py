@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from flasgger import Swagger
+from os import environ
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
@@ -33,7 +34,7 @@ app.config['SWAGGER'] = {
 
 swagger = Swagger(app)
 
-app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+mysqlconnector://root:pSSSS+]q8zZ-pjF@34.124.211.169/user"
+app.config["SQLALCHEMY_DATABASE_URI"] = environ.get('dbURL') or "mysql+mysqlconnector://root:pSSSS+]q8zZ-pjF@34.124.211.169/user"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)

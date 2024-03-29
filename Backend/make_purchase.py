@@ -14,7 +14,7 @@ app.config['SWAGGER'] = {
     'title': 'Make_Purchase Microservice API',
     'version': 2.0,
     "openapi": "3.0.2",
-    'description': 'Orchestrate the process of making a purchase of a game.',
+    'description': 'Orchestrate the process of making a .json is not shared from the host and is not known to Docker.purchase of a game.',
     'tags': {
         'Make_Purchase': 'Operations related to making a purchase of a game',
     },
