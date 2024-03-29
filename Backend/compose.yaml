@@ -65,6 +65,9 @@ services:
       dockerfile: error.dockerfile
     image: ngcaijun/error:esd
     restart: always
+    depends_on:
+      - amqp_connection
+      - amqp_setup
     environment:
       PYTHONUNBUFFERED: 1
   
@@ -77,20 +80,25 @@ services:
       dockerfile: notification.dockerfile
     image: ngcaijun/notification:esd
     restart: always
+    depends_on:
+      - amqp_connection
+      - amqp_setup
     environment:
       PYTHONUNBUFFERED: 1
 
   # ######################################################
   # #AMQP_SETUP: The AMQP Setup File needs to run once
   # ######################################################
-  # amqp_setup:
-  #   build:
-  #     context: ./
-  #     dockerfile: amqp_setup.dockerfile
-  #   image: ngcaijun/amqp_setup:esd
-  #   restart: always
-  #   environment:
-  #     PYTHONUNBUFFERED: 1
+  amqp_setup:
+    build:
+      context: ./
+      dockerfile: amqp_setup.dockerfile
+    image: ngcaijun/amqp_setup:esd
+    restart: on-failure
+    depends_on:
+      - amqp_connection
+    environment:
+      PYTHONUNBUFFERED: 1
 
   ######################################################
   #AMQP_CONNECTION: The AMQP Setup File needs to run once
@@ -100,7 +108,10 @@ services:
       context: ./
       dockerfile: amqp_connection.dockerfile
     image: ngcaijun/amqp_connection:esd
-    restart: always
+    restart: on-failure
+    depends_on:
+      rabbitmq:
+        condition: service_completed_successfully
     environment:
       PYTHONUNBUFFERED: 1
 
@@ -109,7 +120,7 @@ services:
   # RabbitMQ: The messaging broker   
   ####################################
   rabbitmq:
-    image: rabbitmq:3-management
+    image: rabbitmq:3.13-management
     hostname: esd-rabbit
     restart: always
     ports:
@@ -138,8 +149,10 @@ services:
         condition: service_completed_successfully
       error:
         condition: service_completed_successfully
+      amqp_connection:
+        condition: service_completed_successfully
     ports:
-      - "5500:5500"
+      - "5501:5500"
      #ensure that dependency containers are expected to 
     #run to successful completion before starting a dependent service.
     environment:
@@ -155,11 +168,18 @@ services:
     image: ngcaijun/make_purchase:esd
     restart: always
     depends_on:
-      - shop
-      - user
-      - paymentfinal
-      - notification
-      - error
+      shop:
+        condition: service_completed_successfully
+      user:
+        condition: service_completed_successfully
+      paymentfinal:
+        condition: service_completed_successfully
+      notification:
+        condition: service_completed_successfully
+      error:
+        condition: service_completed_successfully
+      amqp_connection:
+        condition: service_completed_successfully
 
     ports:
       - "5100:5500"
@@ -178,11 +198,18 @@ services:
     image: ngcaijun/refund_game:esd
     restart: always
     depends_on:
-      - shop
-      - user
-      - paymentfinal
-      - notification
-      - error
+      shop:
+        condition: service_completed_successfully
+      user:
+        condition: service_completed_successfully
+      paymentfinal:
+        condition: service_completed_successfully
+      notification:
+        condition: service_completed_successfully
+      error:
+        condition: service_completed_successfully
+      amqp_connection:
+        condition: service_completed_successfully
 
     ports:
       - "5200:5500"
