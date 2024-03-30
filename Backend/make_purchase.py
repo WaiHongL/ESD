@@ -47,8 +47,7 @@ payment_URL = "http://payment:5604/payment"
 update_game_purchase_URL = "http://user:5600/game-purchase/update"
 user_details_URL = "http://user:5600/users/"
 delete_game_purchase_URL = "http://user:5600/game-purchase/delete"
-# error_URL = "http://localhost:5100/error"
-# user_point_URL = "http://localhost:5600/points/add"
+
 
 @app.route("/make-purchase", methods=['POST'])
 def make_purchase():
@@ -152,7 +151,7 @@ def make_purchase():
                             }    
 
                             print('processing notification...')
-                            # process_notification(notification_json)
+                            process_notification(notification_json)
 
                             print('\n------------------------')
                             print('\nresult: ', update_game_purchase_result)
@@ -174,7 +173,6 @@ def make_purchase():
                         rollback_record_result = rollback_record(user_id, game_id)
 
                         if rollback_record_result["code"] in range(200, 300):
-                            # userdetailsjson = invoke_http(user_details_URL + str(user_id), method='GET')
                             user_details_result = get_user_details(user_id)
 
                             if user_details_result["code"] in range(200, 300):
@@ -190,7 +188,6 @@ def make_purchase():
                                 process_fail_notification(notification_json)
 
                                 # remove password key
-                                # print("here: ", user_details_result)
                                 del user_details_result['data']["user_details_result"]["data"]['password']
 
                                 return jsonify(
@@ -315,50 +312,6 @@ def create_game_purchase(userid_gameid):
         }
     }
 
-    # game = game_details_result['data']
-    # points_json = {
-    #     # "user_id": userid_gameid['user_id'],
-    #     "price": game['price'],
-    #     "operation": "add"
-    # }
-    # # print(pointsjson)
-    # # print(json.dumps(pointsjson))
-   
-    # print('\n-----Invoking user microservice-----')
-    # update_points_result = invoke_http(update_points_URL + str(userid_gameid['user_id']) + "/points/update", method='PUT', json=points_json)
-    # print("update_points_result: ", update_points_result, '\n')
-
-    # update_points_result_code = update_points_result["code"]
-    # update_points_message = json.dumps(update_points_result)
-
-    # if update_points_result_code not in range(200, 300):
-    #     print('\n\n-----Publishing the (points error) message with routing_key=points.error-----')
-
-    #     channel.basic_publish(exchange=exchangename, routing_key="points.error", 
-    #         body=update_points_message, properties=pika.BasicProperties(delivery_mode = 2)) 
-    #     # make message persistent within the matching queues 
-
-    #     # - reply from the invocation is not used;
-    #     # continue even if this invocation fails        
-    #     print("\nPoints update status ({:d}) published to the RabbitMQ Exchange:".format(
-    #         update_points_result_code), update_points_result)
-
-    #     # Return error
-    #     return {
-    #         "code": 500,
-    #         "data": {
-    #             "update_points_result": update_points_result
-    #         },
-    #         "message": "Points update error sent for error handling"
-    #     }
-
-    # data = {
-    #     "code": 202, 
-    #     "data": {
-    #         "game_details_result": game_details_result
-    #     }}
-    # return data
-
 
 def make_payment(payment_json):
     print('\n-----Invoking payment microservice-----')
@@ -437,8 +390,6 @@ def update_game_purchase(update_json):
 
 
 def update_points(user_id, game_details):
-    # gamessjson = invoke_http(game_details_URL + str(userid_gameid['game_id']), method='GET')
-    # gamess = gamessjson['data']
     points_json = {
         # "user_id": user_id,
         "price": game_details["price"],
@@ -488,7 +439,6 @@ def get_user_details(user_id):
 
     user_details_result_code = user_details_result['code']
     user_details_message = json.dumps(user_details_result)
-    # print(message)
 
     if user_details_result_code not in range(200, 300):
         print('\n\n-----Publishing the (user details error) message with routing_key=user.details.error-----')

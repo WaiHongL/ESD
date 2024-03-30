@@ -48,6 +48,7 @@ async function createCardElement() {
 // HANDLE SUBMIT
 const isPaymentProcessing = ref(false);
 const isPaymentUnsuccessful = ref(false);
+const isPaymentModalDisplayed = ref(false);
 function handleSubmit() {
     stripePromise.value.createPaymentMethod({
         type: "card",
@@ -69,13 +70,16 @@ function handleSubmit() {
                 await axios.post("http://localhost:5605/make-purchase", axiosData)
                     .then(res => {
                         if (res.data.code == 200) {
-                            router.push("/");
                             isPaymentProcessing.value = false;
+                            isPaymentModalDisplayed.value = true;
+                            setTimeout(() => {
+                                router.push("/");
+                            }, 5000);
                         } else {
                             isPaymentUnsuccessful.value = true;
+                            isPaymentProcessing.value = false;
                             setTimeout(() => {
                                 isPaymentUnsuccessful.value = false;
-                                isPaymentProcessing.value = false;
                             }, 5000);
                         }
                     })
@@ -146,7 +150,10 @@ onMounted(async () => {
     <div v-if="isPaymentProcessing" class="payment-processing-bg"></div>
     <div v-if="isPaymentProcessing && isPaymentUnsuccessful" class="payment-processing-modal">Payment unsuccessful
     </div>
-    <div v-else-if="isPaymentProcessing && !isPaymentUnsuccessful" class="payment-processing-modal">Payment processing...
+    <div v-else-if="isPaymentProcessing && !isPaymentUnsuccessful" class="payment-processing-modal">Payment
+        processing...
+    </div>
+    <div v-else-if="!isPaymentProcessing && !isPaymentUnsuccessful && isPaymentModalDisplayed" class="payment-processing-modal">Payment successful
     </div>
 </template>
 
