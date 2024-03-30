@@ -160,6 +160,7 @@ def get_user_details_new(userId):
                 "message": "There is no such user"
             }
         ), 404
+    # The code 404 will not return I tried on Postman. If i query for user id = 10, the code below is returned instead.
     
     except Exception as e:
         return jsonify(

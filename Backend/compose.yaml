@@ -135,7 +135,7 @@ services:
       - recommend
 
     ports:
-      - "5500:5500"
+      - "5501:5500"
 
     environment:
       PYTHONUNBUFFERED: 1
