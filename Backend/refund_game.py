@@ -28,14 +28,6 @@ if not amqp_connection.check_exchange(channel, exchangename, exchangetype):
     )
     sys.exit(0)  # Exit with a success status
 
-
-# def log_error(user_id, error_message):
-#     # Function to log errors to the Error Microservice.
-#     error_data = {"user_id": user_id, "error_message": error_message}
-#     print("-----Invoking error microservice-----")
-#     invoke_http(f"{ERROR_MICROSERVICE_URL}/log", method="POST", json=error_data)
-
-
 def process_refund_notification(notification_json):
     message = notification_json
 
@@ -50,7 +42,7 @@ def process_refund_notification(notification_json):
             body=json.dumps(message),
             properties=pika.BasicProperties(delivery_mode=2),
         )
-        print("published")
+       
     # make message persistent within the matching queues
 
     # - reply from the invocation is not used;
@@ -74,11 +66,10 @@ def process_refund_notification(notification_json):
 @app.route("/refund", methods=["POST"])
 def process_refund():
     # Pull data first
-    print(request.get_json())
+  
     if request.is_json:
         try:
             data = request.get_json()
-            print(data)
             user_id = data["user_id"]
             game_id = data["game_id"]
             print("-----Invoking shop microservice-----")
@@ -90,12 +81,12 @@ def process_refund():
 
             if gamedetail["code"] not in range(200, 300):
                 print(
-                    "\n\n-----Publishing the (game details error) message with routing_key=game.details.error-----"
+                    "\n\n-----Publishing the (game details error) message with routing_key=game.error-----"
                 )
 
                 channel.basic_publish(
                     exchange=exchangename,
-                    routing_key="game.details.error",
+                    routing_key="game.error",
                     body=gamedetail_message,
                     properties=pika.BasicProperties(delivery_mode=2),
                 )
@@ -118,14 +109,11 @@ def process_refund():
                 }
 
             points_to_deduct = gamedetail["data"]["points"]
-            print("points to deduct:")
-            print(points_to_deduct)
-
             # Step 1: Retrieve user's gameplay time and purchase id
             print("-----Invoking user microservice-----")
             create_game_purchase_result = invoke_http(
                 f"{USER_MICROSERVICE_URL}/game-purchase/{user_id}/{game_id}",
-                method="GET",
+                method="GET"
             )
             print(create_game_purchase_result)
 
@@ -133,9 +121,9 @@ def process_refund():
             create_game_purchase_message = json.dumps(create_game_purchase_result)
  
             if create_game_purchase_result_code not in range(200, 300):
-                print('\n\n-----Publishing the (game purchase creation error) message with routing_key=game.purchase.creation.error-----')
+                print('\n\n-----Publishing the (game purchase creation error) message with routing_key=record.error-----')
 
-                channel.basic_publish(exchange=exchangename, routing_key="game.purchase.creation.error", 
+                channel.basic_publish(exchange=exchangename, routing_key="record.error", 
                     body=create_game_purchase_message, properties=pika.BasicProperties(delivery_mode = 2)) 
                 # make message persistent within the matching queues 
 
@@ -155,13 +143,9 @@ def process_refund():
 
             gameplay_time = create_game_purchase_result["data"]["gameplay_time"]
             purchase_id = create_game_purchase_result["data"]["payment_intent"]
-            print(2)
-            print("gameplay time:")
-            print(gameplay_time)
 
             # Step 2: Check for refund eligibility, publish error if gameplay time > 120 mins
             if gameplay_time and gameplay_time >= 120:
-                print("gameplay more than 2 hours")
                 print('\n\n-----Publishing the (gameplay time error) message with routing_key=gametime.error-----')
 
                 channel.basic_publish(exchange=exchangename, routing_key="gametime.error", 
@@ -190,8 +174,6 @@ def process_refund():
 
             user_details_result_code = user_details_result['code']
             user_details_message = json.dumps(user_details_result)
-            # print(message)
-
             if user_details_result_code not in range(200, 300):
                 print('\n\n-----Publishing the (user details error) message with routing_key=user.details.error-----')
 
@@ -214,9 +196,6 @@ def process_refund():
                 }
         
             user_points = user_details_result["data"]["points"]
-            print("user points:")
-            print(user_points)
-
             # Step 4: Check if points are sufficient
 
             if user_points >= points_to_deduct:
@@ -257,8 +236,6 @@ def process_refund():
                     return jsonify({"error": "Failed to update user points."}), 500
             else:
                 remaining = points_to_deduct - user_points
-                print("remaining points to deduct:")
-                print(remaining)
                 print("-----Invoking user microservice-----")
                 user_item_purchase_history = invoke_http(
                     f"{USER_MICROSERVICE_URL}/users/{user_id}/customizations",
@@ -289,13 +266,7 @@ def process_refund():
                         "message": "User item purchase history error sent for error handling"
                     }
 
-
-
-
-
                 user_item_purchase_history_list = user_item_purchase_history["data"]
-                print("items user owns:")
-                print(user_item_purchase_history_list)
                 print("-----Invoking shop microservice-----")
                 customizations = invoke_http(
                     f"{SHOP_CUSTOMIZATION_MICROSERVICE_URL}/customizations",
@@ -338,9 +309,6 @@ def process_refund():
                     customizations_dict[customization["customization_id"]] = (
                         customization["credits"]
                     )
-                print("custom dict:")
-                print(customizations_dict)
-
                 list_to_run = []
                 for item in user_item_purchase_history_list:
                     item_tuple = (
@@ -348,27 +316,13 @@ def process_refund():
                         customizations_dict[item["customization_id"]],
                     )
                     list_to_run.append(item_tuple)
-                print("all of user items:")
-                print(list_to_run)
-
                 to_remove_list = []
-
-                print(list_to_run[-1][1])
                 while (remaining > 0) and (len(list_to_run) > 0):
-                    print("remaining:")
-                    print(remaining)
-                    print("last item pointa")
-                    print(list_to_run[-1][1])
                     remaining -= list_to_run[-1][1]
                     last_customization = list_to_run.pop()
                     to_remove_list.append(last_customization[0])
-                    print(to_remove_list)
-                print("items to remove:")
-                print(to_remove_list)
-
+            
                 change_points = user_points + remaining
-                print("points to deduct")
-                print(change_points)
                 operation = "minus"
 
                 customizations_to_delete = {
@@ -462,8 +416,6 @@ def process_refund():
                 #         ),
                 #         500,
                 #     )
-                print("points deducted successfully")
-                print("success")
 
             # Step 5: Delete purchase record
             del_json = {"user_id": user_id, "game_id": game_id}
@@ -536,17 +488,6 @@ def process_refund():
                 }
 
 
-
-
-
-            print("done!")
-            # if payment_response["code"] != 200:
-            #     return (
-            #         jsonify({"error": "Failed to process refund through Stripe."}),
-            #         500,
-            #     )
-            print("processing notif")
-
             # Step 7: Send email notification to user
 
             notification_json = {
@@ -556,7 +497,6 @@ def process_refund():
                 "account_name": user_details_result["data"]["account_name"],
                 "purchase_id": payment_intent_id,
             }
-            print(notification_json)
 
             print("processing notification...")
             process_refund_notification(notification_json)

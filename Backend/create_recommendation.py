@@ -23,9 +23,9 @@ if not amqp_connection.check_exchange(channel, exchangename, exchangetype):
     sys.exit(0)  # Exit with a success status
 
 # URL
-game_URL = "http://localhost:5000/games"
-game_genres_URL = "http://localhost:5000/games/genre"
-common_genre_URL = "http://localhost:5300/recommend/genre"
+game_URL = "http://shop:5000/games"
+game_genres_URL = "http://shop:5000/games/genre"
+common_genre_URL = "http://recommend:5300/recommend/genre"
 
 # CREATE RECOMMENDATION
 @app.route("/recommendations/<int:userId>")
@@ -44,7 +44,7 @@ def create_recommendation(userId):
         ), 500
 
 def process_recommendation(userId):
-    wishlist_and_purchase_URL = "http://localhost:5101/users/" + str(userId) + "/wishlist-and-purchases"
+    wishlist_and_purchase_URL = "http://user:5101/users/" + str(userId) + "/wishlist-and-purchases"
 
     # INVOKE USER MICROSERVICE TO GET USER WISHLIST AND PURCHASE
     print("\n-----Invoking user microservice-----")
@@ -138,7 +138,7 @@ def process_recommendation(userId):
     # INVOKE GAME MICROSERVICE TO GET GAMES THAT MATCHES COMMON GENRE
     print("\n-----Invoking game microservice-----")
     genre = common_genre_result["data"]
-    game_by_genre_URL = "http://localhost:5000/games?genre="
+    game_by_genre_URL = "http://shop:5000/games?genre="
 
     if type(genre) is list:
         for i in range(len(genre)):

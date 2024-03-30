@@ -117,37 +117,6 @@ services:
     
       PYTHONUNBUFFERED: 1
 
-  # ######################################################
-  # #AMQP_SETUP: The AMQP Setup File needs to run once
-  # ######################################################
-  # amqp_setup:
-  #   build:
-  #     context: ./
-  #     dockerfile: amqp_setup.dockerfile
-  #   image: ngcaijun/amqp_setup:esd
-  #   restart: on-failure
-  #   depends_on:
-  #     - amqp_connection
-  #   environment:
-  #     PYTHONUNBUFFERED: 1
-
-  ######################################################
-  #AMQP_CONNECTION: The AMQP Setup File needs to run once
-  ######################################################
-  # amqp_connection:
-  #   build:
-  #     context: ./
-  #     dockerfile: amqp_connection.dockerfile
-  #   image: ngcaijun/amqp_connection:esd
-  #   restart: on-failure
-  #   depends_on:
-  #     rabbitmq:
-  #       condition: service_completed_successfully
-  #   environment:
-  #     PYTHONUNBUFFERED: 1
-
-
-
 
   ###############################################
   # Create Reccomendation: The Create Reccomendation microservice
@@ -164,20 +133,10 @@ services:
       - user
       - error
       - recommend
-      # recommend:
-      #   condition: service_completed_successfully
-      # shop:
-      #   condition: service_completed_successfully
-      # user:
-      #   condition: service_completed_successfully
-      # error:
-      #   condition: service_completed_successfully
-      # amqp_connection:
-      #   condition: service_completed_successfully
+
     ports:
       - "5500:5500"
-     #ensure that dependency containers are expected to 
-    #run to successful completion before starting a dependent service.
+
     environment:
       PYTHONUNBUFFERED: 1
 
@@ -197,24 +156,10 @@ services:
       - paymentfinal
       - error
       - notification
-      
-      # shop:
-      #   condition: service_completed_successfully
-      # user:
-      #   condition: service_completed_successfully
-      # paymentfinal:
-      #   condition: service_completed_successfully
-      # notification:
-      #   condition: service_completed_successfully
-      # error:
-      #   condition: service_completed_successfully
-      # # amqp_connection:
-      #   condition: service_completed_successfully
 
     ports:
       - "5100:5100"
-    #condition: service_completed_successfully #ensure that dependency containers are expected to 
-    #run to successful completion before starting a dependent service.
+
     environment:
       PYTHONUNBUFFERED: 1
 
@@ -234,23 +179,10 @@ services:
       - paymentfinal
       - error
       - notification
-      # shop:
-      #   condition: service_completed_successfully
-      # user:
-      #   condition: service_completed_successfully
-      # paymentfinal:
-      #   condition: service_completed_successfully
-      # notification:
-      #   condition: service_completed_successfully
-      # error:
-      #   condition: service_completed_successfully
-      # amqp_connection:
-      #   condition: service_completed_successfully
 
     ports:
       - "5200:5200"
-    #condition: service_completed_successfully #ensure that dependency containers are expected to 
-    #run to successful completion before starting a dependent service.
+
     environment:
       PYTHONUNBUFFERED: 1
   
