@@ -43,7 +43,7 @@ if not amqp_connection.check_exchange(channel, exchangename, exchangetype):
 create_game_purchase_URL = "http://user:5101/game-purchase/create"
 game_details_URL = "http://shop:5000/games/"
 update_points_URL = "http://user:5101/users/"
-payment_URL = "http://paymentfinal:5666/payment"
+payment_URL = "http://payment:5666/payment"
 update_game_purchase_URL = "http://user:5101/game-purchase/update"
 user_details_URL = "http://user:5101/users/"
 delete_game_purchase_URL = "http://user:5101/game-purchase/delete"
