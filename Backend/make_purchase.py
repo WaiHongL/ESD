@@ -40,13 +40,13 @@ if not amqp_connection.check_exchange(channel, exchangename, exchangetype):
     sys.exit(0)  # Exit with a success status
 
 #URLS
-create_game_purchase_URL = "http://localhost:5101/game-purchase/create"
-game_details_URL = "http://localhost:5000/games/"
-update_points_URL = "http://localhost:5101/users/"
-payment_URL = "http://localhost:5666/payment"
-update_game_purchase_URL = "http://localhost:5101/game-purchase/update"
-user_details_URL = "http://localhost:5101/users/"
-delete_game_purchase_URL = "http://localhost:5101/game-purchase/delete"
+create_game_purchase_URL = "http://user:5101/game-purchase/create"
+game_details_URL = "http://shop:5000/games/"
+update_points_URL = "http://user:5101/users/"
+payment_URL = "http://paymentfinal:5666/payment"
+update_game_purchase_URL = "http://user:5101/game-purchase/update"
+user_details_URL = "http://user:5101/users/"
+delete_game_purchase_URL = "http://user:5101/game-purchase/delete"
 error_URL = "http://localhost:5100/error"
 # user_point_URL = "http://localhost:5600/points/add"
 
@@ -266,9 +266,11 @@ def create_game_purchase(userid_gameid):
     create_game_purchase_message = json.dumps(create_game_purchase_result)
  
     if create_game_purchase_result_code not in range(200, 300):
-        print('\n\n-----Publishing the (game purchase creation error) message with routing_key=game.purchase.creation.error-----')
-
-        channel.basic_publish(exchange=exchangename, routing_key="game.purchase.creation.error", 
+        print('\n\n-----Publishing the (game purchase creation error) message with routing_key=creation.error-----')
+        print('---------message')
+        print(create_game_purchase_message)
+        print('-----------end message')
+        channel.basic_publish(exchange=exchangename, routing_key="creation.error", 
             body=create_game_purchase_message, properties=pika.BasicProperties(delivery_mode = 2)) 
         # make message persistent within the matching queues 
 

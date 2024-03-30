@@ -4,7 +4,7 @@ Flask-Cors==4.0.0
 mysql-connector-python==8.3.0
 pika==1.3.2
 stripe>=7.0.0
-mailjet_rest==v1.0.3
+mailjet_rest==v1.3.4
 flasgger==0.9.7.1
 Flask-WTF==1.2.1
 MarkupSafe==2.1.5

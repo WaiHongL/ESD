@@ -4,6 +4,20 @@ volumes:
   rabbitmq_data:
 
 services:
+  ####################################
+  # RabbitMQ: The messaging broker   
+  ####################################
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    hostname: esd-rabbit
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes: 
+      - ./rabbitmq.config:/etc/rabbitmq/rabbitmq.config
+      - ./rabbitmq_definitions.json:/etc/rabbitmq/rabbitmq_definitions.json
+      - rabbitmq_data:/var/lib/rabbitmq
  
   ###################################
   # User: The User microservice
@@ -17,6 +31,8 @@ services:
     environment:
       PYTHONUNBUFFERED: 1
       dbURL: mysql+mysqlconnector://root:pSSSS+]q8zZ-pjF@34.124.211.169/user
+    ports:
+      - "5101:5101"
 
  
   #######################################################
@@ -31,6 +47,8 @@ services:
     environment:
       PYTHONUNBUFFERED: 1
       dbURL: mysql+mysqlconnector://root:pSSSS+]q8zZ-pjF:@34.142.233.183/shop
+    ports:
+      - "5000:5000"
 
   #######################################################
   # Recommend: The Recommend microservice
@@ -43,6 +61,8 @@ services:
     restart: always
     environment:
       PYTHONUNBUFFERED: 1
+    ports:
+      - "5300:5300"
   
   #######################################################
   # Payment: The Payment microservice
@@ -55,6 +75,8 @@ services:
     restart: always
     environment:
       PYTHONUNBUFFERED: 1
+    ports:
+      - "5666:5666"
   
   #######################################################
   # Error: The Error microservice
@@ -66,9 +88,13 @@ services:
     image: ngcaijun/error:esd
     restart: always
     depends_on:
-      - amqp_connection
-      - amqp_setup
+      - rabbitmq
     environment:
+      rabbit_host: rabbitmq
+      rabbit_port: 5672
+      e_queue_name: Error
+      
+    
       PYTHONUNBUFFERED: 1
   
   #######################################################
@@ -81,55 +107,47 @@ services:
     image: ngcaijun/notification:esd
     restart: always
     depends_on:
-      - amqp_connection
-      - amqp_setup
+      - rabbitmq
     environment:
+      rabbit_host: rabbitmq
+      rabbit_port: 5672
+      a_queue_name: Notification_Log
+      payment_failure_queue_name: Notification_Log_Fail
+      refund_queue_name: Notification_Refund
+    
       PYTHONUNBUFFERED: 1
 
   # ######################################################
   # #AMQP_SETUP: The AMQP Setup File needs to run once
   # ######################################################
-  amqp_setup:
-    build:
-      context: ./
-      dockerfile: amqp_setup.dockerfile
-    image: ngcaijun/amqp_setup:esd
-    restart: on-failure
-    depends_on:
-      - amqp_connection
-    environment:
-      PYTHONUNBUFFERED: 1
+  # amqp_setup:
+  #   build:
+  #     context: ./
+  #     dockerfile: amqp_setup.dockerfile
+  #   image: ngcaijun/amqp_setup:esd
+  #   restart: on-failure
+  #   depends_on:
+  #     - amqp_connection
+  #   environment:
+  #     PYTHONUNBUFFERED: 1
 
   ######################################################
   #AMQP_CONNECTION: The AMQP Setup File needs to run once
   ######################################################
-  amqp_connection:
-    build:
-      context: ./
-      dockerfile: amqp_connection.dockerfile
-    image: ngcaijun/amqp_connection:esd
-    restart: on-failure
-    depends_on:
-      rabbitmq:
-        condition: service_completed_successfully
-    environment:
-      PYTHONUNBUFFERED: 1
+  # amqp_connection:
+  #   build:
+  #     context: ./
+  #     dockerfile: amqp_connection.dockerfile
+  #   image: ngcaijun/amqp_connection:esd
+  #   restart: on-failure
+  #   depends_on:
+  #     rabbitmq:
+  #       condition: service_completed_successfully
+  #   environment:
+  #     PYTHONUNBUFFERED: 1
 
 
-  ####################################
-  # RabbitMQ: The messaging broker   
-  ####################################
-  rabbitmq:
-    image: rabbitmq:3.13-management
-    hostname: esd-rabbit
-    restart: always
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    volumes: 
-      #- ./rabbitmq.config:/etc/rabbitmq/rabbitmq.config
-      #- ./rabbitmq_definitions.json:/etc/rabbitmq/rabbitmq_definitions.json
-      - rabbitmq_data:/var/lib/rabbitmq
+
 
   ###############################################
   # Create Reccomendation: The Create Reccomendation microservice
@@ -141,18 +159,23 @@ services:
     image: ngcaijun/create_recommendation:esd
     restart: always
     depends_on:
-      recommend:
-        condition: service_completed_successfully
-      shop:
-        condition: service_completed_successfully
-      user:
-        condition: service_completed_successfully
-      error:
-        condition: service_completed_successfully
-      amqp_connection:
-        condition: service_completed_successfully
+      - rabbitmq
+      - shop
+      - user
+      - error
+      - recommend
+      # recommend:
+      #   condition: service_completed_successfully
+      # shop:
+      #   condition: service_completed_successfully
+      # user:
+      #   condition: service_completed_successfully
+      # error:
+      #   condition: service_completed_successfully
+      # amqp_connection:
+      #   condition: service_completed_successfully
     ports:
-      - "5501:5500"
+      - "5500:5500"
      #ensure that dependency containers are expected to 
     #run to successful completion before starting a dependent service.
     environment:
@@ -168,28 +191,35 @@ services:
     image: ngcaijun/make_purchase:esd
     restart: always
     depends_on:
-      shop:
-        condition: service_completed_successfully
-      user:
-        condition: service_completed_successfully
-      paymentfinal:
-        condition: service_completed_successfully
-      notification:
-        condition: service_completed_successfully
-      error:
-        condition: service_completed_successfully
-      amqp_connection:
-        condition: service_completed_successfully
+      - rabbitmq
+      - shop
+      - user
+      - paymentfinal
+      - error
+      - notification
+      
+      # shop:
+      #   condition: service_completed_successfully
+      # user:
+      #   condition: service_completed_successfully
+      # paymentfinal:
+      #   condition: service_completed_successfully
+      # notification:
+      #   condition: service_completed_successfully
+      # error:
+      #   condition: service_completed_successfully
+      # # amqp_connection:
+      #   condition: service_completed_successfully
 
     ports:
-      - "5100:5500"
+      - "5100:5100"
     #condition: service_completed_successfully #ensure that dependency containers are expected to 
     #run to successful completion before starting a dependent service.
     environment:
       PYTHONUNBUFFERED: 1
 
   ###############################################
-  # Make Purchase: The Make Purchase microservice
+  # Refund Game: The Refund Game microservice
   ###############################################
   refund_game:
     build:
@@ -198,21 +228,27 @@ services:
     image: ngcaijun/refund_game:esd
     restart: always
     depends_on:
-      shop:
-        condition: service_completed_successfully
-      user:
-        condition: service_completed_successfully
-      paymentfinal:
-        condition: service_completed_successfully
-      notification:
-        condition: service_completed_successfully
-      error:
-        condition: service_completed_successfully
-      amqp_connection:
-        condition: service_completed_successfully
+      - rabbitmq
+      - shop
+      - user
+      - paymentfinal
+      - error
+      - notification
+      # shop:
+      #   condition: service_completed_successfully
+      # user:
+      #   condition: service_completed_successfully
+      # paymentfinal:
+      #   condition: service_completed_successfully
+      # notification:
+      #   condition: service_completed_successfully
+      # error:
+      #   condition: service_completed_successfully
+      # amqp_connection:
+      #   condition: service_completed_successfully
 
     ports:
-      - "5200:5500"
+      - "5200:5200"
     #condition: service_completed_successfully #ensure that dependency containers are expected to 
     #run to successful completion before starting a dependent service.
     environment:
