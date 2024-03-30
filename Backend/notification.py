@@ -4,8 +4,7 @@ import amqp_connection
 import json
 import pika
 from flask_cors import CORS
-import base64
-
+from os import environ
 app = Flask(__name__, static_url_path="", static_folder="public")
 CORS(app)
 
@@ -184,9 +183,9 @@ def send_refund_email(data):
     return result.json()
 
 
-a_queue_name = 'Notification_Log' # queue to be subscribed by Notification_Log microservice
-payment_failure_queue_name = 'Notification_Log_Fail'
-refund_queue_name = 'Notification_Refund'
+a_queue_name = environ.get('a_queue_name') or 'Notification_Log' # queue to be subscribed by Notification_Log microservice
+payment_failure_queue_name = environ.get('payment_failure_queue_name') or 'Notification_Log_Fail'
+refund_queue_name = environ.get('refund_queue_name') or 'Notification_Refund'
 
 def receiveNotificationLog(channel):
     try:

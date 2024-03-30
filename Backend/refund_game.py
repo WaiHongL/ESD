@@ -523,7 +523,7 @@ def process_refund():
 
                 # - reply from the invocation is not used;
                 # continue even if this invocation fails        
-                print("\Refund status ({:d}) published to the RabbitMQ Exchange:".format(
+                print("\nRefund status ({:d}) published to the RabbitMQ Exchange:".format(
                     payment_result_code), payment_response)
 
                 # Return error
