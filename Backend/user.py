@@ -890,6 +890,6 @@ def get_purchase_records(userId, gameId):
 #     record = db.session.scalars(db.select(GamePurchase).filter_by(user_id=userId,game_id=gameId)).one()
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5101, debug=True)
+    app.run(host="0.0.0.0", port=5600, debug=True)
 
 

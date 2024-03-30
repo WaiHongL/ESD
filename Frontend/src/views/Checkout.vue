@@ -73,7 +73,7 @@ export default {
                     console.log('done')
                     console.log(result.paymentMethod.id)
 
-                    const response = await fetch('http://localhost:5100/make-purchase', {
+                    const response = await fetch('http://localhost:5605/make-purchase', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

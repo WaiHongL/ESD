@@ -11,10 +11,10 @@ app = Flask(__name__)
 CORS(app)
 
 # Define the microservices URLs
-USER_MICROSERVICE_URL = "http://user:5101"
-PAYMENT_MICROSERVICE_URL = "http://payment:5666"
+USER_MICROSERVICE_URL = "http://user:5600"
+PAYMENT_MICROSERVICE_URL = "http://payment:5604"
 ERROR_MICROSERVICE_URL = "http://error:5445/error"
-SHOP_CUSTOMIZATION_MICROSERVICE_URL = "http://shop:5000"
+SHOP_CUSTOMIZATION_MICROSERVICE_URL = "http://shop:5601"
 
 # amqp stuff
 exchangename = "order_topic"  # exchange name

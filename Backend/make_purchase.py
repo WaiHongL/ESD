@@ -40,14 +40,14 @@ if not amqp_connection.check_exchange(channel, exchangename, exchangetype):
     sys.exit(0)  # Exit with a success status
 
 #URLS
-create_game_purchase_URL = "http://user:5101/game-purchase/create"
-game_details_URL = "http://shop:5000/games/"
-update_points_URL = "http://user:5101/users/"
-payment_URL = "http://payment:5666/payment"
-update_game_purchase_URL = "http://user:5101/game-purchase/update"
-user_details_URL = "http://user:5101/users/"
-delete_game_purchase_URL = "http://user:5101/game-purchase/delete"
-error_URL = "http://localhost:5100/error"
+create_game_purchase_URL = "http://user:5600/game-purchase/create"
+game_details_URL = "http://shop:5601/games/"
+update_points_URL = "http://user:5600/users/"
+payment_URL = "http://payment:5604/payment"
+update_game_purchase_URL = "http://user:5600/game-purchase/update"
+user_details_URL = "http://user:5600/users/"
+delete_game_purchase_URL = "http://user:5600/game-purchase/delete"
+# error_URL = "http://localhost:5100/error"
 # user_point_URL = "http://localhost:5600/points/add"
 
 @app.route("/make-purchase", methods=['POST'])
@@ -120,12 +120,6 @@ def make_purchase():
             create_game_purchase_result = create_game_purchase(userid_gameid)
 
             if(create_game_purchase_result['code'] in range(200, 300)):
-                # gamessjson = invoke_http(game_details_URL + str(userid_gameid['game_id']), method='GET')
-                # gamess = gamessjson['data']
-                # print("printing price")
-                # price = gamess['price']
-                # print(price)                
-
                 # payment
                 game_details = create_game_purchase_result["data"]["game_details_result"]["data"]
                 payment_json = json.dumps({
@@ -144,14 +138,10 @@ def make_purchase():
                     
                     update_game_purchase_result = update_game_purchase(update_json)
                     if update_game_purchase_result["code"] in range(200, 300):
-                        # # get user details
-                        # user_details_result = get_user_details(user_id)
-
                         # update points
                         update_points_result = update_points(user_id, game_details)
 
                         if update_points_result["code"] in range(200, 300):
-                            # userdetailsjson = invoke_http(user_details_URL + str(user_id), method='GET')
                             user_details = update_points_result['data']["update_points_result"]["data"]
                             notification_json = {
                                 'game_price': game_details['price'],
@@ -162,7 +152,7 @@ def make_purchase():
                             }    
 
                             print('processing notification...')
-                            process_notification(notification_json)
+                            # process_notification(notification_json)
 
                             print('\n------------------------')
                             print('\nresult: ', update_game_purchase_result)
@@ -615,7 +605,7 @@ def rollback_record(user_id, game_id):
 if __name__ == "__main__":
     print("This is flask " + os.path.basename(__file__) +
           " for placing an order...")
-    app.run(host="0.0.0.0", port=5100, debug=True)
+    app.run(host="0.0.0.0", port=5605, debug=True)
     # Notes for the parameters:
     # - debug=True will reload the program automatically if a change is detected;
     #   -- it in fact starts two instances of the same flask program,

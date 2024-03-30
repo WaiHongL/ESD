@@ -26,7 +26,7 @@ import axios from "axios";
 // GET ALL AVAILABLE CUSTOMIZATIONS
 const customizations = ref([])
 function getAllCustomizations() {
-    axios.get("http://localhost:5000/customizations")
+    axios.get("http://localhost:5601/customizations")
         .then((res) => {
             customizations.value = res.data.data.customizations;
         })
@@ -39,7 +39,7 @@ function getAllCustomizations() {
 const purchases = ref([]);
 let purchaseData;
 async function getPurchases() {
-    await axios.get("http://localhost:5101/users/1/customizations")
+    await axios.get("http://localhost:5600/users/1/customizations")
         .then(res => {
             const data = res.data.data;
             purchaseData = data;

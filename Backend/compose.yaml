@@ -32,7 +32,7 @@ services:
       PYTHONUNBUFFERED: 1
       dbURL: mysql+mysqlconnector://root:pSSSS+]q8zZ-pjF@34.124.211.169/user
     ports:
-      - "5101:5101"
+      - "5600:5600"
 
   #######################################################
   # Shop: The Shop microservice
@@ -47,7 +47,7 @@ services:
       PYTHONUNBUFFERED: 1
       dbURL: mysql+mysqlconnector://root:pSSSS+]q8zZ-pjF:@34.142.233.183/shop
     ports:
-      - "5000:5000"
+      - "5601:5601"
 
   #######################################################
   # Recommend: The Recommend microservice
@@ -61,7 +61,7 @@ services:
     environment:
       PYTHONUNBUFFERED: 1
     ports:
-      - "5300:5300"
+      - "5602:5602"
   
   #######################################################
   # Payment: The Payment microservice
@@ -75,7 +75,7 @@ services:
     environment:
       PYTHONUNBUFFERED: 1
     ports:
-      - "5666:5666"
+      - "5604:5604"
   
   #######################################################
   # Error: The Error microservice
@@ -132,7 +132,7 @@ services:
       - recommend
 
     ports:
-      - "5500:5500"
+      - "5603:5603"
 
     environment:
       PYTHONUNBUFFERED: 1
@@ -155,7 +155,7 @@ services:
       - notification
 
     ports:
-      - "5100:5100"
+      - "5605:5605"
 
     environment:
       PYTHONUNBUFFERED: 1

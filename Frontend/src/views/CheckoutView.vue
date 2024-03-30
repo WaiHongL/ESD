@@ -13,7 +13,7 @@ const gameGenre = ref(null);
 const gamePrice = ref(null);
 
 function getGameDetails() {
-    axios.get("http://localhost:5000/games/" + gameId)
+    axios.get("http://localhost:5601/games/" + gameId)
         .then((res) => {
             const data = res.data.data;
             gameTitle.value = data.title;
@@ -60,13 +60,13 @@ function handleSubmit() {
             } else {
                 const axiosData = {
                     "purchase_id": res.paymentMethod.id,
-                    "user_id": "1", // TO BE CHANGED
+                    "user_id": "6", // TO BE CHANGED
                     "game_id": gameId,
                 }
 
                 isPaymentProcessing.value = true;
 
-                await axios.post("http://localhost:5100/make-purchase", axiosData)
+                await axios.post("http://localhost:5605/make-purchase", axiosData)
                     .then(res => {
                         if (res.data.code == 200) {
                             router.push("/");
