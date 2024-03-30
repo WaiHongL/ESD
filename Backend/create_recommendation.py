@@ -165,7 +165,7 @@ def process_recommendation(userId):
             properties = pika.BasicProperties(delivery_mode = 2)
         )
 
-        print("\Game by genre error published to the RabbitMQ Exchange:".format(game_by_genre_result_code), game_by_genre_result)
+        print("\nGame by genre error published to the RabbitMQ Exchange:".format(game_by_genre_result_code), game_by_genre_result)
 
         return {
             "code": 500,

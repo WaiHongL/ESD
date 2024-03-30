@@ -34,7 +34,6 @@ services:
     ports:
       - "5101:5101"
 
- 
   #######################################################
   # Shop: The Shop microservice
   #######################################################
@@ -94,7 +93,6 @@ services:
       rabbit_port: 5672
       e_queue_name: Error
       
-    
       PYTHONUNBUFFERED: 1
   
   #######################################################
@@ -117,11 +115,10 @@ services:
     
       PYTHONUNBUFFERED: 1
 
-
   ###############################################
-  # Create Reccomendation: The Create Reccomendation microservice
+  # Create Recommendation: The Create Recommendation microservice
   ###############################################
-  create_reccomendation:
+  create_recommendation:
     build:
       context: ./
       dockerfile: create_recommendation.dockerfile
@@ -135,7 +132,7 @@ services:
       - recommend
 
     ports:
-      - "5501:5500"
+      - "5500:5500"
 
     environment:
       PYTHONUNBUFFERED: 1
