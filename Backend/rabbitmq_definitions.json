@@ -109,7 +109,7 @@
             "vhost": "/",
             "destination": "Error",
             "destination_type": "queue",
-            "routing_key": "*.error",
+            "routing_key": "#.error",
             "arguments": {}
         }
     ]
