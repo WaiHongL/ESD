@@ -5,6 +5,7 @@ import pika
 import amqp_connection
 import os, sys
 import json
+from itertools import combinations
 
 app = Flask(__name__)
 CORS(app)
@@ -63,16 +64,79 @@ def process_refund_notification(notification_json):
         print(ex_str)
 
 
-@app.route("/refund", methods=["POST"])
+@app.route("/refund-game", methods=["POST"])
 def process_refund():
     # Pull data first
-  
+    
     if request.is_json:
         try:
             data = request.get_json()
             user_id = data["user_id"]
             game_id = data["game_id"]
 
+            # Retrieve user's gameplay time and purchase id
+            print("-----Invoking user microservice-----")
+            game_purchase_details_result = invoke_http(
+                f"{USER_MICROSERVICE_URL}/users/game-purchase?userId={user_id}&gameId={game_id}",
+                method="GET"
+            )
+            print("game_purchase_details_result:", game_purchase_details_result, "\n")
+
+            game_purchase_details_result_code = game_purchase_details_result["code"]
+            game_purchase_details_message = json.dumps(game_purchase_details_result)
+ 
+            if game_purchase_details_result_code not in range(200, 300):
+                print('\n\n-----Publishing the (game purchase details error) message with routing_key=game.purchase.details.error-----')
+
+                channel.basic_publish(exchange=exchangename, routing_key="game.purchase.details.error", 
+                    body=game_purchase_details_message, properties=pika.BasicProperties(delivery_mode = 2)) 
+                # make message persistent within the matching queues 
+
+                # - reply from the invocation is not used;
+                # continue even if this invocation fails        
+                print("\nGame purchase details status ({:d}) published to the RabbitMQ Exchange:".format(
+                    game_purchase_details_result_code), game_purchase_details_result)
+                
+                result = {
+                    "code": 500,
+                    "data": {
+                        "game_purchase_details_result": game_purchase_details_result
+                    },
+                    "message": "Game purchase creation error sent for error handling"
+                }
+
+                print('\n------------------------')
+                print('\nresult: ', result)
+                return jsonify(result), result["code"]
+            
+            gameplay_time = game_purchase_details_result["data"]["gameplay_time"]
+            purchase_id = game_purchase_details_result["data"]["payment_intent"]
+
+
+            # Check for refund eligibility, publish error if gameplay time > 120 mins
+            if gameplay_time and gameplay_time >= 120:
+                result = {
+                    "code": 400,
+                    "message": "Refund cannot be processed as the gameplay time exceeds 120 minutes"
+                }
+
+                print('\n\n-----Publishing the (gameplay time error) message with routing_key=gameplay.time.error-----')
+
+                channel.basic_publish(exchange=exchangename, routing_key="gameplay.time.error", 
+                    body=json.dumps(result), properties=pika.BasicProperties(delivery_mode = 2)) 
+                # make message persistent within the matching queues 
+
+                # - reply from the invocation is not used;
+                # continue even if this invocation fails        
+                print("\nGameplay time status ({:d}) published to the RabbitMQ Exchange:".format(
+                    result["code"]), result)
+            
+                print('\n------------------------')
+                print('\nresult: ', result)
+                return jsonify(result), result["code"]
+            
+
+            # Get game points awarded
             print("-----Invoking shop microservice-----")
             game_details_result = invoke_http(
                 f"{SHOP_MICROSERVICE_URL}/shop/games/{game_id}", method="GET"
@@ -100,85 +164,32 @@ def process_refund():
                     "\nGame details status ({:d}) published to the RabbitMQ Exchange:".format(
                         game_details_result["code"]
                     ),
-                    game_details_result,
+                    game_details_result
                 )
 
-                # Return error
-                return jsonify(
-                    {
-                        "code": 500,
-                        "data": { "game_details_result": game_details_result },
-                        "message": "Game details error sent for error handling",
-                    }
-                ), 500
-
-            points_to_deduct = game_details_result["data"]["points"]
-
-            # Step 1: Retrieve user's gameplay time and purchase id
-            print("-----Invoking user microservice-----")
-            create_game_purchase_result = invoke_http(
-                f"{USER_MICROSERVICE_URL}/game-purchase/{user_id}/{game_id}",
-                method="GET"
-            )
-            print(create_game_purchase_result)
-
-            create_game_purchase_result_code = create_game_purchase_result["code"]
-            create_game_purchase_message = json.dumps(create_game_purchase_result)
- 
-            if create_game_purchase_result_code not in range(200, 300):
-                print('\n\n-----Publishing the (game purchase creation error) message with routing_key=record.error-----')
-
-                channel.basic_publish(exchange=exchangename, routing_key="record.error", 
-                    body=create_game_purchase_message, properties=pika.BasicProperties(delivery_mode = 2)) 
-                # make message persistent within the matching queues 
-
-                # - reply from the invocation is not used;
-                # continue even if this invocation fails        
-                print("\nGame purchase creation status ({:d}) published to the RabbitMQ Exchange:".format(
-                    create_game_purchase_result_code), create_game_purchase_result)
-
-                # Return error
-                return {
+                result = {
                     "code": 500,
-                    "data": {
-                        "create_game_purchase_result": create_game_purchase_result
-                    },
-                    "message": "Game purchase creation error sent for error handling"
+                    "data": { "game_details_result": game_details_result },
+                    "message": "Game details error sent for error handling",
                 }
 
-            gameplay_time = create_game_purchase_result["data"]["gameplay_time"]
-            purchase_id = create_game_purchase_result["data"]["payment_intent"]
+                print('\n------------------------')
+                print('\nresult: ', result)
+                return jsonify(result), result["code"]
 
-            # Step 2: Check for refund eligibility, publish error if gameplay time > 120 mins
-            if gameplay_time and gameplay_time >= 120:
-                print('\n\n-----Publishing the (gameplay time error) message with routing_key=gametime.error-----')
-
-                channel.basic_publish(exchange=exchangename, routing_key="gametime.error", 
-                    body=create_game_purchase_message, properties=pika.BasicProperties(delivery_mode = 2)) 
-                # make message persistent within the matching queues 
-
-                # - reply from the invocation is not used;
-                # continue even if this invocation fails        
-                print("\nGame purchase creation status ({:d}) published to the RabbitMQ Exchange:".format(
-                    400), gameplay_time)
-
-
-                return (
-                    jsonify({"error": "Refund ineligible due to gameplay time."}),
-                    400,
-                )
+            points_to_deduct = game_details_result["data"]["points"]
             
-     
-
-            # Step 3: Get user points
+            
+            # Get user points
             print("-----Invoking user microservice-----")
             user_details_result = invoke_http(
                 f"{USER_MICROSERVICE_URL}/users/{user_id}", method="GET"
             )
-            print(user_details_result)
+            print("user_details_result:", user_details_result, "\n")
 
             user_details_result_code = user_details_result['code']
             user_details_message = json.dumps(user_details_result)
+
             if user_details_result_code not in range(200, 300):
                 print('\n\n-----Publishing the (user details error) message with routing_key=user.details.error-----')
 
@@ -190,29 +201,39 @@ def process_refund():
                 # continue even if this invocation fails        
                 print("\nUser details status ({:d}) published to the RabbitMQ Exchange:".format(
                     user_details_result_code), user_details_result)
-
-                # Return error
-                return {
+                
+                result = {
                     "code": 500,
                     "data": {
                         "user_details_result": user_details_result
                     },
                     "message": "User details error sent for error handling"
                 }
+
+                print('\n------------------------')
+                print('\nresult: ', result)
+                return jsonify(result), result["code"]
         
             user_points = user_details_result["data"]["points"]
-            # Step 4: Check if points are sufficient
 
+
+            # Check if points are sufficient
             if user_points >= points_to_deduct:
+                points_to_change = {
+                    "user_id": user_id,
+                    "price": points_to_deduct / 100,
+                    "operation": "subtract"
+                }
+
                 # invoke user.py endpoint that only updates the points
-                points_to_change = {"operation": "-", "price": points_to_deduct / 100}
                 print("-----Invoking user microservice-----")
                 update_points_result = invoke_http(
-                    f"{USER_MICROSERVICE_URL}/users/{user_id}/points/update",
+                    f"{USER_MICROSERVICE_URL}/users/points/update",
                     method="PUT",
                     json=points_to_change,
                 )
-                print(update_points_result)
+                print("update_points_result:", update_points_result)
+
                 update_points_result_code = update_points_result["code"]
                 update_points_message = json.dumps(update_points_result)
 
@@ -228,62 +249,73 @@ def process_refund():
                     print("\nPoints update status ({:d}) published to the RabbitMQ Exchange:".format(
                         update_points_result_code), update_points_result)
 
-                    # Return error
-                    return {
+                    result = {
                         "code": 500,
                         "data": {
                             "update_points_result": update_points_result
                         },
                         "message": "Points update error sent for error handling"
                     }
-                if update_points_result["code"] != 200:
-                    #log_error(user_id, "Failed to update user points")
-                    return jsonify({"error": "Failed to update user points."}), 500
+
+                    print('\n------------------------')
+                    print('\nresult: ', result)
+                    return jsonify(result), result["code"]
             else:
-                remaining = points_to_deduct - user_points
+                points_to_deduct_from_customizations = points_to_deduct - user_points
+
+                # Get user customizations
                 print("-----Invoking user microservice-----")
-                user_item_purchase_history = invoke_http(
+                user_customizations_result = invoke_http(
                     f"{USER_MICROSERVICE_URL}/users/{user_id}/customizations",
                     method="GET",
                 )
-                print(user_item_purchase_history)
-                user_item_purchase_history_code = user_item_purchase_history["code"]
-                user_item_purchase_history_message = json.dumps(user_item_purchase_history)
-                # error handle if cant retrieve
-                if user_item_purchase_history_code not in range(200, 300):
-                    print('\n\n-----Publishing the (points update error) message with routing_key=points.update.error-----')
+                print("user_customizations_result: ", user_customizations_result, '\n')
 
-                    channel.basic_publish(exchange=exchangename, routing_key="user.error", 
-                        body=user_item_purchase_history_message, properties=pika.BasicProperties(delivery_mode = 2)) 
+                user_customizations_result_code = user_customizations_result["code"]
+                user_customizations_message = json.dumps(user_customizations_result)
+                
+                # error handle if cant retrieve
+                if user_customizations_result_code not in range(200, 300):
+                    print('\n\n-----Publishing the (user customizations error) message with routing_key=user.customizations.error-----')
+
+                    channel.basic_publish(exchange=exchangename, routing_key="user.customizations.error", 
+                        body=user_customizations_message, properties=pika.BasicProperties(delivery_mode = 2)) 
                     # make message persistent within the matching queues 
 
                     # - reply from the invocation is not used;
                     # continue even if this invocation fails        
-                    print("\nUser item purchase history status ({:d}) published to the RabbitMQ Exchange:".format(
-                        user_item_purchase_history_code), user_item_purchase_history)
-
-                    # Return error
-                    return {
+                    print("\nUser customizations status ({:d}) published to the RabbitMQ Exchange:".format(
+                        user_customizations_result_code), user_customizations_result)
+                    
+                    result = {
                         "code": 500,
                         "data": {
-                            "user_item_purchase_history_result": user_item_purchase_history
+                            "user_customizations_result": user_customizations_result
                         },
-                        "message": "User item purchase history error sent for error handling"
+                        "message": "User customizations error sent for error handling"
                     }
 
-                user_item_purchase_history_list = user_item_purchase_history["data"]
+                    print('\n------------------------')
+                    print('\nresult: ', result)
+                    return jsonify(result), result["code"]
+
+                user_customizations_result_list = user_customizations_result["data"]
+
+
+                # Get all customizations
                 print("-----Invoking shop microservice-----")
-                customizations = invoke_http(
+                customizations_result = invoke_http(
                     f"{SHOP_MICROSERVICE_URL}/shop/customizations",
                     method="GET"
                 )
+                print("customizations_result:", customizations_result, "\n")
 
-                print(customizations)
-                customizations_code = customizations["code"]
-                customizations_message = json.dumps(customizations)
+                customizations_result_code = customizations_result["code"]
+                customizations_message = json.dumps(customizations_result)
+
                 # error handle if cant retrieve
-                if customizations_code not in range(200, 300):
-                    print('\n\n-----Publishing the (get customizations error) message with routing_key=customizations.error-----')
+                if customizations_result_code not in range(200, 300):
+                    print('\n\n-----Publishing the (customizations error) message with routing_key=customizations.error-----')
 
                     channel.basic_publish(exchange=exchangename, routing_key="customizations.error", 
                         body=customizations_message, properties=pika.BasicProperties(delivery_mode = 2)) 
@@ -291,210 +323,322 @@ def process_refund():
 
                     # - reply from the invocation is not used;
                     # continue even if this invocation fails        
-                    print("\nGet customizations status ({:d}) published to the RabbitMQ Exchange:".format(
-                        customizations_code), customizations)
-
-                    # Return error
-                    return {
+                    print("\nCustomizations status ({:d}) published to the RabbitMQ Exchange:".format(
+                        customizations_result_code), customizations_result)
+                    
+                    result = {
                         "code": 500,
                         "data": {
-                            "customizations_result": customizations
+                            "customizations_result": customizations_result
                         },
-                        "message": "Get customizations error sent for error handling"
+                        "message": "Customizations error sent for error handling"
                     }
 
+                    print('\n------------------------')
+                    print('\nresult: ', result)
+                    return jsonify(result), result["code"]
 
-                # if customizations["code"] not in range(200, 300):
-                #     #log_error(user_id, "Failed to retrieve customizations")
-                #     return jsonify({"error": "Failed to retrieve customizations."}), 500
-
-                customizations_list = customizations["data"]["customizations"]
+                customizations_list = customizations_result["data"]["customizations"]
                 customizations_dict = {}
+
                 for customization in customizations_list:
                     customizations_dict[customization["customization_id"]] = (
                         customization["credits"]
                     )
-                list_to_run = []
-                for item in user_item_purchase_history_list:
-                    item_tuple = (
-                        item["customization_id"],
-                        customizations_dict[item["customization_id"]],
-                    )
-                    list_to_run.append(item_tuple)
-                to_remove_list = []
-                while (remaining > 0) and (len(list_to_run) > 0):
-                    remaining -= list_to_run[-1][1]
-                    last_customization = list_to_run.pop()
-                    to_remove_list.append(last_customization[0])
-            
-                change_points = user_points + remaining
-                operation = "minus"
 
+                possible_user_customizations_to_remove = []
+
+                for customization in user_customizations_result_list:
+                    customization_tuple = (
+                        customization["customization_id"],
+                        customizations_dict[customization["customization_id"]],
+                    )
+                    possible_user_customizations_to_remove.append(customization_tuple)
+
+                to_remove_list = []
+
+                # while points_to_deduct_from_customizations > 0 and len(possible_user_customizations_to_remove) > 0:
+                #     possible_user_customizations_to_remove_points = possible_user_customizations_to_remove[-1][1]
+
+                #     if possible_user_customizations_to_remove_points > points_to_deduct_from_customizations:
+                #         possible_user_customizations_to_remove.pop()
+                #         continue
+
+                #     points_to_deduct_from_customizations -= possible_user_customizations_to_remove_points
+                #     user_customization = possible_user_customizations_to_remove.pop()
+                #     to_remove_list.append(user_customization[0])
+
+                isBestCombination = False
+                # Best case scenario
+                for customization_tuple in possible_user_customizations_to_remove:
+                    customization_points = customization_tuple[1]
+                    if customization_points == points_to_deduct_from_customizations:
+                        to_remove_list.append(customization_tuple[0])
+                        points_to_deduct_from_customizations = 0
+                        isBestCombination = True
+                        break
+
+                isSufficientForRefund = True
+                compensate_points = 0
+                if not isBestCombination:
+                    total_points = 0
+
+                    # Check if user customizations are sufficient for refund
+                    for customization_tuple in possible_user_customizations_to_remove:
+                        customization_points = customization_tuple[1]
+                        total_points += customization_points
+                        to_remove_list.append(customization_tuple[0])
+
+                    if total_points < points_to_deduct_from_customizations:
+                        isSufficientForRefund = False
+
+                    elif total_points == points_to_deduct_from_customizations:
+                        points_to_deduct_from_customizations = 0
+
+                    elif total_points != points_to_deduct_from_customizations:
+                        # Reset
+                        to_remove_list = []
+
+                        temp_to_remove_list = []
+                        
+                        combs = list(combinations(possible_user_customizations_to_remove, 2))
+
+                        # Initialize first combination
+                        smallest_eligible_points_diff = float('inf')
+
+                        for comb in combs:
+                            comb_total_points = comb[0][1] + comb[1][1]
+                            points_diff = comb_total_points - points_to_deduct_from_customizations
+
+                            if points_diff < smallest_eligible_points_diff and points_diff >= 0:
+                                # Reset
+                                temp_to_remove_list.clear()
+
+                                temp_to_remove_list.append(comb)
+                                smallest_eligible_points_diff = points_diff
+
+                        for customization in possible_user_customizations_to_remove:
+                            customization_points = customization[1]
+                            points_diff = customization_points - points_to_deduct_from_customizations
+
+                            if points_diff < smallest_eligible_points_diff and points_diff >= 0:
+                                # Reset
+                                temp_to_remove_list.clear()
+
+                                temp_to_remove_list.append(customization)
+                                smallest_eligible_points_diff = points_diff
+
+                        # Special handling (can't use len())
+                        if str(temp_to_remove_list).count(",") == 3:
+                            to_remove_customizations = temp_to_remove_list[0]
+                            to_remove_list.append(to_remove_customizations[0][0])
+                            to_remove_list.append(to_remove_customizations[1][0])
+                            to_remove_list_total_points = to_remove_customizations[0][1] + to_remove_customizations[1][1]
+
+                            # If refunded customization credits > points_to_deduct_from_customizations, compensate the user
+                            if to_remove_list_total_points > points_to_deduct_from_customizations:
+                                compensate_points += to_remove_list_total_points - points_to_deduct_from_customizations
+
+                        elif len(temp_to_remove_list) == 1:
+                            to_remove_customization = temp_to_remove_list[0]
+                            to_remove_list.append(to_remove_customization[0])
+                            to_remove_list_total_points = to_remove_customization[1]
+
+                            # If refunded customization credits > points_to_deduct_from_customizations, compensate the user
+                            if to_remove_list_total_points > points_to_deduct_from_customizations:
+                                compensate_points += to_remove_list_total_points - points_to_deduct_from_customizations
+
+                        points_to_deduct_from_customizations = 0
+
+                # If user customizations are insufficient for refund
+                if not isSufficientForRefund:
+                    result = {
+                        "code": 400,
+                        "message": "Refund cannot be processed as user customizations are insufficient for refund"
+                    }
+
+                    print('\n\n-----Publishing the (customizations refund error) message with routing_key=customizations.refund.error-----')
+
+                    channel.basic_publish(exchange=exchangename, routing_key="customizations.refund.error", 
+                        body=json.dumps(result), properties=pika.BasicProperties(delivery_mode = 2)) 
+                    # make message persistent within the matching queues 
+
+                    # - reply from the invocation is not used;
+                    # continue even if this invocation fails        
+                    print("\nCustomizations refund status ({:d}) published to the RabbitMQ Exchange:".format(
+                        result["code"]), result)
+            
+                    print('\n------------------------')
+                    print('\nresult: ', result)
+                    return jsonify(result), result["code"]
+                    
+                change_points = user_points - points_to_deduct_from_customizations - compensate_points
+
+
+                # Delete user customizations
                 customizations_to_delete = {
                     "user_id": user_id,
                     "to_remove_list": to_remove_list,
                 }
+
                 print("-----Invoking user microservice-----")
-                delete_customizations = invoke_http(
-                    f"{USER_MICROSERVICE_URL}/customizations/delete",
+                delete_customizations_result = invoke_http(
+                    f"{USER_MICROSERVICE_URL}/users/customizations/delete",
                     method="DELETE",
                     json=customizations_to_delete,
                 )
-                print(delete_customizations)
-                delete_customizations_code = delete_customizations["code"]
-                delete_customizations_message = json.dumps(delete_customizations)
-                # error handle if cant retrieve
-                if delete_customizations_code not in range(200, 300):
-                    print('\n\n-----Publishing the (delete customizations error) message with routing_key=customizations.error-----')
+                print("delete_customizations_result:", delete_customizations_result, "\n")
 
-                    channel.basic_publish(exchange=exchangename, routing_key="customizations.error", 
+                delete_customizations_result_code = delete_customizations_result["code"]
+                delete_customizations_message = json.dumps(delete_customizations_result)
+
+                # error handle if cant retrieve
+                if delete_customizations_result_code not in range(200, 300):
+                    print('\n\n-----Publishing the (delete customizations error) message with routing_key=customizations.deletion.error-----')
+
+                    channel.basic_publish(exchange=exchangename, routing_key="customizations.deletion.error", 
                         body=delete_customizations_message, properties=pika.BasicProperties(delivery_mode = 2)) 
                     # make message persistent within the matching queues 
 
                     # - reply from the invocation is not used;
                     # continue even if this invocation fails        
-                    print("\nGet customizations status ({:d}) published to the RabbitMQ Exchange:".format(
-                        delete_customizations_code), delete_customizations)
-
-                    # Return error
-                    return {
+                    print("\nCustomizations deletion status ({:d}) published to the RabbitMQ Exchange:".format(
+                        delete_customizations_result_code), delete_customizations_result)
+                    
+                    result = {
                         "code": 500,
                         "data": {
-                            "delete_customizations_result": delete_customizations
+                            "delete_customizations_result_result": delete_customizations_result
                         },
-                        "message": "Delete customizations error sent for error handling"
+                        "message": "Customizations deletion error sent for error handling"
                     }
 
+                    print('\n------------------------')
+                    print('\nresult: ', result)
+                    return jsonify(result), result["code"]
 
 
-                # if delete_customizations["code"] not in range(200, 300):
-                #     #log_error(user_id, "Failed to delete customizations")
-                #     return jsonify({"error": "Failed to delete customizations."}), 500
-                print("items deleted successfully")
+                # Update user points
                 points_to_change = {
-                    "operation": operation,
+                    "user_id": user_id,
                     "price": abs(change_points / 100),
+                    "operation": "subtract",
                 }
+
                 print("-----Invoking user microservice-----")
                 update_points_result = invoke_http(
-                    f"{USER_MICROSERVICE_URL}/users/{user_id}/points/update",
+                    f"{USER_MICROSERVICE_URL}/users/points/update",
                     method="PUT",
                     json=points_to_change,
                 )
-                print(update_points_result)
+                print("update_points_result:", update_points_result, "\n")
+
                 update_points_result_code = update_points_result["code"]
-                update_points_result_message = json.dumps(update_points_result)
+                update_points_message = json.dumps(update_points_result)
+
                 # error handle if cant retrieve
                 if update_points_result_code not in range(200, 300):
-                    print('\n\n-----Publishing the (points update error) message with routing_key=points.error-----')
+                    print('\n\n-----Publishing the (points update error) message with routing_key=points.update.error-----')
 
-                    channel.basic_publish(exchange=exchangename, routing_key="points.error", 
-                        body=update_points_result_message, properties=pika.BasicProperties(delivery_mode = 2)) 
+                    channel.basic_publish(exchange=exchangename, routing_key="points.update.error", 
+                        body=update_points_message, properties=pika.BasicProperties(delivery_mode = 2)) 
                     # make message persistent within the matching queues 
 
                     # - reply from the invocation is not used;
                     # continue even if this invocation fails        
-                    print("\nGet customizations status ({:d}) published to the RabbitMQ Exchange:".format(
+                    print("\nPoints update status ({:d}) published to the RabbitMQ Exchange:".format(
                         update_points_result_code), update_points_result)
 
-                    # Return error
-                    return {
+                    result = {
                         "code": 500,
                         "data": {
                             "update_points_result": update_points_result
                         },
-                        "message": "Update points error sent for error handling"
+                        "message": "Points update error sent for error handling"
                     }
 
+                    print('\n------------------------')
+                    print('\nresult: ', result)
+                    return jsonify(result), result["code"]
 
-
-
-                # if update_points_result["code"] not in range(200, 300):
-                #     #log_error(
-                #     #    user_id, "Failed to update points after deleting customizations"
-                #     #)
-                #     return (
-                #         jsonify(
-                #             {
-                #                 "error": "Failed to update points after deleting customizations."
-                #             }
-                #         ),
-                #         500,
-                #     )
-
-            # Step 5: Delete purchase record
+            # Delete purchase record
             del_json = {"user_id": user_id, "game_id": game_id}
             
             print("-----Invoking user microservice-----")
-            delete_purchase_record = invoke_http(
+            delete_game_purchase_result = invoke_http(
                 f"{USER_MICROSERVICE_URL}/users/game-purchase/delete",
                 method="DELETE",
                 json=del_json,
             )
-            print(delete_purchase_record)
-            delete_purchase_record_code = delete_purchase_record["code"]
-            delete_purchase_record_message = json.dumps(delete_purchase_record)
-            # error handle if cant retrieve
-            if delete_purchase_record_code not in range(200, 300):
-                print('\n\n-----Publishing the (delete purchase error) message with routing_key=deletepurchase.error-----')
+            print("delete_game_purchase_result:", delete_game_purchase_result, "\n")
 
-                channel.basic_publish(exchange=exchangename, routing_key="deletepurchase.error", 
-                    body=delete_purchase_record_message, properties=pika.BasicProperties(delivery_mode = 2)) 
+            delete_game_purchase_result_code = delete_game_purchase_result["code"]
+            delete_game_purchase_message = json.dumps(delete_game_purchase_result)
+
+            # error handle if cant retrieve
+            if delete_game_purchase_result_code not in range(200, 300):
+                print('\n\n-----Publishing the (game purchase deletion error) message with routing_key=game.purchase.deletion.error-----')
+
+                channel.basic_publish(exchange=exchangename, routing_key="game.purchase.deletion.error", 
+                    body=delete_game_purchase_message, properties=pika.BasicProperties(delivery_mode = 2)) 
                 # make message persistent within the matching queues 
 
                 # - reply from the invocation is not used;
                 # continue even if this invocation fails        
-                print("\nGet customizations status ({:d}) published to the RabbitMQ Exchange:".format(
-                    delete_purchase_record_code), delete_purchase_record)
-
-                # Return error
-                return {
+                print("\nGame purchase deletion status ({:d}) published to the RabbitMQ Exchange:".format(
+                    delete_game_purchase_result_code), delete_game_purchase_result)
+                
+                result = {
                     "code": 500,
                     "data": {
-                        "delete_purchase_record": delete_purchase_record
+                        "delete_game_purchase_result": delete_game_purchase_result
                     },
-                    "message": "Delete purchase error sent for error handling"
+                    "message": "Game purchase deletion error sent for error handling"
                 }
 
-            # if delete_purchase_record["code"] != 200:
-            #     return jsonify({"error": "Failed to delete purchase record."}), 500
+                print('\n------------------------')
+                print('\nresult: ', result)
+                return jsonify(result), result["code"]
             
 
-            # Step 6: Process the refund through Stripe
+            # Process the refund through Stripe
             payment_intent_id = purchase_id
-            refund_data = {"payment_intent": payment_intent_id}
+            payment_refund_data = {"payment_intent": payment_intent_id}
+
             print('\n-----Invoking payment microservice-----')
-            payment_response = invoke_http(
-                f"{PAYMENT_MICROSERVICE_URL}/refund", method="POST", json=refund_data
+            payment_refund_result = invoke_http(
+                f"{PAYMENT_MICROSERVICE_URL}/refund", method="POST", json=payment_refund_data
             )
-            print(payment_response)
-            payment_result_code = payment_response["code"]
-            payment_message = json.dumps(payment_response)
+            print('payment_refund_result:', payment_refund_result, '\n')
 
-            if payment_result_code not in range(200, 300):
-                print('\n\n-----Publishing the (refund error) message with routing_key=refund.error-----')
+            payment_refund_result_code = payment_refund_result["code"]
+            payment_refund_message = json.dumps(payment_refund_result)
 
-                channel.basic_publish(exchange=exchangename, routing_key="refund.error", 
-                    body=payment_message, properties=pika.BasicProperties(delivery_mode = 2)) 
+            if payment_refund_result_code not in range(200, 300):
+                print('\n\n-----Publishing the (payment refund error) message with routing_key=payment.refund.error-----')
+
+                channel.basic_publish(exchange=exchangename, routing_key="payment.refund.error", 
+                    body=payment_refund_message, properties=pika.BasicProperties(delivery_mode = 2)) 
                 # make message persistent within the matching queues 
 
                 # - reply from the invocation is not used;
                 # continue even if this invocation fails        
-                print("\nRefund status ({:d}) published to the RabbitMQ Exchange:".format(
-                    payment_result_code), payment_response)
-
-                # Return error
-                return {
+                print("\nPayment refund status ({:d}) published to the RabbitMQ Exchange:".format(
+                    payment_refund_result_code), payment_refund_result)
+                
+                result = {
                     "code": 500,
                     "data": {
-                        "payment_result": payment_response
+                        "payment_refund_result": payment_refund_result
                     },
                     "message": "Refund error sent for error handling"
                 }
 
+                print('\n------------------------')
+                print('\nresult: ', result)
+                return jsonify(result), result["code"]
 
             # Step 7: Send email notification to user
-
             notification_json = {
                 "game_price": game_details_result["data"]["price"],
                 "game_title": game_details_result["data"]["title"],
@@ -504,7 +648,7 @@ def process_refund():
             }
 
             print("processing notification...")
-            # process_refund_notification(notification_json)
+            process_refund_notification(notification_json)
 
             # If everything is successful, return confirmation
             return jsonify({"message": "Refund processed successfully."}), 200

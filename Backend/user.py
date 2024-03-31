@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from flasgger import Swagger
 from os import environ
+from sqlalchemy.orm.exc import NoResultFound
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
@@ -125,7 +126,7 @@ class CustomizationPurchase(db.Model):
 
 # GET USER DETAILS 
 @app.route("/users/<int:userId>")
-def get_user_details_new(userId):
+def get_user_details(userId):
     """
     Get user details by user ID
     ---
@@ -143,37 +144,40 @@ def get_user_details_new(userId):
     """
     try:
         user = db.session.scalars(db.select(User).filter_by(user_id=userId)).one()
-        if user:
-            return jsonify(
-                {
-                    "code": 200,
-                    "data": user.json()
-                }
-            ), 200
+
+        return jsonify(
+            {
+                "code": 200,
+                "data": user.json()
+            }
+        ), 200
         
+    except NoResultFound:
         return jsonify(
             {
                 "code": 404, 
                 "data": {
                     "user_id": userId
                 },
-                "message": "There is no such user"
+                "message": "User does not exist"
             }
         ), 404
-    # The code 404 will not return I tried on Postman. If i query for user id = 10, the code below is returned instead.
-    
+        
     except Exception as e:
         return jsonify(
             {
-                "code": 500,
+                "code": 500, 
+                "data": {
+                    "user_id": userId
+                },
                 "message": "An error occurred while getting user details"
             }
         ), 500
     
 
 # UPDATE USER POINTS
-@app.route("/users/<int:userId>/points/update", methods=["PUT"])
-def update_points(userId):
+@app.route("/users/points/update", methods=["PUT"])
+def update_points():
     # """
     # Update user points
     # ---
@@ -203,14 +207,16 @@ def update_points(userId):
     if request.is_json:
         try:
             points_json = request.get_json()
+            user_id = points_json["user_id"]
+            price = points_json["price"]
 
-            user = User.query.get(userId)
+            user = User.query.get(user_id)
 
             if user:
                 if points_json["operation"] == "add":
-                    user.points  = user.points + (float(points_json["price"]) * 100)
+                    user.points  = user.points + (float(price) * 100)
                 else:
-                    user.points  = user.points - (float(points_json["price"]) * 100)
+                    user.points  = user.points - (float(price) * 100)
 
                 db.session.commit()
                 return jsonify(
@@ -224,7 +230,7 @@ def update_points(userId):
                 {
                     "code": 404, 
                     "data": {
-                        "user_id": userId
+                        "user_id": user_id
                     },
                     "message": "User does not exist"
                 }
@@ -234,6 +240,9 @@ def update_points(userId):
             return jsonify(
                 {
                     "code": 500,
+                    "data": {
+                        "user_id": user_id
+                    },
                     "message": "An error occurred while updating user points"
                 }
             ), 500
@@ -315,6 +324,9 @@ def get_wishlist_and_purchase(userId):
         return jsonify(
             {
                 "code": 500,
+                "data": {
+                    "user_id": userId
+                },
                 "message": "An error occurred while getting user wishlist and purchases"
             }
         ), 500
@@ -386,7 +398,6 @@ def delete_wishlist():
     if request.is_json:
         try:
             data = request.get_json()
-            print(data)
             user_id = data["user_id"]
             game_id = data["game_id"]
 
@@ -422,9 +433,6 @@ def delete_wishlist():
     return jsonify(
         {
             "code": 400, 
-            "data": {
-                "user_id": user_id
-            },
             "message": "Invalid JSON input: " + str(request.get_data())
         }
     ), 400
@@ -475,6 +483,9 @@ def get_customizations(userId):
         return jsonify(
             {
                 "code": 404, 
+                "data": {
+                    "user_id": userId
+                },
                 "message": "User does not exist"
             }
         ), 404
@@ -483,6 +494,9 @@ def get_customizations(userId):
         return jsonify(
             {
                 "code": 500,
+                "data": {
+                    "user_id": userId
+                },
                 "message": "An error occurred while getting user customizations"
             }
         ), 500
@@ -549,6 +563,9 @@ def update_customization():
             return jsonify(
                 {
                     "code": 500,
+                    "data": {
+                        "user_id": user_id
+                    },
                     "message": "An error occurred while updating user selected customization"
                 }
             ), 500
@@ -562,7 +579,7 @@ def update_customization():
     
 
 # DELETE CUSTOMIZATION RECORDS
-@app.route("/customizations/delete", methods=["DELETE"])
+@app.route("/users/customizations/delete", methods=["DELETE"])
 def delete_customization():
     """
     Delete customization purchase records
@@ -582,45 +599,38 @@ def delete_customization():
             data = request.get_json()
             user_id = data["user_id"]
             to_remove_list = data["to_remove_list"]
-            # Query the database for the purchase entry
-            print(user_id)
-            print(to_remove_list)
-            customizationpurchase = CustomizationPurchase.query.filter(CustomizationPurchase.customization_id.in_(to_remove_list), CustomizationPurchase.user_id == user_id).delete()
-            print(customizationpurchase)
-            
-            # Check if the purchase entry exists
-            if customizationpurchase:
-                # Delete the purchase entry
+
+            for customization_id in to_remove_list:
+                customization_purchase = CustomizationPurchase.query.filter(CustomizationPurchase.customization_id==customization_id, CustomizationPurchase.user_id==user_id).delete()
                 
+                if not customization_purchase:
+                    return jsonify(
+                        {
+                            "code": 404, 
+                            "message": "Customization purchase record not found"
+                        }
+                    ), 404
+            
                 db.session.commit()
-                return jsonify(
-                    {
-                        "code": 200, 
-                        "message": "Customization Purchase entry deleted successfully"
-                    }
-                ), 200
-            else:
-                return jsonify(
-                    {
-                        "code": 404, 
-                        "message": "Customization Purchase entry not found"
-                    }
-                ), 404
+            
+            return jsonify(
+                {
+                    "code": 200, 
+                    "message": "Customization purchase record(s) deleted successfully"
+                }
+            ), 200
             
         except Exception as e:
             return jsonify(
                 {
                     "code": 500,
-                    "message": "An error occurred deleting the customization purchase"
+                    "message": "An error occurred deleting the customization purchase record(s)"
                 }
             ), 500
         
     return jsonify(
         {
             "code": 400, 
-            "data": {
-                "user_id": user_id
-            },
             "message": "Invalid JSON input: " + str(request.get_data())
         }
     ), 400
@@ -688,6 +698,48 @@ def create_game_purchase():
         {
             "code": 400, 
             "message": "Invalid JSON input: " + str(request.get_data())
+        }
+    ), 400
+
+
+# GET GAME PURCHASE RECORD
+@app.route("/users/game-purchase", methods = ["GET"])
+def get_game_purchase_record():
+    if (request.args.get("userId") and request.args.get("gameId")):
+        user_id = request.args.get("userId")
+        game_id = request.args.get("gameId")
+
+        try:
+            record = db.session.scalars(db.select(GamePurchase).filter_by(user_id=user_id,game_id=game_id)).one()
+
+            return jsonify(
+                {
+                    "code":200,
+                    "data": {
+                        "user_id": record.user_id,
+                        "game_id": record.game_id,
+                        "payment_intent": record.purchase_id,
+                        "gameplay_time": record.gameplay_time,
+                    },
+                }
+            ), 200
+        
+        except NoResultFound:
+            return jsonify(
+                {
+                    "code": 404,
+                    "data": {
+                        "userId": user_id,
+                        "gameId": game_id
+                    },
+                    "message": "There are no game purchase record that matches the given userId and gameId"
+                }
+            ), 404
+        
+    return jsonify(
+        {
+            "code": 400, 
+            "message": "Invalid query parameter(s)"
         }
     ), 400
 
@@ -760,7 +812,7 @@ def update_game_purchase():
             return jsonify(
                 {
                     "code": 500,
-                    "message": "An error occurred updating the game purchase"
+                    "message": "An error occurred updating the game purchase record"
                 }
             ), 500
     
@@ -817,14 +869,14 @@ def delete_game_purchase():
                 return jsonify(
                     {
                         "code": 200, 
-                        "message": "Purchase entry deleted successfully"
+                        "message": "Game purchase record deleted successfully"
                     }
                 ), 200
             else:
                 return jsonify(
                     {
                         "code": 404, 
-                        "message": "Purchase entry not found"
+                        "message": "Game purchase record not found"
                     }
                 ), 404
             
@@ -832,39 +884,17 @@ def delete_game_purchase():
             return jsonify(
                 {
                     "code": 500,
-                    "message": "An error occurred deleting the game purchase"
+                    "message": "An error occurred deleting the game purchase record"
                 }
             ), 500
         
     return jsonify(
         {
             "code": 400, 
-            "data": {
-                "user_id": user_id
-            },
             "message": "Invalid JSON input: " + str(request.get_data())
         }
     ), 400
 
-
-# Get gameplay time of game
-@app.route("/game-purchase/<int:userId>/<int:gameId>", methods = ["GET"])
-def get_purchase_records(userId, gameId):
-    record = db.session.scalars(db.select(GamePurchase).filter_by(user_id=userId,game_id=gameId)).one()
-    if record:
-        print(record)
-        return jsonify(
-            {
-                "code":200,
-                "data": {
-                    "user_id": record.user_id,
-                    "game_id": record.game_id,
-                    "payment_intent": record.purchase_id,
-                    "gameplay_time": record.gameplay_time,
-                },
-            }
-        )
-    return jsonify({"code": 404, "message": "There is no such record."}), 404
 
 # Get payment ID for refund
 # @app.route("/purchase-id/<int:userId>/<int:gameId>", methods = ["GET"])

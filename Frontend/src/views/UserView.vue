@@ -16,7 +16,7 @@ async function handleRefund(gameData) {
             }
     displayRefundOverlay();
     // CALL REFUND COMPLEX MICROSERVICE HERE
-    await axios.post("http://localhost:5200/refund", axiosData)
+    await axios.post("http://localhost:5200/refund-game", axiosData)
                     .then(res => {
                         if (res.data.code == 200) {
                             console.log('yay')

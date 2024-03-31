@@ -381,13 +381,13 @@ def update_game_purchase(update_json):
 
 def update_points(user_id, game_details):
     points_json = {
-        # "user_id": user_id,
+        "user_id": user_id,
         "price": game_details["price"],
         "operation": "add"
     }
 
     print('\n-----Invoking user microservice-----')
-    update_points_result = invoke_http(update_points_URL + str(user_id) + "/points/update", method='PUT', json=points_json)
+    update_points_result = invoke_http(update_points_URL + "points/update", method='PUT', json=points_json)
     print("update_points_result: ", update_points_result, '\n')
 
     update_points_result_code = update_points_result["code"]

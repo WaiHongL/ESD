@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from flasgger import Swagger
 from os import environ
+from sqlalchemy.orm.exc import NoResultFound
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
@@ -231,7 +232,7 @@ def get_games_genre():
             return jsonify(
                 {
                     "code": 404,
-                    "data": "There are no game genres"
+                    "message": "There are no game genres"
                 }
             ), 404
         
@@ -263,15 +264,15 @@ def get_game_details(gameId):
     """
     try:
         game = db.session.scalars(db.select(Game).filter_by(game_id=gameId)).one()
-        if (game):
-            # print(game)
-            return jsonify(
-                {
-                    "code": 200,
-                    "data": game.json()
-                }
-            ), 200
         
+        return jsonify(
+            {
+                "code": 200,
+                "data": game.json()
+            }
+        ), 200
+        
+    except NoResultFound:
         return jsonify(
             {
                 "code": 404,
@@ -358,14 +359,14 @@ def get_customization_details(customizationId):
     try: 
         customization = db.session.scalars(db.select(Customizations).filter_by(customization_id=customizationId)).one()
 
-        if customization:
-            return jsonify(
-                {
-                    "code": 200,
-                    "data": customization.json()
-                }
-            ), 200
+        return jsonify(
+            {
+                "code": 200,
+                "data": customization.json()
+            }
+        ), 200
         
+    except NoResultFound:
         return jsonify(
             {
                 "code": 404,

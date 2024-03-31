@@ -121,25 +121,26 @@ def refund():
     if request.is_json:
         try:
             data = request.get_json()
-            print(data)
             pi = data['payment_intent']
-            print(pi)
             refund_obj = stripe.Refund.create(payment_intent=pi)
             status = refund_obj['status']
+
             if status == 'succeeded':
                 return jsonify(
                 {   
                     "code": 200,
-                    "data": 'Refund successful'
+                    "data": refund_obj,
                 }
             ), 200
+
             else:
                 return jsonify(
                 {   
-                    "code": 500,
-                    "data": 'Refund failed (Stripe error)'
+                    "code": 400,
+                    "message": 'Refund failed'
                 }
-            ), 200
+            ), 400
+
         except Exception as e:
             return jsonify(
                 {
@@ -147,6 +148,13 @@ def refund():
                     "message": "An error occurred while refunding payment"
                 }
             ), 500
+    
+    return jsonify(
+        {
+            "code": 400, 
+            "message": "Invalid JSON input: " + str(request.get_data())
+        }
+    ), 400
 
 
 if __name__ == '__main__':
