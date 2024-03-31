@@ -26,7 +26,7 @@ import axios from "axios";
 // GET ALL AVAILABLE CUSTOMIZATIONS
 const customizations = ref([])
 function getAllCustomizations() {
-    axios.get("http://localhost:5601/customizations")
+    axios.get("http://localhost:5601/shop/customizations")
         .then((res) => {
             customizations.value = res.data.data.customizations;
         })

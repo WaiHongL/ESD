@@ -161,7 +161,7 @@ async function getWishlistAndPurchases() {
 }
 
 async function getGameById(gameId, type) {
-    axios.get("http://localhost:5601/games/" + gameId)
+    axios.get("http://localhost:5601/shop/games/" + gameId)
         .then(res => {
             const data = res.data.data
             type == "wishlist" ? wishlist.value.push(data) : purchases.value.push(data);
@@ -203,7 +203,7 @@ async function getUserCustomizations() {
     if (customizationData != undefined) {
         for (const customization of customizationData) {
             const id = customization.customization_id
-            await axios.get("http://localhost:5601/customizations/" + id)
+            await axios.get("http://localhost:5601/shop/customizations/" + id)
                 .then(res => {
                     customizations.value.push(res.data.data);
 

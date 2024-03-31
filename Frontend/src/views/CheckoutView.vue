@@ -13,7 +13,7 @@ const gameGenre = ref(null);
 const gamePrice = ref(null);
 
 function getGameDetails() {
-    axios.get("http://localhost:5601/games/" + gameId)
+    axios.get("http://localhost:5601/shop/games/" + gameId)
         .then((res) => {
             const data = res.data.data;
             gameTitle.value = data.title;
@@ -61,7 +61,7 @@ function handleSubmit() {
             } else {
                 const axiosData = {
                     "purchase_id": res.paymentMethod.id,
-                    "user_id": "6", // TO BE CHANGED
+                    "user_id": "1", // TO BE CHANGED
                     "game_id": gameId,
                 }
 

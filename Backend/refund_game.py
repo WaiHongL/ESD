@@ -1,7 +1,6 @@
 from flask import Flask, request, jsonify
 from invokes import invoke_http
 from flask_cors import CORS
-import requests
 import pika
 import amqp_connection
 import os, sys
@@ -14,13 +13,14 @@ CORS(app)
 USER_MICROSERVICE_URL = "http://user:5600"
 PAYMENT_MICROSERVICE_URL = "http://payment:5604"
 ERROR_MICROSERVICE_URL = "http://error:5445/error"
-SHOP_CUSTOMIZATION_MICROSERVICE_URL = "http://shop:5601"
+SHOP_MICROSERVICE_URL = "http://shop:5601"
 
 # amqp stuff
 exchangename = "order_topic"  # exchange name
 exchangetype = "topic"  # use a 'topic' exchange to enable interaction
 connection = amqp_connection.create_connection()
 channel = connection.channel()
+
 # # if the exchange is not yet created, exit the program
 if not amqp_connection.check_exchange(channel, exchangename, exchangetype):
     print(
@@ -72,22 +72,24 @@ def process_refund():
             data = request.get_json()
             user_id = data["user_id"]
             game_id = data["game_id"]
-            print("-----Invoking shop microservice-----")
-            gamedetail = invoke_http(
-                f"{SHOP_CUSTOMIZATION_MICROSERVICE_URL}/games/{game_id}", method="GET"
-            )
-            print("game_detail_result:", gamedetail, "\n")
-            gamedetail_message = json.dumps(gamedetail)
 
-            if gamedetail["code"] not in range(200, 300):
+            print("-----Invoking shop microservice-----")
+            game_details_result = invoke_http(
+                f"{SHOP_MICROSERVICE_URL}/shop/games/{game_id}", method="GET"
+            )
+            print("game_details_result:", game_details_result, "\n")
+
+            game_details_message = json.dumps(game_details_result)
+
+            if game_details_result["code"] not in range(200, 300):
                 print(
-                    "\n\n-----Publishing the (game details error) message with routing_key=game.error-----"
+                    "\n\n-----Publishing the (game details error) message with routing_key=game.details.error-----"
                 )
 
                 channel.basic_publish(
                     exchange=exchangename,
-                    routing_key="game.error",
-                    body=gamedetail_message,
+                    routing_key="game.details.error",
+                    body=game_details_message,
                     properties=pika.BasicProperties(delivery_mode=2),
                 )
                 # make message persistent within the matching queues
@@ -96,19 +98,22 @@ def process_refund():
                 # continue even if this invocation fails
                 print(
                     "\nGame details status ({:d}) published to the RabbitMQ Exchange:".format(
-                        gamedetail["code"]
+                        game_details_result["code"]
                     ),
-                    gamedetail,
+                    game_details_result,
                 )
 
                 # Return error
-                return {
-                    "code": 500,
-                    "data": {"game_details_result": gamedetail},
-                    "message": "Game details error sent for error handling",
-                }
+                return jsonify(
+                    {
+                        "code": 500,
+                        "data": { "game_details_result": game_details_result },
+                        "message": "Game details error sent for error handling",
+                    }
+                ), 500
 
-            points_to_deduct = gamedetail["data"]["points"]
+            points_to_deduct = game_details_result["data"]["points"]
+
             # Step 1: Retrieve user's gameplay time and purchase id
             print("-----Invoking user microservice-----")
             create_game_purchase_result = invoke_http(
@@ -269,7 +274,7 @@ def process_refund():
                 user_item_purchase_history_list = user_item_purchase_history["data"]
                 print("-----Invoking shop microservice-----")
                 customizations = invoke_http(
-                    f"{SHOP_CUSTOMIZATION_MICROSERVICE_URL}/customizations",
+                    f"{SHOP_MICROSERVICE_URL}/shop/customizations",
                     method="GET"
                 )
 
@@ -422,7 +427,7 @@ def process_refund():
             
             print("-----Invoking user microservice-----")
             delete_purchase_record = invoke_http(
-                f"{USER_MICROSERVICE_URL}/game-purchase/delete",
+                f"{USER_MICROSERVICE_URL}/users/game-purchase/delete",
                 method="DELETE",
                 json=del_json,
             )
@@ -491,15 +496,15 @@ def process_refund():
             # Step 7: Send email notification to user
 
             notification_json = {
-                "game_price": gamedetail["data"]["price"],
-                "game_title": gamedetail["data"]["title"],
+                "game_price": game_details_result["data"]["price"],
+                "game_title": game_details_result["data"]["title"],
                 "email": user_details_result["data"]["email"],
                 "account_name": user_details_result["data"]["account_name"],
                 "purchase_id": payment_intent_id,
             }
 
             print("processing notification...")
-            process_refund_notification(notification_json)
+            # process_refund_notification(notification_json)
 
             # If everything is successful, return confirmation
             return jsonify({"message": "Refund processed successfully."}), 200

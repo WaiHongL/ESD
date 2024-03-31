@@ -58,7 +58,7 @@ async function handleWishlist(data) {
 // GET ALL AVAILABLE GAMES
 const games = ref([]);
 async function getAllGames() {
-	await axios.get("http://localhost:5601/games")
+	await axios.get("http://localhost:5601/shop/games")
 		.then((res) => {
 			const data = res.data.data;
 			games.value = data.games;
@@ -74,7 +74,7 @@ const isRecommendedGamesLoading = ref(false);
 async function getRecommendedGames() {
 	isRecommendedGamesLoading.value = true;
 	recommendedGames.value = [];
-	await axios.get("http://localhost:5603/create_recommendations/1")
+	await axios.get("http://localhost:5603/create-recommendation/1")
 		.then((res) => {
 			const data = res.data.data;
 			recommendedGames.value = data.games;

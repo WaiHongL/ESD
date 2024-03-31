@@ -23,12 +23,12 @@ if not amqp_connection.check_exchange(channel, exchangename, exchangetype):
     sys.exit(0)  # Exit with a success status
 
 # URL
-game_URL = "http://shop:5601/games"
-game_genres_URL = "http://shop:5601/games/genre"
+game_URL = "http://shop:5601/shop/games"
+game_genres_URL = "http://shop:5601/shop/games/genre"
 common_genre_URL = "http://recommend:5602/recommend/genre"
 
 # CREATE RECOMMENDATION
-@app.route("/create_recommendations/<int:userId>")
+@app.route("/create-recommendation/<int:userId>")
 def create_recommendation(userId):
     try:
         result = process_recommendation(userId)
@@ -138,53 +138,53 @@ def process_recommendation(userId):
     # INVOKE GAME MICROSERVICE TO GET GAMES THAT MATCHES COMMON GENRE
     print("\n-----Invoking game microservice-----")
     genre = common_genre_result["data"]
-    game_by_genre_URL = "http://shop:5601/games?genre="
+    games_by_genre_URL = "http://shop:5601/shop/games?genre="
 
     if type(genre) is list:
         for i in range(len(genre)):
             if i == 0:
-                game_by_genre_URL += quote(genre[i])
+                games_by_genre_URL += quote(genre[i])
             else:
-                game_by_genre_URL += "&genre=" + quote(genre[i])
+                games_by_genre_URL += "&genre=" + quote(genre[i])
     else:
-        game_by_genre_URL += quote(genre)
+        games_by_genre_URL += quote(genre)
 
-    game_by_genre_result = invoke_http(game_by_genre_URL)
-    print("game_by_genre_result:", game_by_genre_result)
+    games_by_genre_result = invoke_http(games_by_genre_URL)
+    print("games_by_genre_result:", games_by_genre_result)
 
-    game_by_genre_result_code = game_by_genre_result["code"]
-    game_by_genre_message = json.dumps(game_by_genre_result)
+    games_by_genre_result_code = games_by_genre_result["code"]
+    games_by_genre_message = json.dumps(games_by_genre_result)
 
-    if game_by_genre_result_code not in range(200, 300):
+    if games_by_genre_result_code not in range(200, 300):
         print("\n\n-----Publishing the (game by genre error) message with routing_key=game.by.genre.error-----")
 
         channel.basic_publish(
             exchange = exchangename,
             routing_key = "game.by.genre.error",
-            body = game_by_genre_message,
+            body = games_by_genre_message,
             properties = pika.BasicProperties(delivery_mode = 2)
         )
 
-        print("\nGame by genre error published to the RabbitMQ Exchange:".format(game_by_genre_result_code), game_by_genre_result)
+        print("\nGame by genre error published to the RabbitMQ Exchange:".format(games_by_genre_result_code), games_by_genre_result)
 
         return {
             "code": 500,
-            "data": { "game_by_genre_result": game_by_genre_result },
+            "data": { "games_by_genre_result": games_by_genre_result },
             "message": "Game by genre error sent for error handling."
         }
     
     # FILTER GAMES ALREADY PURCHASED
-    game_by_genre_data = game_by_genre_result["data"]
+    games_by_genre_data = games_by_genre_result["data"]
     recommended_games = []
-    if "games" in game_by_genre_data:
-        games = game_by_genre_data["games"]
+    if "games" in games_by_genre_data:
+        games = games_by_genre_data["games"]
         for game in games:
             if (game["game_id"] not in purchase_ids):
                 recommended_games.append(game)
     
-    game_by_genre_result["data"]["games"] = recommended_games
+    games_by_genre_result["data"]["games"] = recommended_games
 
-    return game_by_genre_result
+    return games_by_genre_result
 
 
 if __name__ == "__main__":

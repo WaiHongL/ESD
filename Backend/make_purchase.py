@@ -1,5 +1,5 @@
-from flask import Flask, request, jsonify, Response
-from flask_cors import CORS, cross_origin
+from flask import Flask, request, jsonify
+from flask_cors import CORS
 import os, sys
 from invokes import invoke_http
 import pika
@@ -40,13 +40,13 @@ if not amqp_connection.check_exchange(channel, exchangename, exchangetype):
     sys.exit(0)  # Exit with a success status
 
 #URLS
-create_game_purchase_URL = "http://user:5600/game-purchase/create"
-game_details_URL = "http://shop:5601/games/"
+create_game_purchase_URL = "http://user:5600/users/game-purchase/create"
+game_details_URL = "http://shop:5601/shop/games/"
 update_points_URL = "http://user:5600/users/"
 payment_URL = "http://payment:5604/payment"
-update_game_purchase_URL = "http://user:5600/game-purchase/update"
+update_game_purchase_URL = "http://user:5600/users/game-purchase/update"
 user_details_URL = "http://user:5600/users/"
-delete_game_purchase_URL = "http://user:5600/game-purchase/delete"
+delete_game_purchase_URL = "http://user:5600/users/game-purchase/delete"
 
 
 @app.route("/make-purchase", methods=['POST'])
@@ -151,7 +151,7 @@ def make_purchase():
                             }    
 
                             print('processing notification...')
-                            process_notification(notification_json)
+                            # process_notification(notification_json)
 
                             print('\n------------------------')
                             print('\nresult: ', update_game_purchase_result)
@@ -167,51 +167,39 @@ def make_purchase():
                     else:
                         return jsonify(update_game_purchase_result), update_game_purchase_result["code"]
                 else:
-                    #rollback function TBD
-                    # try:
-                        # point_result = rollback_points(game_details)
-                        rollback_record_result = rollback_record(user_id, game_id)
+                    rollback_record_result = rollback_record(user_id, game_id)
 
-                        if rollback_record_result["code"] in range(200, 300):
-                            user_details_result = get_user_details(user_id)
+                    if rollback_record_result["code"] in range(200, 300):
+                        user_details_result = get_user_details(user_id)
 
-                            if user_details_result["code"] in range(200, 300):
-                                user_details = user_details_result['data']["user_details_result"]["data"]
-                                notification_json = {
-                                    'game_price': game_details['price'],
-                                    'game_title': game_details['title'],
-                                    'email': user_details['email'],
-                                    'account_name': user_details['account_name']
-                                }    
+                        if user_details_result["code"] in range(200, 300):
+                            user_details = user_details_result['data']["user_details_result"]["data"]
+                            notification_json = {
+                                'game_price': game_details['price'],
+                                'game_title': game_details['title'],
+                                'email': user_details['email'],
+                                'account_name': user_details['account_name']
+                            }    
 
-                                print('processing notification...')
-                                process_fail_notification(notification_json)
+                            print('processing notification...')
+                            # process_fail_notification(notification_json)
 
-                                # remove password key
-                                del user_details_result['data']["user_details_result"]["data"]['password']
+                            # remove password key
+                            del user_details_result['data']["user_details_result"]["data"]['password']
 
-                                return jsonify(
-                                    {
-                                        "code": 500,
-                                        "data": {
-                                            "user_details_result": user_details_result
-                                        },
-                                        "message": make_payment_result["message"]
-                                    }
-                                ), 500
-                            else:
-                                return jsonify(user_details_result), user_details_result["code"]
+                            return jsonify(
+                                {
+                                    "code": 500,
+                                    "data": {
+                                        "user_details_result": user_details_result
+                                    },
+                                    "message": make_payment_result["message"]
+                                }
+                            ), 500
                         else:
-                            return jsonify(rollback_record_result), rollback_record_result["code"]
-                    
-                    # except Exception as e:
-                    #     # Unexpected error in code
-                    #     exc_type, exc_obj, exc_tb = sys.exc_info()
-                    #     fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-                    #     ex_str = str(e) + " at " + str(exc_type) + ": " + fname + ": line " + str(exc_tb.tb_lineno)
-                    #     print(ex_str)
-
-                    # return {'code': 200, 'data': {'result': 'rollback success'}}
+                            return jsonify(user_details_result), user_details_result["code"]
+                    else:
+                        return jsonify(rollback_record_result), rollback_record_result["code"]
             else:
                 return jsonify(create_game_purchase_result), create_game_purchase_result["code"]
 
@@ -253,11 +241,13 @@ def create_game_purchase(userid_gameid):
     create_game_purchase_message = json.dumps(create_game_purchase_result)
  
     if create_game_purchase_result_code not in range(200, 300):
-        print('\n\n-----Publishing the (game purchase creation error) message with routing_key=creation.error-----')
-        print('---------message')
-        print(create_game_purchase_message)
-        print('-----------end message')
-        channel.basic_publish(exchange=exchangename, routing_key="creation.error", 
+        print('\n\n-----Publishing the (game purchase creation error) message with routing_key=game.purchase.creation.error-----')
+
+        # print('---------message')
+        # print(create_game_purchase_message)
+        # print('-----------end message')
+
+        channel.basic_publish(exchange=exchangename, routing_key="game.purchase.creation.error", 
             body=create_game_purchase_message, properties=pika.BasicProperties(delivery_mode = 2)) 
         # make message persistent within the matching queues 
 
@@ -379,7 +369,7 @@ def update_game_purchase(update_json):
                 "update_game_purchase_result": update_game_purchase_result
             },
             "message": "Game purchase update error sent for error handling"
-        }, 500
+        }
     
     return {
         "code": 200,
@@ -494,20 +484,20 @@ def process_fail_notification(notification_json):
 
     print('\n\n-----Publishing the notification with routing_key=fail.notification-----')
 
-    try:
-        channel.basic_publish(exchange=exchangename, routing_key="fail.notification", 
-            body=json.dumps(message), properties=pika.BasicProperties(delivery_mode = 2)) 
-        print("published")
+    # try:
+    channel.basic_publish(exchange=exchangename, routing_key="fail.notification", 
+        body=json.dumps(message), properties=pika.BasicProperties(delivery_mode = 2)) 
+        # print("published")
     # make message persistent within the matching queues 
 
     # - reply from the invocation is not used;
     # continue even if this invocation fails        
-    except Exception as e:
-        # Unexpected error in code
-        exc_type, exc_obj, exc_tb = sys.exc_info()
-        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-        ex_str = str(e) + " at " + str(exc_type) + ": " + fname + ": line " + str(exc_tb.tb_lineno)
-        print(ex_str)
+    # except Exception as e:
+    #     # Unexpected error in code
+    #     exc_type, exc_obj, exc_tb = sys.exc_info()
+    #     fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+    #     ex_str = str(e) + " at " + str(exc_type) + ": " + fname + ": line " + str(exc_tb.tb_lineno)
+    #     print(ex_str)
         
 def rollback_record(user_id, game_id):
     delete_game_purchase_json = {

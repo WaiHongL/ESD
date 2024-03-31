@@ -84,7 +84,7 @@ class Customizations(db.Model):
         }
     
 # GET ALL GAMES AND GAMES BY GENRE
-@app.route("/games")
+@app.route("/shop/games")
 def get_games():
     """
     Get all games
@@ -166,7 +166,7 @@ def get_games():
 
 
 # GET GAME GENRES
-@app.route("/games/genre", methods=["POST"])
+@app.route("/shop/games/genre", methods=["POST"])
 def get_games_genre():
     """
     Get games genres
@@ -244,7 +244,7 @@ def get_games_genre():
 
 
 # GET GAME DETAILS
-@app.route("/games/<int:gameId>")
+@app.route("/shop/games/<int:gameId>")
 def get_game_details(gameId):
     """
     Get games genres
@@ -295,7 +295,7 @@ def get_game_details(gameId):
 
 
 # GET ALL CUSTOMIZATIONS
-@app.route("/customizations")
+@app.route("/shop/customizations")
 def get_customizations():
     """
     Get all customizations
@@ -338,7 +338,7 @@ def get_customizations():
 
 
 # GET CUSTOMIZATION DETAILS
-@app.route("/customizations/<int:customizationId>")
+@app.route("/shop/customizations/<int:customizationId>")
 def get_customization_details(customizationId):
     """
     Get customization details

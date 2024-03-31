@@ -627,7 +627,7 @@ def delete_customization():
 
 
 # CREATE A PURCHASE RECORD IN GAME PURCHASE TABLE
-@app.route("/game-purchase/create", methods=["POST"])
+@app.route("/users/game-purchase/create", methods=["POST"])
 def create_game_purchase():
     """
     Create a game purchase record
@@ -693,7 +693,7 @@ def create_game_purchase():
 
 
 # UPDATE PURCHASE RECORD IN GAME PURCHASE TABLE
-@app.route("/game-purchase/update", methods=["PUT"])
+@app.route("/users/game-purchase/update", methods=["PUT"])
 def update_game_purchase():
     """
     Update a game purchase record
@@ -773,7 +773,7 @@ def update_game_purchase():
 
 
 # DELETE A PURCHASE RECORD
-@app.route("/game-purchase/delete", methods=["DELETE"])
+@app.route("/users/game-purchase/delete", methods=["DELETE"])
 def delete_game_purchase():
     """
     Delete a game purchase record
@@ -847,25 +847,7 @@ def delete_game_purchase():
     ), 400
 
 
-# # GET USER DETAILS
-# @app.route("/userdetail/<int:userId>")
-# def get_user_details(userId):
-#     user = db.session.scalars(db.select(User).filter_by(user_id=userId)).one()
-#     if user:
-#         print(user)
-#         return jsonify(
-#             {
-#                 "code": 200,
-#                 "data": {
-#                     "user_id": user.user_id,
-#                     "account_name": user.account_name,
-#                     "email": user.email,
-#                 },
-#             }
-#         )
-#     return jsonify({"code": 404, "message": "There is no such user."}), 404
-
-#Get gameplay time of game
+# Get gameplay time of game
 @app.route("/game-purchase/<int:userId>/<int:gameId>", methods = ["GET"])
 def get_purchase_records(userId, gameId):
     record = db.session.scalars(db.select(GamePurchase).filter_by(user_id=userId,game_id=gameId)).one()

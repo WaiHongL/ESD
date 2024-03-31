@@ -53,7 +53,6 @@ def payment():
     """
     if request.is_json:
         data = request.get_json()
-        # print(json.loads(data))
         data = json.loads(data)
         purchase_id = data['purchase_id']
         price = data['price']
@@ -71,7 +70,6 @@ def payment():
                 payment_method=purchase_id,
                 return_url="https://www.google.com",
             )
-            # print(confirmation)
             return jsonify(
                 {   
                     "code": 200,
@@ -80,11 +78,6 @@ def payment():
             ), 200
 
         except Exception as e:
-            # Unexpected error in code
-            # exc_type, exc_obj, exc_tb = sys.exc_info()
-            # fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            # ex_str = str(e) + " at " + str(exc_type) + ": " + fname + ": line " + str(exc_tb.tb_lineno)
-
             return jsonify(
                 {
                     "code": 500,
@@ -128,7 +121,6 @@ def refund():
     if request.is_json:
         try:
             data = request.get_json()
-            #data = json.loads(data)
             print(data)
             pi = data['payment_intent']
             print(pi)
