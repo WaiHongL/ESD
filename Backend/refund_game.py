@@ -648,7 +648,7 @@ def process_refund():
             }
 
             print("processing notification...")
-            # process_refund_notification(notification_json)
+            process_refund_notification(notification_json)
 
             result = {
                 "code": 200,

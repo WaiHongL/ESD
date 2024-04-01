@@ -33,6 +33,7 @@ async function handleRefund(gameData) {
                 isRefundModalDisplayed.value = true;
                 setTimeout(() => {
                     isRefundModalDisplayed.value = false;
+                    window.location.reload();
                 }, 3000);
             }
         })
@@ -43,6 +44,7 @@ async function handleRefund(gameData) {
             isRefundModalDisplayed.value = true;
             setTimeout(() => {
                 isRefundModalDisplayed.value = false;
+                window.location.reload();
             }, 3000);
         })
 }

@@ -151,20 +151,24 @@ def make_purchase():
                             }    
 
                             print('processing notification...')
-                            # process_notification(notification_json)
+                            process_notification(notification_json)
+
+                            result = {
+                                "code": 200,
+                                "data": update_game_purchase_result
+                            }
 
                             print('\n------------------------')
                             print('\nresult: ', update_game_purchase_result)
 
-                            return jsonify(
-                                {
-                                    "code": 200,
-                                    "data": update_game_purchase_result
-                                }
-                            ), 200
+                            return jsonify(result), result["code"]
                         else:
+                            print('\n------------------------')
+                            print('\nresult: ', update_points_result)
                             return jsonify(update_points_result), update_points_result["code"]
                     else:
+                        print('\n------------------------')
+                        print('\nresult: ', update_game_purchase_result)
                         return jsonify(update_game_purchase_result), update_game_purchase_result["code"]
                 else:
                     rollback_record_result = rollback_record(user_id, game_id)
@@ -182,25 +186,34 @@ def make_purchase():
                             }    
 
                             print('processing notification...')
-                            # process_fail_notification(notification_json)
+                            process_fail_notification(notification_json)
 
                             # remove password key
                             del user_details_result['data']["user_details_result"]["data"]['password']
 
-                            return jsonify(
-                                {
-                                    "code": 500,
-                                    "data": {
-                                        "user_details_result": user_details_result
-                                    },
-                                    "message": make_payment_result["message"]
-                                }
-                            ), 500
+                            result = {
+                                "code": 500,
+                                "data": {
+                                    "user_details_result": user_details_result
+                                },
+                                "message": make_payment_result["message"]
+                            }
+
+                            print('\n------------------------')
+                            print('\nresult: ', update_game_purchase_result)
+
+                            return jsonify(result), result["code"]
                         else:
+                            print('\n------------------------')
+                            print('\nresult: ', user_details_result)
                             return jsonify(user_details_result), user_details_result["code"]
                     else:
+                        print('\n------------------------')
+                        print('\nresult: ', rollback_record_result)
                         return jsonify(rollback_record_result), rollback_record_result["code"]
             else:
+                print('\n------------------------')
+                print('\nresult: ', create_game_purchase_result)
                 return jsonify(create_game_purchase_result), create_game_purchase_result["code"]
 
         except Exception as e:

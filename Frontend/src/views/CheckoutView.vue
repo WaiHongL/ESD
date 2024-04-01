@@ -81,6 +81,7 @@ function handleSubmit() {
                             isPaymentModalDisplayed.value = true;
                             setTimeout(() => {
                                 isPaymentModalDisplayed.value = false;
+                                window.location.reload();
                             }, 3000);
                         }
                     })
@@ -91,6 +92,7 @@ function handleSubmit() {
                         isPaymentModalDisplayed.value = true;
                         setTimeout(() => {
                             isPaymentModalDisplayed.value = false;
+                            window.location.reload();
                         }, 3000);
                     })
             }
