@@ -119,13 +119,14 @@ def make_purchase():
             create_game_purchase_result = create_game_purchase(userid_gameid)
 
             if(create_game_purchase_result['code'] in range(200, 300)):
-                # payment
-                game_details = create_game_purchase_result["data"]["game_details_result"]["data"]
+                #get game details
+                game_result = get_game_detail(game_id)
+                game_details = game_result["data"]["game_details_result"]["data"]
                 payment_json = json.dumps({
                     'price': game_details["price"],
                     'purchase_id': userid_gameid['purchase_id']
                 })
-
+                # payment
                 make_payment_result = make_payment(payment_json)["data"]["payment_result"]
                 if make_payment_result['code'] in range(200, 300):
                     # update game_purchase table
@@ -151,7 +152,7 @@ def make_purchase():
                             }    
 
                             print('processing notification...')
-                            process_notification(notification_json)
+                            # process_notification(notification_json)
 
                             result = {
                                 "code": 200,
@@ -186,7 +187,7 @@ def make_purchase():
                             }    
 
                             print('processing notification...')
-                            process_fail_notification(notification_json)
+                            # process_fail_notification(notification_json)
 
                             # remove password key
                             del user_details_result['data']["user_details_result"]["data"]['password']
@@ -278,9 +279,19 @@ def create_game_purchase(userid_gameid):
             "message": "Game purchase creation error sent for error handling"
         }
     
+
+    
+    return {
+        "code": 201,
+        "data": {
+            "create_game_purchase_result": create_game_purchase_result            
+        }
+    }
+
+def get_game_detail(game_id):
     # get game details
     print('\n-----Invoking shop microservice-----')
-    game_details_result = invoke_http(game_details_URL + str(userid_gameid['game_id']), method='GET')
+    game_details_result = invoke_http(game_details_URL + str(game_id), method='GET')
     print('game_details_result:', game_details_result, '\n')
 
     game_details_result_code = game_details_result["code"]
@@ -306,16 +317,12 @@ def create_game_purchase(userid_gameid):
             },
             "message": "Game details error sent for error handling"
         }
-    
     return {
         "code": 201,
         "data": {
-            "create_game_purchase_result": create_game_purchase_result,
             "game_details_result": game_details_result
         }
     }
-
-
 def make_payment(payment_json):
     print('\n-----Invoking payment microservice-----')
     payment_result = invoke_http(payment_URL, method='POST', json=payment_json)

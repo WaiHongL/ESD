@@ -4,6 +4,7 @@ from flask_cors import CORS
 from flasgger import Swagger
 from os import environ
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.orm import backref
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
@@ -70,8 +71,10 @@ class User(db.Model):
 class Wishlist(db.Model):
     __tablename__ = "wishlist"
 
-    user_id = db.Column(db.Integer, nullable=False, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.user_id'), nullable=False, primary_key=True)
     game_id = db.Column(db.Integer, nullable=False, primary_key=True)
+
+    user = db.relationship("User", backref=backref("wishlist", cascade="all, delete-orphan"))
 
     def __init__(self, user_id, game_id):
         self.user_id = user_id
@@ -87,10 +90,12 @@ class Wishlist(db.Model):
 class GamePurchase(db.Model):
     __tablename__ = "game_purchase"
 
-    user_id = db.Column(db.Integer, nullable=False, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.user_id'), nullable=False, primary_key=True)
     game_id = db.Column(db.Integer, nullable=False, primary_key=True)
     purchase_id = db.Column(db.String, nullable=True)
     gameplay_time = db.Column(db.Integer, nullable=True, default = 0)
+
+    user = db.relationship("User", backref=backref("game_purchase", cascade="all, delete-orphan"))
 
     def __init__(self, user_id, game_id):
         self.user_id = user_id
@@ -109,8 +114,10 @@ class CustomizationPurchase(db.Model):
     __tablename__ = "customization_purchase"
 
     purchase_id = db.Column(db.Integer, nullable=False, primary_key=True)
-    user_id = db.Column(db.Integer, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.user_id'), nullable=False)
     customization_id = db.Column(db.Integer, nullable=False)
+
+    user = db.relationship("User", backref=backref("customization_purchase", cascade="all, delete-orphan"))
 
     def __init__(self, user_id, customization_id):
         self.user_id = user_id

@@ -65,32 +65,32 @@ def process_refund_notification(notification_json):
         "\n\n-----Publishing the notification with routing_key=refund.notification-----"
     )
 
-    try:
-        channel.basic_publish(
-            exchange=exchangename,
-            routing_key="refund.notification",
-            body=json.dumps(message),
-            properties=pika.BasicProperties(delivery_mode=2),
-        )
+    # try:
+    channel.basic_publish(
+        exchange=exchangename,
+        routing_key="refund.notification",
+        body=json.dumps(message),
+        properties=pika.BasicProperties(delivery_mode=2),
+    )
        
     # make message persistent within the matching queues
 
     # - reply from the invocation is not used;
     # continue even if this invocation fails
-    except Exception as e:
-        # Unexpected error in code
-        exc_type, exc_obj, exc_tb = sys.exc_info()
-        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-        ex_str = (
-            str(e)
-            + " at "
-            + str(exc_type)
-            + ": "
-            + fname
-            + ": line "
-            + str(exc_tb.tb_lineno)
-        )
-        print(ex_str)
+    # except Exception as e:
+    #     # Unexpected error in code
+    #     exc_type, exc_obj, exc_tb = sys.exc_info()
+    #     fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+    #     ex_str = (
+    #         str(e)
+    #         + " at "
+    #         + str(exc_type)
+    #         + ": "
+    #         + fname
+    #         + ": line "
+    #         + str(exc_tb.tb_lineno)
+    #     )
+    #     print(ex_str)
 
 
 @app.route("/refund-game", methods=["POST"])
@@ -386,122 +386,116 @@ def process_refund():
 
                 to_remove_list = []
 
-                # while points_to_deduct_from_customizations > 0 and len(possible_user_customizations_to_remove) > 0:
-                #     possible_user_customizations_to_remove_points = possible_user_customizations_to_remove[-1][1]
+                while points_to_deduct_from_customizations > 0 and len(possible_user_customizations_to_remove) > 0:
+                    points_to_deduct_from_customizations -= possible_user_customizations_to_remove[-1][1]
+                    possible_user_customization_to_remove = possible_user_customizations_to_remove.pop()
+                    to_remove_list.append(possible_user_customization_to_remove[0])
 
-                #     if possible_user_customizations_to_remove_points > points_to_deduct_from_customizations:
-                #         possible_user_customizations_to_remove.pop()
-                #         continue
+                # isBestCombination = False
+                # # Best case scenario
+                # for customization_tuple in possible_user_customizations_to_remove:
+                #     customization_points = customization_tuple[1]
+                #     if customization_points == points_to_deduct_from_customizations:
+                #         to_remove_list.append(customization_tuple[0])
+                #         points_to_deduct_from_customizations = 0
+                #         isBestCombination = True
+                #         break
 
-                #     points_to_deduct_from_customizations -= possible_user_customizations_to_remove_points
-                #     user_customization = possible_user_customizations_to_remove.pop()
-                #     to_remove_list.append(user_customization[0])
+                # isSufficientForRefund = True
+                # compensate_points = 0
+                # if not isBestCombination:
+                #     total_points = 0
 
-                isBestCombination = False
-                # Best case scenario
-                for customization_tuple in possible_user_customizations_to_remove:
-                    customization_points = customization_tuple[1]
-                    if customization_points == points_to_deduct_from_customizations:
-                        to_remove_list.append(customization_tuple[0])
-                        points_to_deduct_from_customizations = 0
-                        isBestCombination = True
-                        break
+                #     # Check if user customizations are sufficient for refund
+                #     for customization_tuple in possible_user_customizations_to_remove:
+                #         customization_points = customization_tuple[1]
+                #         total_points += customization_points
+                #         to_remove_list.append(customization_tuple[0])
 
-                isSufficientForRefund = True
-                compensate_points = 0
-                if not isBestCombination:
-                    total_points = 0
+                #     if total_points < points_to_deduct_from_customizations:
+                #         isSufficientForRefund = False
 
-                    # Check if user customizations are sufficient for refund
-                    for customization_tuple in possible_user_customizations_to_remove:
-                        customization_points = customization_tuple[1]
-                        total_points += customization_points
-                        to_remove_list.append(customization_tuple[0])
+                #     elif total_points == points_to_deduct_from_customizations:
+                #         points_to_deduct_from_customizations = 0
 
-                    if total_points < points_to_deduct_from_customizations:
-                        isSufficientForRefund = False
+                #     elif total_points != points_to_deduct_from_customizations:
+                #         # Reset
+                #         to_remove_list = []
 
-                    elif total_points == points_to_deduct_from_customizations:
-                        points_to_deduct_from_customizations = 0
-
-                    elif total_points != points_to_deduct_from_customizations:
-                        # Reset
-                        to_remove_list = []
-
-                        temp_to_remove_list = []
+                #         temp_to_remove_list = []
                         
-                        combs = list(combinations(possible_user_customizations_to_remove, 2))
+                #         combs = list(combinations(possible_user_customizations_to_remove, 2))
 
-                        # Initialize first combination
-                        smallest_eligible_points_diff = float('inf')
+                #         # Initialize first combination
+                #         smallest_eligible_points_diff = float('inf')
 
-                        for comb in combs:
-                            comb_total_points = comb[0][1] + comb[1][1]
-                            points_diff = comb_total_points - points_to_deduct_from_customizations
+                #         for comb in combs:
+                #             comb_total_points = comb[0][1] + comb[1][1]
+                #             points_diff = comb_total_points - points_to_deduct_from_customizations
 
-                            if points_diff < smallest_eligible_points_diff and points_diff >= 0:
-                                # Reset
-                                temp_to_remove_list.clear()
+                #             if points_diff < smallest_eligible_points_diff and points_diff >= 0:
+                #                 # Reset
+                #                 temp_to_remove_list.clear()
 
-                                temp_to_remove_list.append(comb)
-                                smallest_eligible_points_diff = points_diff
+                #                 temp_to_remove_list.append(comb)
+                #                 smallest_eligible_points_diff = points_diff
 
-                        for customization in possible_user_customizations_to_remove:
-                            customization_points = customization[1]
-                            points_diff = customization_points - points_to_deduct_from_customizations
+                #         for customization in possible_user_customizations_to_remove:
+                #             customization_points = customization[1]
+                #             points_diff = customization_points - points_to_deduct_from_customizations
 
-                            if points_diff < smallest_eligible_points_diff and points_diff >= 0:
-                                # Reset
-                                temp_to_remove_list.clear()
+                #             if points_diff < smallest_eligible_points_diff and points_diff >= 0:
+                #                 # Reset
+                #                 temp_to_remove_list.clear()
 
-                                temp_to_remove_list.append(customization)
-                                smallest_eligible_points_diff = points_diff
+                #                 temp_to_remove_list.append(customization)
+                #                 smallest_eligible_points_diff = points_diff
 
-                        # Special handling (can't use len())
-                        if str(temp_to_remove_list).count(",") == 3:
-                            to_remove_customizations = temp_to_remove_list[0]
-                            to_remove_list.append(to_remove_customizations[0][0])
-                            to_remove_list.append(to_remove_customizations[1][0])
-                            to_remove_list_total_points = to_remove_customizations[0][1] + to_remove_customizations[1][1]
+                #         # Special handling (can't use len())
+                #         if str(temp_to_remove_list).count(",") == 3:
+                #             to_remove_customizations = temp_to_remove_list[0]
+                #             to_remove_list.append(to_remove_customizations[0][0])
+                #             to_remove_list.append(to_remove_customizations[1][0])
+                #             to_remove_list_total_points = to_remove_customizations[0][1] + to_remove_customizations[1][1]
 
-                            # If refunded customization credits > points_to_deduct_from_customizations, compensate the user
-                            if to_remove_list_total_points > points_to_deduct_from_customizations:
-                                compensate_points += to_remove_list_total_points - points_to_deduct_from_customizations
+                #             # If refunded customization credits > points_to_deduct_from_customizations, compensate the user
+                #             if to_remove_list_total_points > points_to_deduct_from_customizations:
+                #                 compensate_points += to_remove_list_total_points - points_to_deduct_from_customizations
 
-                        elif len(temp_to_remove_list) == 1:
-                            to_remove_customization = temp_to_remove_list[0]
-                            to_remove_list.append(to_remove_customization[0])
-                            to_remove_list_total_points = to_remove_customization[1]
+                #         elif len(temp_to_remove_list) == 1:
+                #             to_remove_customization = temp_to_remove_list[0]
+                #             to_remove_list.append(to_remove_customization[0])
+                #             to_remove_list_total_points = to_remove_customization[1]
 
-                            # If refunded customization credits > points_to_deduct_from_customizations, compensate the user
-                            if to_remove_list_total_points > points_to_deduct_from_customizations:
-                                compensate_points += to_remove_list_total_points - points_to_deduct_from_customizations
+                #             # If refunded customization credits > points_to_deduct_from_customizations, compensate the user
+                #             if to_remove_list_total_points > points_to_deduct_from_customizations:
+                #                 compensate_points += to_remove_list_total_points - points_to_deduct_from_customizations
 
-                        points_to_deduct_from_customizations = 0
+                #         points_to_deduct_from_customizations = 0
 
-                # If user customizations are insufficient for refund
-                if not isSufficientForRefund:
-                    result = {
-                        "code": 400,
-                        "message": "Refund cannot be processed as user customizations are insufficient for refund"
-                    }
+                # # If user customizations are insufficient for refund
+                # if not isSufficientForRefund:
+                #     result = {
+                #         "code": 400,
+                #         "message": "Refund cannot be processed as user customizations are insufficient for refund"
+                #     }
 
-                    print('\n\n-----Publishing the (customizations refund error) message with routing_key=customizations.refund.error-----')
+                #     print('\n\n-----Publishing the (customizations refund error) message with routing_key=customizations.refund.error-----')
 
-                    channel.basic_publish(exchange=exchangename, routing_key="customizations.refund.error", 
-                        body=json.dumps(result), properties=pika.BasicProperties(delivery_mode = 2)) 
-                    # make message persistent within the matching queues 
+                #     channel.basic_publish(exchange=exchangename, routing_key="customizations.refund.error", 
+                #         body=json.dumps(result), properties=pika.BasicProperties(delivery_mode = 2)) 
+                #     # make message persistent within the matching queues 
 
-                    # - reply from the invocation is not used;
-                    # continue even if this invocation fails        
-                    print("\nCustomizations refund status ({:d}) published to the RabbitMQ Exchange:".format(
-                        result["code"]), result)
+                #     # - reply from the invocation is not used;
+                #     # continue even if this invocation fails        
+                #     print("\nCustomizations refund status ({:d}) published to the RabbitMQ Exchange:".format(
+                #         result["code"]), result)
             
-                    print('\n------------------------')
-                    print('\nresult: ', result)
-                    return jsonify(result), result["code"]
+                #     print('\n------------------------')
+                #     print('\nresult: ', result)
+                #     return jsonify(result), result["code"]
                     
-                change_points = user_points - points_to_deduct_from_customizations - compensate_points
+                change_points = user_points + points_to_deduct_from_customizations
 
 
                 # Delete user customizations
@@ -675,9 +669,8 @@ def process_refund():
                 "account_name": user_details_result["data"]["account_name"],
                 "purchase_id": payment_intent_id,
             }
-
             print("processing notification...")
-            process_refund_notification(notification_json)
+            # process_refund_notification(notification_json)
 
             result = {
                 "code": 200,
