@@ -19,13 +19,13 @@ app.config['SWAGGER'] = {
         'Make_Purchase': 'Operations related to making a purchase of a game',
     },
 }
+
 swagger = Swagger(app)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:pSSSS+]q8zZ-pjF@34.124.211.169/user'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 CORS(app)
-
 
 # AMQP connection setup
 exchangename = "order_topic" # exchange name

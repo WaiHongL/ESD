@@ -3,7 +3,6 @@ from invokes import invoke_http
 from flask_cors import CORS
 from flasgger import Swagger
 
-
 import pika
 import amqp_connection
 import os, sys
@@ -372,7 +371,7 @@ def process_refund():
 
                 for customization in customizations_list:
                     customizations_dict[customization["customization_id"]] = (
-                        customization["credits"]
+                        customization["points"]
                     )
 
                 possible_user_customizations_to_remove = []
@@ -458,7 +457,7 @@ def process_refund():
                 #             to_remove_list.append(to_remove_customizations[1][0])
                 #             to_remove_list_total_points = to_remove_customizations[0][1] + to_remove_customizations[1][1]
 
-                #             # If refunded customization credits > points_to_deduct_from_customizations, compensate the user
+                #             # If refunded customization points > points_to_deduct_from_customizations, compensate the user
                 #             if to_remove_list_total_points > points_to_deduct_from_customizations:
                 #                 compensate_points += to_remove_list_total_points - points_to_deduct_from_customizations
 
@@ -467,7 +466,7 @@ def process_refund():
                 #             to_remove_list.append(to_remove_customization[0])
                 #             to_remove_list_total_points = to_remove_customization[1]
 
-                #             # If refunded customization credits > points_to_deduct_from_customizations, compensate the user
+                #             # If refunded customization points > points_to_deduct_from_customizations, compensate the user
                 #             if to_remove_list_total_points > points_to_deduct_from_customizations:
                 #                 compensate_points += to_remove_list_total_points - points_to_deduct_from_customizations
 

@@ -386,7 +386,7 @@ def create_wishlist():
     ), 400
 
 
-# DELETE FROM WISHLIST
+# DELETE WISHLIST
 @app.route("/users/wishlist/delete", methods=["DELETE"])
 def delete_wishlist(): 
     """
@@ -507,6 +507,40 @@ def get_customizations(userId):
                 "message": "An error occurred while getting user customizations"
             }
         ), 500
+    
+
+# CREATE A PURCHASE RECORD IN CUSTOMIZATION PURCHASE TABLE
+@app.route("/users/customization-purchase/create", methods=["POST"])
+def create_customization_purchase():
+    if request.is_json:
+        data = request.get_json(force=True)
+        customization = CustomizationPurchase(**data)
+
+        try:
+            db.session.add(customization)
+            db.session.commit()
+
+            return jsonify(
+                {
+                    "code": 201, 
+                    "data": customization.json()
+                }
+            ), 201
+
+        except Exception as e:
+            return jsonify(
+                {
+                    "code": 500,
+                    "message": "An error occurred while creating the customization purchase record"
+                }
+            ), 500
+    
+    return jsonify(
+        {
+            "code": 400, 
+            "message": "Invalid JSON input: " + str(request.get_data())
+        }
+    ), 400
     
 
 # UPDATE USER SELECTED CUSTOMIZATION
@@ -643,6 +677,48 @@ def delete_customization():
     ), 400
 
 
+# GET GAME PURCHASE RECORD
+@app.route("/users/game-purchase", methods = ["GET"])
+def get_game_purchase_record():
+    if (request.args.get("userId") and request.args.get("gameId")):
+        user_id = request.args.get("userId")
+        game_id = request.args.get("gameId")
+
+        try:
+            record = db.session.scalars(db.select(GamePurchase).filter_by(user_id=user_id,game_id=game_id)).one()
+
+            return jsonify(
+                {
+                    "code":200,
+                    "data": {
+                        "user_id": record.user_id,
+                        "game_id": record.game_id,
+                        "payment_intent": record.purchase_id,
+                        "gameplay_time": record.gameplay_time,
+                    },
+                }
+            ), 200
+        
+        except NoResultFound:
+            return jsonify(
+                {
+                    "code": 404,
+                    "data": {
+                        "userId": user_id,
+                        "gameId": game_id
+                    },
+                    "message": "There are no game purchase record that matches the given userId and gameId"
+                }
+            ), 404
+        
+    return jsonify(
+        {
+            "code": 400, 
+            "message": "Invalid query parameter(s)"
+        }
+    ), 400
+
+
 # CREATE A PURCHASE RECORD IN GAME PURCHASE TABLE
 @app.route("/users/game-purchase/create", methods=["POST"])
 def create_game_purchase():
@@ -709,48 +785,6 @@ def create_game_purchase():
     ), 400
 
 
-# GET GAME PURCHASE RECORD
-@app.route("/users/game-purchase", methods = ["GET"])
-def get_game_purchase_record():
-    if (request.args.get("userId") and request.args.get("gameId")):
-        user_id = request.args.get("userId")
-        game_id = request.args.get("gameId")
-
-        try:
-            record = db.session.scalars(db.select(GamePurchase).filter_by(user_id=user_id,game_id=game_id)).one()
-
-            return jsonify(
-                {
-                    "code":200,
-                    "data": {
-                        "user_id": record.user_id,
-                        "game_id": record.game_id,
-                        "payment_intent": record.purchase_id,
-                        "gameplay_time": record.gameplay_time,
-                    },
-                }
-            ), 200
-        
-        except NoResultFound:
-            return jsonify(
-                {
-                    "code": 404,
-                    "data": {
-                        "userId": user_id,
-                        "gameId": game_id
-                    },
-                    "message": "There are no game purchase record that matches the given userId and gameId"
-                }
-            ), 404
-        
-    return jsonify(
-        {
-            "code": 400, 
-            "message": "Invalid query parameter(s)"
-        }
-    ), 400
-
-
 # UPDATE PURCHASE RECORD IN GAME PURCHASE TABLE
 @app.route("/users/game-purchase/update", methods=["PUT"])
 def update_game_purchase():
@@ -789,13 +823,10 @@ def update_game_purchase():
     if request.is_json:
         try:
             data = request.get_json(force=True)
-            # print(data)
+
             user_id = data["user_id"]
-            # print(user_id)
             game_id = data["game_id"]
-            # print(game_id)
             purchase_id = data["transaction_id"]
-            # print(purchase_id)
 
             purchase = db.session.scalars(
                 db.select(GamePurchase).filter_by(user_id=user_id, game_id=game_id)

@@ -151,15 +151,15 @@ onMounted(async () => {
         </div>
     </div>
 
-    <div v-if="isPaymentProcessing || isPaymentModalDisplayed" class="payment-processing-bg"></div>
+    <div v-if="isPaymentProcessing || isPaymentModalDisplayed" class="payment-modal-bg"></div>
     <div v-if="!isPaymentProcessing && isPaymentUnsuccessful && isPaymentModalDisplayed"
-        class="payment-processing-modal">Payment unsuccessful
+        class="payment-modal">Payment unsuccessful
     </div>
-    <div v-else-if="isPaymentProcessing && !isPaymentUnsuccessful" class="payment-processing-modal">Payment
+    <div v-else-if="isPaymentProcessing && !isPaymentUnsuccessful" class="payment-modal">Payment
         processing...
     </div>
     <div v-else-if="!isPaymentProcessing && !isPaymentUnsuccessful && isPaymentModalDisplayed"
-        class="payment-processing-modal">Payment successful
+        class="payment-modal">Payment successful
     </div>
 </template>
 
@@ -222,7 +222,7 @@ input {
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
 }
 
-.payment-processing-bg {
+.payment-modal-bg {
     position: fixed;
     inset: 0;
     content: "";
@@ -230,7 +230,7 @@ input {
     opacity: 0.5;
 }
 
-.payment-processing-modal {
+.payment-modal {
     position: fixed;
     top: 50%;
     left: 50%;

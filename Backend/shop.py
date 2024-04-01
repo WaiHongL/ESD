@@ -69,19 +69,19 @@ class Customizations(db.Model):
     customization_id = db.Column(db.Integer, primary_key=True)
     tier = db.Column(db.String(255), nullable=False)
     border_color = db.Column(db.String(255), nullable=False)
-    credits = db.Column(db.Integer, nullable=False)
+    points = db.Column(db.Integer, nullable=False)
 
-    def __init__(self, tier, border_color, credits):
+    def __init__(self, tier, border_color, points):
         self.tier = tier
         self.border_color = border_color
-        self.credits = credits
+        self.points = points
 
     def json(self):
         return {
             "customization_id": self.customization_id,
             "tier": self.tier,
             "border_color": self.border_color,
-            "credits": self.credits
+            "points": self.points
         }
     
 # GET ALL GAMES AND GAMES BY GENRE
@@ -102,8 +102,6 @@ def get_games():
     if (request.args.getlist("genre")):
         genres = request.args.getlist('genre')
         games = []
-
-        print("genres:", genres)
         
         for genre in genres:
             try:
@@ -200,7 +198,7 @@ def get_games_genre():
             description: Game genres not found
     """
     if request.is_json:
-        data = request.get_json()["data"]
+        data = request.get_json()
         wishlist_data = []
         purchase_data = []
 

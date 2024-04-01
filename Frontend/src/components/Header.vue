@@ -71,7 +71,7 @@ import { useRouter } from 'vue-router';
 
                         <div v-else class="d-flex justify-content-between mb-2">
                             <div class="cart-item-title">{{ item.tier }}</div>
-                            <div class="cart-item-title">{{ item.price }} credits</div>
+                            <div class="cart-item-title">{{ item.price }} points</div>
                         </div>
                     </div>
 

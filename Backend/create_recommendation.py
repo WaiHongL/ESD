@@ -38,7 +38,6 @@ app.config['SWAGGER'] = {
 
 swagger = Swagger(app)
 
-
 # AMQP
 exchangename = "order_topic" # exchange name
 exchangetype="topic" # use a 'topic' exchange to enable interaction
@@ -116,7 +115,7 @@ def process_recommendation(userId):
 
     # INVOKE SHOP MICROSERVICE TO GET GAMES GENRE
     print("\n-----Invoking shop microservice-----")
-    games_genre_result = invoke_http(game_genres_URL, method="POST", json=wishlist_and_purchase_result)
+    games_genre_result = invoke_http(game_genres_URL, method="POST", json=wishlist_and_purchase_result["data"])
     print("games_genre_result:", games_genre_result)
 
     games_genre_result_code = games_genre_result["code"]

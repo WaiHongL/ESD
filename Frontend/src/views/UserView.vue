@@ -305,14 +305,14 @@ onMounted(async () => {
         </div>
 
         <!-- REFUND MODAL -->
-        <div v-if="isRefundProcessing || isRefundModalDisplayed" class="refund-processing-bg"></div>
-        <div v-if="!isRefundProcessing && isRefundUnsuccessful && isRefundModalDisplayed" class="refund-processing-modal">Refund is unsuccessful
+        <div v-if="isRefundProcessing || isRefundModalDisplayed" class="refund-modal-bg"></div>
+        <div v-if="!isRefundProcessing && isRefundUnsuccessful && isRefundModalDisplayed" class="refund-modal">Refund is unsuccessful
         </div>
-        <div v-else-if="isRefundProcessing && !isRefundModalDisplayed" class="refund-processing-modal">Refund is being
+        <div v-else-if="isRefundProcessing && !isRefundModalDisplayed" class="refund-modal">Refund is being
             processed...
         </div>
         <div v-else-if="!isRefundProcessing && !isRefundUnsuccessful && isRefundModalDisplayed"
-            class="refund-processing-modal">Refund is successful
+            class="refund-modal">Refund is successful
         </div>
     </main>
 
@@ -417,7 +417,7 @@ h1 {
     margin-bottom: 100px;
 }
 
-.refund-processing-bg {
+.refund-modal-bg {
     position: fixed;
     inset: 0;
     content: "";
@@ -425,7 +425,7 @@ h1 {
     opacity: 0.5;
 }
 
-.refund-processing-modal {
+.refund-modal {
     position: fixed;
     top: 50%;
     left: 50%;
