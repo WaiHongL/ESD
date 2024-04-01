@@ -1,5 +1,6 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
+from flasgger import Swagger
 
 from invokes import invoke_http
 import amqp_connection
@@ -10,6 +11,33 @@ from urllib.parse import quote
 
 app = Flask(__name__)
 CORS(app)
+
+# Initialize flasgger for API Documentation
+app.config['SWAGGER'] = {
+    'title': 'Shop microservice API',
+    'version': 2.0,
+    "openapi": "3.0.2",
+    'description': 'Allows create, retrieve, update, and delete of shop items',
+    'tags': {
+        'Games': 'Operations related to game management',
+        'Customizations': 'Operations related to customizations',
+    },
+    'ui_params': {
+        'apisSorter': 'alpha',
+        'operationsSorter': 'alpha',
+        'tagsSorter': 'alpha',
+    },
+    'ui_params_text': '''{
+        "tagsSorter": (a, b) => {
+            const order = ['Users', 'Customisations'];
+            return order.indexOf(a) - order.indexOf(b);
+        }
+    }''',
+    
+}
+
+swagger = Swagger(app)
+
 
 # AMQP
 exchangename = "order_topic" # exchange name
