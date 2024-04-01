@@ -99,53 +99,59 @@ def get_games():
             description: Games not found
     """
     # CHECK IF "GENRE" IS IN QUERY PARAMS
-    if (request.args.get("genre")):
-        genre = request.args.get("genre")
+    if (request.args.getlist("genre")):
+        genres = request.args.getlist('genre')
+        games = []
 
-        try:
-            gameList = db.session.scalars(db.select(Game).filter_by(genre=genre)).all()
+        print("genres:", genres)
+        
+        for genre in genres:
+            try:
+                game_list = db.session.scalars(db.select(Game).filter_by(genre=genre)).all()
 
-            if len(gameList):
+                if len(game_list):
+                    games += game_list
+                else:
+                    return jsonify(
+                        {
+                            "code": 404,
+                            "data": {
+                                "genre": genre
+                            },
+                            "message": "There are no games that matches the genre"
+                        }
+                    ), 404
+            
+            except Exception as e:
                 return jsonify(
                     {
-                        "code": 200,
+                        "code": 500,
                         "data": {
-                            "games": [game.json() for game in gameList]
-                        }
+                            "genre": genre
+                        },
+                        "message": "An error occurred while getting games that matches the genre"
                     }
-                ), 200
-
-            return jsonify(
-                {
-                    "code": 404,
-                    "data": {
-                        "genre": genre
-                    },
-                    "message": "There are no games that matches the genre"
+                ), 500
+            
+        return jsonify(
+            {
+                "code": 200,
+                "data": {
+                    "games": [game.json() for game in games]
                 }
-            ), 404
-        
-        except Exception as e:
-            return jsonify(
-                {
-                    "code": 500,
-                    "data": {
-                        "genre": genre
-                    },
-                    "message": "An error occurred while getting games that matches the genre"
-                }
-            ), 500
+            }
+        ), 200
     
     # FOR FRONTEND
     try:
-        gameList = db.session.scalars(db.select(Game)).all()
+        game_list = db.session.scalars(db.select(Game)).all()
 
-        if len(gameList):
+        if len(game_list):
             return jsonify(
                 {
                     "code": 200,
                     "data": {
-                        "games": [game.json() for game in gameList]
+                        "games": [game.json() for game in game_list]
                     }
                 }
             ), 200

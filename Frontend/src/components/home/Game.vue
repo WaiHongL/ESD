@@ -24,6 +24,10 @@ const imgSrc = computed(() => {
         src += "palworld.jpg";
     } else if (props.title == "Oxygen Not Included") {
         src += "oxygen_not_included.jpg";
+    } else if (props.title == "PUBG: BATTLEGROUNDS") {
+        src += "pubg_battlegrounds.jpg";
+    } else if (props.title == "HELLDIVERS 2") {
+        src += "helldivers_2.jpg";
     }
     return src;
 });
