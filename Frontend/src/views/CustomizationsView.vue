@@ -86,12 +86,11 @@ function createPurchaseRecord(customizationId) {
 
 function updateUserPoints(customizationPoints) {
     const axiosData = {
-        "user_id": 1,
-        "price": customizationPoints / 100,
+        "points": customizationPoints / 100,
         "operation": "subtract"
     }
 
-    axios.put("http://localhost:5600/users/points/update", axiosData)
+    axios.put("http://localhost:5600/users/1/update", axiosData)
         .then(res => {})
         .catch(err => {
             console.log(err);
@@ -114,7 +113,7 @@ function getAllCustomizations() {
 const purchases = ref([]);
 let purchaseData;
 async function getPurchases() {
-    await axios.get("http://localhost:5600/users/1/customizations")
+    await axios.get("http://localhost:5600/users/1/customization-purchase")
         .then(res => {
             const data = res.data.data;
             purchaseData = data;

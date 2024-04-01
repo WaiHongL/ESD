@@ -206,8 +206,6 @@ def process_recommendation(userId):
         }
     
     # FILTER GAMES ALREADY PURCHASED
-    print("purchase ids:", purchase_ids)
-    print("wishlist ids:", wishlist_ids)
     games_by_genre_data = games_by_genre_result["data"]
     recommended_games = []
     if "games" in games_by_genre_data:

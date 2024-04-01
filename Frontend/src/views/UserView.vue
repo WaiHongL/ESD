@@ -66,11 +66,10 @@ function handleCustomizationChange(customization) {
     const borderColor = customization.border_color;
 
     const axiosData = {
-        "user_id": 1,
-        "customization_id": id
+        "selected_customization_id": id
     }
 
-    axios.put("http://localhost:5600/users/customizations/update", axiosData)
+    axios.put("http://localhost:5600/users/1/update", axiosData)
         .then(res => {
             console.log(res);
         })
@@ -200,7 +199,7 @@ async function getUserDetails() {
 const customizations = ref([]);
 let customizationData;
 async function getUserCustomizations() {
-    await axios.get("http://localhost:5600/users/1/customizations")
+    await axios.get("http://localhost:5600/users/1/customization-purchase")
         .then(res => {
             customizationData = res.data.data;
         })
@@ -272,6 +271,7 @@ onMounted(async () => {
                         {{ customization.tier }}</div>
                     <button @click="handleCustomizationChange(customization)" class="btn btn-primary">Select</button>
                 </div>
+                <div v-if="customizations.length == 0" style="margin-top: 180px;">You have no customizations</div>
             </div>
         </div>
 

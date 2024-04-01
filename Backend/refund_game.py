@@ -248,19 +248,18 @@ def process_refund():
             # Check if points are sufficient
             if user_points >= points_to_deduct:
                 points_to_change = {
-                    "user_id": user_id,
-                    "price": points_to_deduct / 100,
+                    "points": points_to_deduct / 100,
                     "operation": "subtract"
                 }
 
                 # invoke user.py endpoint that only updates the points
                 print("-----Invoking user microservice-----")
                 update_points_result = invoke_http(
-                    f"{USER_MICROSERVICE_URL}/users/points/update",
+                    f"{USER_MICROSERVICE_URL}/users/" + str(user_id) + "/update",
                     method="PUT",
                     json=points_to_change,
                 )
-                print("update_points_result:", update_points_result)
+                print("update_points_result:", update_points_result, "\n")
 
                 update_points_result_code = update_points_result["code"]
                 update_points_message = json.dumps(update_points_result)
@@ -294,7 +293,7 @@ def process_refund():
                 # Get user customizations
                 print("-----Invoking user microservice-----")
                 user_customizations_result = invoke_http(
-                    f"{USER_MICROSERVICE_URL}/users/{user_id}/customizations",
+                    f"{USER_MICROSERVICE_URL}/users/{user_id}/customization-purchase",
                     method="GET",
                 )
                 print("user_customizations_result: ", user_customizations_result, '\n')
@@ -505,7 +504,7 @@ def process_refund():
 
                 print("-----Invoking user microservice-----")
                 delete_customizations_result = invoke_http(
-                    f"{USER_MICROSERVICE_URL}/users/customizations/delete",
+                    f"{USER_MICROSERVICE_URL}/users/customization-purchase/delete",
                     method="DELETE",
                     json=customizations_to_delete,
                 )
@@ -540,43 +539,46 @@ def process_refund():
                     return jsonify(result), result["code"]
 
 
-                # Update user points
-                points_to_change = {
-                    "user_id": user_id,
-                    "price": abs(change_points / 100),
-                    "operation": "subtract",
-                }
+                # Update user details
+                selected_customization_id = user_details_result["data"]["selected_customization_id"]
+                user_details_to_change = {}
+
+                if int(selected_customization_id) in to_remove_list:
+                    user_details_to_change["selected_customization_id"] = "none"
+
+                user_details_to_change["points"] = abs(change_points / 100)
+                user_details_to_change["operation"] = "subtract"
 
                 print("-----Invoking user microservice-----")
-                update_points_result = invoke_http(
-                    f"{USER_MICROSERVICE_URL}/users/points/update",
+                update_user_details_result = invoke_http(
+                    f"{USER_MICROSERVICE_URL}/users/" + str(user_id) + "/update",
                     method="PUT",
-                    json=points_to_change,
+                    json=user_details_to_change,
                 )
-                print("update_points_result:", update_points_result, "\n")
+                print("update_user_details_result:", update_user_details_result, "\n")
 
-                update_points_result_code = update_points_result["code"]
-                update_points_message = json.dumps(update_points_result)
+                update_user_details_result_code = update_user_details_result["code"]
+                update_user_details_message = json.dumps(update_user_details_result)
 
                 # error handle if cant retrieve
-                if update_points_result_code not in range(200, 300):
-                    print('\n\n-----Publishing the (points update error) message with routing_key=points.update.error-----')
+                if update_user_details_result_code not in range(200, 300):
+                    print('\n\n-----Publishing the (user details update error) message with routing_key=user.details.update.error-----')
 
-                    channel.basic_publish(exchange=exchangename, routing_key="points.update.error", 
-                        body=update_points_message, properties=pika.BasicProperties(delivery_mode = 2)) 
+                    channel.basic_publish(exchange=exchangename, routing_key="user.details.update.error", 
+                        body=update_user_details_message, properties=pika.BasicProperties(delivery_mode = 2)) 
                     # make message persistent within the matching queues 
 
                     # - reply from the invocation is not used;
                     # continue even if this invocation fails        
-                    print("\nPoints update status ({:d}) published to the RabbitMQ Exchange:".format(
-                        update_points_result_code), update_points_result)
+                    print("\nUser details update status ({:d}) published to the RabbitMQ Exchange:".format(
+                        update_user_details_result_code), update_user_details_result)
 
                     result = {
                         "code": 500,
                         "data": {
-                            "update_points_result": update_points_result
+                            "update_user_details_result": update_user_details_result
                         },
-                        "message": "Points update error sent for error handling"
+                        "message": "User details update error sent for error handling"
                     }
 
                     print('\n------------------------')
@@ -674,10 +676,9 @@ def process_refund():
             result = {
                 "code": 200,
                 "data": {
-                    "update_points_result": update_points_result,
+                    "update_user_details_result": update_user_details_result,
                     "payment_refund_result": payment_refund_result
-                },
-                "message": "Refund error sent for error handling"
+                }
             }
 
             print('\n------------------------')

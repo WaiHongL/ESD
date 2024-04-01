@@ -156,11 +156,14 @@ def make_purchase():
 
                             result = {
                                 "code": 200,
-                                "data": update_game_purchase_result
+                                "data": {
+                                    "update_game_purchase_result": update_game_purchase_result,
+                                    "update_points_result": update_points_result
+                                }
                             }
 
                             print('\n------------------------')
-                            print('\nresult: ', update_game_purchase_result)
+                            print('\nresult: ', result)
 
                             return jsonify(result), result["code"]
                         else:
@@ -189,9 +192,6 @@ def make_purchase():
                             print('processing notification...')
                             # process_fail_notification(notification_json)
 
-                            # remove password key
-                            del user_details_result['data']["user_details_result"]["data"]['password']
-
                             result = {
                                 "code": 500,
                                 "data": {
@@ -201,7 +201,7 @@ def make_purchase():
                             }
 
                             print('\n------------------------')
-                            print('\nresult: ', update_game_purchase_result)
+                            print('\nresult: ', result)
 
                             return jsonify(result), result["code"]
                         else:
@@ -401,13 +401,12 @@ def update_game_purchase(update_json):
 
 def update_points(user_id, game_details):
     points_json = {
-        "user_id": user_id,
-        "price": game_details["price"],
+        "points": game_details["price"],
         "operation": "add"
     }
 
     print('\n-----Invoking user microservice-----')
-    update_points_result = invoke_http(update_points_URL + "points/update", method='PUT', json=points_json)
+    update_points_result = invoke_http(update_points_URL + str(user_id) + "/update", method='PUT', json=points_json)
     print("update_points_result: ", update_points_result, '\n')
 
     update_points_result_code = update_points_result["code"]

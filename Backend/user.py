@@ -183,8 +183,8 @@ def get_user_details(userId):
     
 
 # UPDATE USER POINTS
-@app.route("/users/points/update", methods=["PUT"])
-def update_points():
+@app.route("/users/<int:userId>/update", methods=["PUT"])
+def update_user_details(userId):
     # """
     # Update user points
     # ---
@@ -213,44 +213,53 @@ def update_points():
     # """
     if request.is_json:
         try:
-            points_json = request.get_json()
-            user_id = points_json["user_id"]
-            price = points_json["price"]
+            data = request.get_json()
 
-            user = User.query.get(user_id)
+            user = User.query.get(userId)
 
-            if user:
-                if points_json["operation"] == "add":
-                    user.points  = user.points + (float(price) * 100)
-                else:
-                    user.points  = user.points - (float(price) * 100)
+            print("data:", data)
 
-                db.session.commit()
+            if not user:
                 return jsonify(
                     {
-                        "code": 200,
-                        "data": user.json()
+                        "code": 404, 
+                        "data": {
+                            "user_id": userId
+                        },
+                        "message": "User does not exist"
                     }
-                ), 200
+                ), 404
+
+            if "points" in data:
+                points = data["points"]
+
+                if data["operation"] == "add":
+                    user.points = user.points + (float(points) * 100)
+                else:
+                    user.points = user.points - (float(points) * 100)
             
+            if "selected_customization_id" in data:
+                if data["selected_customization_id"] != "None":
+                    user.selected_customization_id = data["selected_customization_id"]
+                else:
+                    user.selected_customization_id = None
+
+            db.session.commit()
             return jsonify(
                 {
-                    "code": 404, 
-                    "data": {
-                        "user_id": user_id
-                    },
-                    "message": "User does not exist"
+                    "code": 200,
+                    "data": user.json()
                 }
-            ), 404
-
+            ), 200
+            
         except Exception as e:
             return jsonify(
                 {
                     "code": 500,
                     "data": {
-                        "user_id": user_id
+                        "user_id": userId
                     },
-                    "message": "An error occurred while updating user points"
+                    "message": "An error occurred while updating user details"
                 }
             ), 500
         
@@ -446,7 +455,7 @@ def delete_wishlist():
     
 
 # GET USER CUSTOMIZATIONS
-@app.route("/users/<int:userId>/customizations")
+@app.route("/users/<int:userId>/customization-purchase")
 def get_customizations(userId):
     """
     Get user customizations
@@ -509,6 +518,82 @@ def get_customizations(userId):
         ), 500
     
 
+# # UPDATE USER SELECTED CUSTOMIZATION
+# @app.route("/users/customizations/update", methods=["PUT"])
+# def update_customization():
+#     """
+#     Update user selected customization
+#     ---
+#     tags:
+#         - ['Users']
+#     requestBody:
+#         description: Customization update details
+#         required: true
+#         content:
+#             application/json:
+#                 schema:
+#                     properties:
+#                         user_id: 
+#                             type: integer
+#                             description: User ID
+#                         customization_id: 
+#                             type: integer
+#                             description: Customization ID
+#     responses:
+#         200:
+#             description: Customization updated successfully
+#         404:
+#             description: User not found
+#         500:
+#             description: Internal server error
+#     """
+#     if request.is_json:
+#         try:
+#             data = request.get_json()
+#             user_id = data["user_id"]
+#             customization_id = data["customization_id"]
+
+#             user = User.query.get(user_id)
+
+#             if user:
+#                 user.selected_customization_id = customization_id
+#                 db.session.commit()
+#                 return jsonify(
+#                     {
+#                         "code": 200,
+#                         "data": user.json()
+#                     }
+#                 ), 200
+            
+#             return jsonify(
+#                 {
+#                     "code": 404, 
+#                     "data": {
+#                         "user_id": user_id
+#                     },
+#                     "message": "User does not exist"
+#                 }
+#             ), 404
+
+#         except Exception as e:
+#             return jsonify(
+#                 {
+#                     "code": 500,
+#                     "data": {
+#                         "user_id": user_id
+#                     },
+#                     "message": "An error occurred while updating user selected customization"
+#                 }
+#             ), 500
+        
+#     return jsonify(
+#         {
+#             "code": 400, 
+#             "message": "Invalid JSON input: " + str(request.get_data())
+#         }
+#     ), 400
+    
+
 # CREATE A PURCHASE RECORD IN CUSTOMIZATION PURCHASE TABLE
 @app.route("/users/customization-purchase/create", methods=["POST"])
 def create_customization_purchase():
@@ -543,84 +628,8 @@ def create_customization_purchase():
     ), 400
     
 
-# UPDATE USER SELECTED CUSTOMIZATION
-@app.route("/users/customizations/update", methods=["PUT"])
-def update_customization():
-    """
-    Update user selected customization
-    ---
-    tags:
-        - ['Users']
-    requestBody:
-        description: Customization update details
-        required: true
-        content:
-            application/json:
-                schema:
-                    properties:
-                        user_id: 
-                            type: integer
-                            description: User ID
-                        customization_id: 
-                            type: integer
-                            description: Customization ID
-    responses:
-        200:
-            description: Customization updated successfully
-        404:
-            description: User not found
-        500:
-            description: Internal server error
-    """
-    if request.is_json:
-        try:
-            data = request.get_json()
-            user_id = data["user_id"]
-            customization_id = data["customization_id"]
-
-            user = User.query.get(user_id)
-
-            if user:
-                user.selected_customization_id = customization_id
-                db.session.commit()
-                return jsonify(
-                    {
-                        "code": 200,
-                        "data": user.json()
-                    }
-                ), 200
-            
-            return jsonify(
-                {
-                    "code": 404, 
-                    "data": {
-                        "user_id": user_id
-                    },
-                    "message": "User does not exist"
-                }
-            ), 404
-
-        except Exception as e:
-            return jsonify(
-                {
-                    "code": 500,
-                    "data": {
-                        "user_id": user_id
-                    },
-                    "message": "An error occurred while updating user selected customization"
-                }
-            ), 500
-        
-    return jsonify(
-        {
-            "code": 400, 
-            "message": "Invalid JSON input: " + str(request.get_data())
-        }
-    ), 400
-    
-
 # DELETE CUSTOMIZATION RECORDS
-@app.route("/users/customizations/delete", methods=["DELETE"])
+@app.route("/users/customization-purchase/delete", methods=["DELETE"])
 def delete_customization():
     """
     Delete customization purchase records

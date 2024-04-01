@@ -29,7 +29,7 @@ services:
 - name: get-user-1
   url: http://user:5600/users/1
 - name: update-user-1-points
-  url: http://user:5600/users/points/update
+  url: http://user:5600/users/1/update
 - name: get-user-1-wishlist-and-purchase
   url: http://user:5600/users/1/wishlist-and-purchases
 - name: add-to-wishlist
@@ -37,11 +37,11 @@ services:
 - name: delete-from-wishlist
   url: http://user:5600/users/wishlist/delete
 - name: get-user-customizations
-  url: http://user:5600/users/1/customizations
+  url: http://user:5600/users/1/customization-purchase
 - name: update-user-customizations
   url: http://user:5600/users/customizations/update
 - name: delete-user-customizations
-  url: http://user:5600/users/customizations/delete
+  url: http://user:5600/users/customization-purchase/delete
 - name: create-purchase-record
   url: http://user:5600/users/game-purchase/create
 - name: get-purchase-record
@@ -144,7 +144,7 @@ routes:
     name: get-user-1
 - name: update-user-1-points
   paths:
-   - /users/points/update
+   - /users/1/update
   methods:
    - PUT
   service:
@@ -172,7 +172,7 @@ routes:
     name: delete-from-wishlist
 - name: get-user-customizations
   paths:
-   - /users/1/customizations
+   - /users/1/customization-purchase
   methods:
    - GET
   service:
@@ -186,7 +186,7 @@ routes:
     name: update-user-customizations
 - name: delete-user-customizations
   paths:
-   - /users/customizations/delete
+   - /users/customization-purchase/delete
   methods:
    - DELETE
   service:
