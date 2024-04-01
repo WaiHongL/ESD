@@ -4,50 +4,47 @@ import Footer from "../components/Footer.vue";
 import Game from "../components/home/Game.vue";
 import PurchasedGame from "../components/user/PurchasedGame.vue";
 import axios from "axios";
-import { onMounted, ref } from "vue";
+import { onMounted, ref, computed } from "vue";
 
 // HANDLE REFUND UPON CLICK OF REFUND BUTTON
+const isRefundProcessing = ref(false);
+const isRefundUnsuccessful = ref(false);
+const isRefundModalDisplayed = ref(false);
 async function handleRefund(gameData) {
-    console.log(gameData);
     var game_Id = gameData.id
     var axiosData = {
-                "user_id": "1", // TO BE CHANGED
-                "game_id": game_Id,
-            }
-    displayRefundOverlay();
+        "user_id": "1", // TO BE CHANGED
+        "game_id": game_Id,
+    }
     // CALL REFUND COMPLEX MICROSERVICE HERE
+    isRefundProcessing.value = true;
     await axios.post("http://localhost:5200/refund-game", axiosData)
-                    .then(res => {
-                        if (res.data.code == 200) {
-                            console.log('yay')
-                            // router.push("/");
-                            // isPaymentProcessing.value = false;
-                        } else {
-                            // isPaymentUnsuccessful.value = true;
-                            // setTimeout(() => {
-                            //     isPaymentUnsuccessful.value = false;
-                            //     isPaymentProcessing.value = false;
-                            // }, 5000);
-                        }
-                    })
-                    .catch(err => {
-                        // console.log(err);
-                        // isPaymentUnsuccessful.value = true;
-                        // setTimeout(() => {
-                        //     isPaymentUnsuccessful.value = false;
-                        //     isPaymentProcessing.value = false;
-                        // }, 5000);
-                    })
-}
-
-// DISPLAY REFUND MODAL
-const isRefundModalVisible = ref(false);
-function displayRefundOverlay() {
-    isRefundModalVisible.value = true;
-    setTimeout(() => {
-        isRefundModalVisible.value = false;
-    }, 5000);
-    // Currently Modal timeout after 5s, change to actual refund completion once complex refund.py is done
+        .then(res => {
+            if (res.data.code == 200) {
+                isRefundProcessing.value = false;
+                isRefundModalDisplayed.value = true;
+                setTimeout(() => {
+                    isRefundModalDisplayed.value = false;
+                    window.location.reload();
+                }, 3000);
+            } else {
+                isRefundProcessing.value = false;
+                isRefundUnsuccessful.value = true;
+                isRefundModalDisplayed.value = true;
+                setTimeout(() => {
+                    isRefundModalDisplayed.value = false;
+                }, 3000);
+            }
+        })
+        .catch(err => {
+            console.log(err);
+            isRefundProcessing.value = false;
+            isRefundUnsuccessful.value = true;
+            isRefundModalDisplayed.value = true;
+            setTimeout(() => {
+                isRefundModalDisplayed.value = false;
+            }, 3000);
+        })
 }
 
 // DISPLAY CUSTOMIZATION MODAL WHEN CLICKED
@@ -219,6 +216,10 @@ async function getUserCustomizations() {
     }
 }
 
+const borderColor = computed(() => {
+    return "border-" + selectedBorderColor.value;
+});
+
 onMounted(async () => {
     await getWishlistAndPurchases();
     await getUserDetails();
@@ -235,12 +236,12 @@ onMounted(async () => {
                 <div>
                     <h1>Hi Chason!</h1>
                     <div>
-                        <span class="me-3"><b>Tier:</b> {{ selectedTier }}</span>
+                        <span class="me-3"><b>Tier:</b> {{ selectedTier ? selectedTier : "None" }}</span>
                         <span><b>Points:</b> {{ points }}</span>
                     </div>
                 </div>
 
-                <img @click="displayCustomizationModal(true)" class="user-img" :class="'border-' + selectedBorderColor"
+                <img @click="displayCustomizationModal(true)" class="user-img" :class="borderColor"
                     src="../assets/images/user/user.jpg" />
             </div>
         </div>
@@ -271,28 +272,39 @@ onMounted(async () => {
         <div class="wishlist-container">
             <div class="fs-4 fw-bold mb-3">My Wishlist</div>
 
-            <div class="wishlist-container__games-container">
+            <div v-if="wishlist.length" class="wishlist-container__games-container">
                 <Game v-for="(game, index) in wishlist" :key="index" :id="game.game_id" :title="game.title"
                     :genre="game.genre" :price="game.price" @handle-wishlist="handleWishlist"
                     :isWishlist="wishlist.some(wish => wish.game_id == game.game_id)"
                     :isWishlistDisabled="purchases.includes(game.game_id)"
                     :isPurchaseDisabled="purchases.includes(game.game_id)" />
             </div>
+
+            <div class="text-center" v-else>You have no games in your wishlist</div>
         </div>
 
         <!-- PURCHASE -->
         <div class="purchase-container">
             <div class="fs-4 fw-bold mb-3">My Purchases</div>
 
-            <div class="purchase-container__games-container">
-                <PurchasedGame v-for="(game, index) in purchases" :key="index" :id="game.game_id" :title="game.title" :genre="game.genre"
-                    @handle-refund="handleRefund" />
-
+            <div v-if="purchases.length" class="purchase-container__games-container">
+                <PurchasedGame v-for="(game, index) in purchases" :key="index" :id="game.game_id" :title="game.title"
+                    :genre="game.genre" @handle-refund="handleRefund" />
             </div>
+
+            <div class="text-center" v-else>You have no purchases</div>
         </div>
 
         <!-- REFUND MODAL -->
-        <div v-if="isRefundModalVisible" class="refund-overlay">Refund is being processed...</div>
+        <div v-if="isRefundProcessing || isRefundModalDisplayed" class="refund-processing-bg"></div>
+        <div v-if="!isRefundProcessing && isRefundUnsuccessful && isRefundModalDisplayed" class="refund-processing-modal">Refund is unsuccessful
+        </div>
+        <div v-else-if="isRefundProcessing && !isRefundModalDisplayed" class="refund-processing-modal">Refund is being
+            processed...
+        </div>
+        <div v-else-if="!isRefundProcessing && !isRefundUnsuccessful && isRefundModalDisplayed"
+            class="refund-processing-modal">Refund is successful
+        </div>
     </main>
 
     <Footer></Footer>
@@ -396,16 +408,23 @@ h1 {
     margin-bottom: 100px;
 }
 
-.refund-overlay {
+.refund-processing-bg {
+    position: fixed;
+    inset: 0;
+    content: "";
+    background-color: black;
+    opacity: 0.5;
+}
+
+.refund-processing-modal {
     position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    z-index: 2;
     width: 300px;
     height: 150px;
+    z-index: 2;
     background-color: white;
-    color: black;
     border-radius: 10px;
     border: 3px solid black;
     display: flex;

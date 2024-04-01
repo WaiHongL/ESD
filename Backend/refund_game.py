@@ -648,12 +648,35 @@ def process_refund():
             }
 
             print("processing notification...")
-            process_refund_notification(notification_json)
+            # process_refund_notification(notification_json)
 
-            # If everything is successful, return confirmation
-            return jsonify({"message": "Refund processed successfully."}), 200
-        except:
-            return {"code": "400"}
+            result = {
+                "code": 200,
+                "data": {
+                    "update_points_result": update_points_result,
+                    "payment_refund_result": payment_refund_result
+                },
+                "message": "Refund error sent for error handling"
+            }
+
+            print('\n------------------------')
+            print('\nresult: ', result)
+            return jsonify(result), result["code"]
+        
+        except Exception as e:
+            return jsonify(
+                {
+                    "code": 500,
+                    "message": "refund_game.py internal error"
+                }
+            ), 500
+        
+    return jsonify(
+        {
+            "code": 400, 
+            "message": "Invalid JSON input: " + str(request.get_data())
+        }
+    ), 400
 
 
 if __name__ == "__main__":

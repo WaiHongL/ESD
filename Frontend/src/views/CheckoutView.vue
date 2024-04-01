@@ -74,22 +74,24 @@ function handleSubmit() {
                             isPaymentModalDisplayed.value = true;
                             setTimeout(() => {
                                 router.push("/");
-                            }, 5000);
+                            }, 3000);
                         } else {
-                            isPaymentUnsuccessful.value = true;
                             isPaymentProcessing.value = false;
+                            isPaymentUnsuccessful.value = true;
+                            isPaymentModalDisplayed.value = true;
                             setTimeout(() => {
-                                isPaymentUnsuccessful.value = false;
-                            }, 5000);
+                                isPaymentModalDisplayed.value = false;
+                            }, 3000);
                         }
                     })
                     .catch(err => {
                         console.log(err);
+                        isPaymentProcessing.value = false;
                         isPaymentUnsuccessful.value = true;
+                        isPaymentModalDisplayed.value = true;
                         setTimeout(() => {
-                            isPaymentUnsuccessful.value = false;
-                            isPaymentProcessing.value = false;
-                        }, 5000);
+                            isPaymentModalDisplayed.value = false;
+                        }, 3000);
                     })
             }
         })
@@ -148,12 +150,14 @@ onMounted(async () => {
     </div>
 
     <div v-if="isPaymentProcessing || isPaymentModalDisplayed" class="payment-processing-bg"></div>
-    <div v-if="isPaymentProcessing && isPaymentUnsuccessful" class="payment-processing-modal">Payment unsuccessful
+    <div v-if="!isPaymentProcessing && isPaymentUnsuccessful && isPaymentModalDisplayed"
+        class="payment-processing-modal">Payment unsuccessful
     </div>
     <div v-else-if="isPaymentProcessing && !isPaymentUnsuccessful" class="payment-processing-modal">Payment
         processing...
     </div>
-    <div v-else-if="!isPaymentProcessing && !isPaymentUnsuccessful && isPaymentModalDisplayed" class="payment-processing-modal">Payment successful
+    <div v-else-if="!isPaymentProcessing && !isPaymentUnsuccessful && isPaymentModalDisplayed"
+        class="payment-processing-modal">Payment successful
     </div>
 </template>
 
