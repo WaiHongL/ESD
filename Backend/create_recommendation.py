@@ -102,12 +102,17 @@ def process_recommendation(userId):
     
     # GET GAME IDS OF PURCHASES
     wishlist_and_purchase_data = wishlist_and_purchase_result["data"]
+    wishlist_ids = []
+    if "wishlist" in wishlist_and_purchase_data:
+        wishlist = wishlist_and_purchase_data["wishlist"]
+        for wish in wishlist:
+            wishlist_ids.append(wish["game_id"])
+
     purchase_ids = []
     if "purchases" in wishlist_and_purchase_data:
         purchases = wishlist_and_purchase_data["purchases"]
         for purchase in purchases:
             purchase_ids.append(purchase["game_id"])
-
 
     # INVOKE SHOP MICROSERVICE TO GET GAMES GENRE
     print("\n-----Invoking shop microservice-----")
@@ -202,12 +207,14 @@ def process_recommendation(userId):
         }
     
     # FILTER GAMES ALREADY PURCHASED
+    print("purchase ids:", purchase_ids)
+    print("wishlist ids:", wishlist_ids)
     games_by_genre_data = games_by_genre_result["data"]
     recommended_games = []
     if "games" in games_by_genre_data:
         games = games_by_genre_data["games"]
         for game in games:
-            if (game["game_id"] not in purchase_ids):
+            if (game["game_id"] not in purchase_ids and game["game_id"] not in wishlist_ids):
                 recommended_games.append(game)
     
     games_by_genre_result["data"]["games"] = recommended_games
