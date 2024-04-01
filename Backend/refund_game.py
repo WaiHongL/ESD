@@ -1,6 +1,9 @@
 from flask import Flask, request, jsonify
 from invokes import invoke_http
 from flask_cors import CORS
+from flasgger import Swagger
+
+
 import pika
 import amqp_connection
 import os, sys
@@ -9,6 +12,32 @@ from itertools import combinations
 
 app = Flask(__name__)
 CORS(app)
+
+# Initialize flasgger for API Documentation
+app.config['SWAGGER'] = {
+    'title': 'Shop microservice API',
+    'version': 2.0,
+    "openapi": "3.0.2",
+    'description': 'Allows create, retrieve, update, and delete of shop items',
+    'tags': {
+        'Games': 'Operations related to game management',
+        'Customizations': 'Operations related to customizations',
+    },
+    'ui_params': {
+        'apisSorter': 'alpha',
+        'operationsSorter': 'alpha',
+        'tagsSorter': 'alpha',
+    },
+    'ui_params_text': '''{
+        "tagsSorter": (a, b) => {
+            const order = ['Users', 'Customisations'];
+            return order.indexOf(a) - order.indexOf(b);
+        }
+    }''',
+    
+}
+
+swagger = Swagger(app)
 
 # Define the microservices URLs
 USER_MICROSERVICE_URL = "http://user:5600"
