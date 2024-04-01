@@ -18,7 +18,7 @@ async function handleRefund(gameData) {
     }
     // CALL REFUND COMPLEX MICROSERVICE HERE
     isRefundProcessing.value = true;
-    await axios.post("http://localhost:5200/refund-game", axiosData)
+    await axios.post("http://localhost:5606/refund-game", axiosData)
         .then(res => {
             if (res.data.code == 200) {
                 isRefundProcessing.value = false;
@@ -130,11 +130,20 @@ async function getWishlistAndPurchases() {
         for (const wishlistId of wishlistData) {
             const gameId = wishlistId.game_id;
 
-            if (!wishlist.value.some(wish => wish.game_id == gameId)) {
-                await getGameById(gameId, "wishlist");
-            } else if (wishlist.value.length > wishlistData.length) {
-                wishlist.value = [];
-                await getGameById(gameId, "wishlist");
+            if (purchaseData != undefined && !purchaseData.some(purchase => purchase.game_id == gameId)) {
+                if (!wishlist.value.some(wish => wish.game_id == gameId)) {
+                    await getGameById(gameId, "wishlist");
+                } else if (wishlist.value.length > wishlistData.length) {
+                    wishlist.value = [];
+                    await getGameById(gameId, "wishlist");
+                }
+            } else if (purchaseData == undefined) {
+                if (!wishlist.value.some(wish => wish.game_id == gameId)) {
+                    await getGameById(gameId, "wishlist");
+                } else if (wishlist.value.length > wishlistData.length) {
+                    wishlist.value = [];
+                    await getGameById(gameId, "wishlist");
+                }
             }
         }
     } else {
@@ -273,11 +282,9 @@ onMounted(async () => {
             <div class="fs-4 fw-bold mb-3">My Wishlist</div>
 
             <div v-if="wishlist.length" class="wishlist-container__games-container">
-                <Game v-for="(game, index) in wishlist" :key="index" :id="game.game_id" :title="game.title"
-                    :genre="game.genre" :price="game.price" @handle-wishlist="handleWishlist"
-                    :isWishlist="wishlist.some(wish => wish.game_id == game.game_id)"
-                    :isWishlistDisabled="purchases.includes(game.game_id)"
-                    :isPurchaseDisabled="purchases.includes(game.game_id)" />
+				<Game v-for="(game, index) in wishlist" :key="index" :id="game.game_id" :title="game.title"
+					:genre="game.genre" :price="game.price" @handle-wishlist="handleWishlist"
+					:isWishlist="true" />
             </div>
 
             <div class="text-center" v-else>You have no games in your wishlist</div>

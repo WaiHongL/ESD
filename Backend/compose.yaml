@@ -178,7 +178,7 @@ services:
       - notification
 
     ports:
-      - "5200:5200"
+      - "5606:5606"
 
     environment:
       PYTHONUNBUFFERED: 1
