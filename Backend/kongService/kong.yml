@@ -125,3 +125,53 @@ services:
           - DELETE
         strip_path: false
 
+  - name: recommendation
+    url: http://create_recommendation:5603/
+    routes:
+      - name: create-recommendation
+        paths:
+          - /create-recommendation
+        methods:
+          - GET
+        strip_path: false
+
+  - name: make-purchase
+    url: http://make_purchase:5605/
+    routes:
+      - name: make-purchase
+        paths:
+          - /make-purchase
+        methods:
+          - POST
+        strip_path: false
+
+  - name: payment
+    url: http://payment:5604/
+    routes:
+      - name: payment
+        paths:
+          - /payment
+        methods:
+          - POST
+        strip_path: false
+
+  - name: recommend
+    url: http://recommend:5602/
+    routes:
+      - name: recommend
+        paths:
+          - /recommend/genre
+        methods:
+          - POST
+        strip_path: false
+
+  - name: refund-game
+    url: http://refund_game:5606/
+    routes:
+      - name: refund-game
+        paths:
+          - /refund-game
+        methods:
+          - POST
+        strip_path: false
+
