@@ -50,9 +50,9 @@ if not amqp_connection.check_exchange(channel, exchangename, exchangetype):
     sys.exit(0)  # Exit with a success status
 
 # URL
-game_URL = "http://shop:5601/shop/games"
-game_genres_URL = "http://shop:5601/shop/games/genre"
-common_genre_URL = "http://recommend:5602/recommend/genre"
+game_URL = "http://kong:8000/shop/games"
+game_genres_URL = "http://kong:8000/shop/games/genre"
+common_genre_URL = "http://kong:8000/recommend/genre"
 
 # CREATE RECOMMENDATION
 @app.route("/create-recommendation/<int:userId>")
@@ -170,7 +170,7 @@ def process_recommendation(userId):
     # INVOKE GAME MICROSERVICE TO GET GAMES THAT MATCHES COMMON GENRE
     print("\n-----Invoking game microservice-----")
     genre = common_genre_result["data"]
-    games_by_genre_URL = "http://shop:5601/shop/games?genre="
+    games_by_genre_URL = "http://kong:8000/shop/games?genre="
 
     if type(genre) is list:
         for i in range(len(genre)):

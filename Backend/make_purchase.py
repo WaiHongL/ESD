@@ -33,20 +33,19 @@ exchangetype="topic" # use a 'topic' exchange to enable interaction
 connection = amqp_connection.create_connection() 
 channel = connection.channel()
 channel.exchange_declare(exchange=exchangename, exchange_type=exchangetype, durable=True) 
-
 # If the exchange is not yet created, exit the program
 if not amqp_connection.check_exchange(channel, exchangename, exchangetype):
     print("\nCreate the 'Exchange' before running this microservice. \nExiting the program.")
     sys.exit(0)  # Exit with a success status
 
 #URLS
-create_game_purchase_URL = "http://user:5600/users/game-purchase/create"
-game_details_URL = "http://shop:5601/shop/games/"
-update_points_URL = "http://user:5600/users/"
-payment_URL = "http://payment:5604/payment"
-update_game_purchase_URL = "http://user:5600/users/game-purchase/update"
-user_details_URL = "http://user:5600/users/"
-delete_game_purchase_URL = "http://user:5600/users/game-purchase/delete"
+create_game_purchase_URL = "http://kong:8000/users/game-purchase/create"
+game_details_URL = "http://kong:8000/shop/games/"
+update_points_URL = "http://kong:8000/users/"
+payment_URL = "http://kong:8000/payment"
+update_game_purchase_URL = "http://kong:8000/users/game-purchase/update"
+user_details_URL = "http://kong:8000/users/"
+delete_game_purchase_URL = "http://kong:8000/users/game-purchase/delete"
 
 
 @app.route("/make-purchase", methods=['POST'])

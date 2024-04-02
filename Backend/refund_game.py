@@ -39,10 +39,10 @@ app.config['SWAGGER'] = {
 swagger = Swagger(app)
 
 # Define the microservices URLs
-USER_MICROSERVICE_URL = "http://user:5600"
-PAYMENT_MICROSERVICE_URL = "http://payment:5604"
-ERROR_MICROSERVICE_URL = "http://error:5445/error"
-SHOP_MICROSERVICE_URL = "http://shop:5601"
+USER_MICROSERVICE_URL = "http://kong:8000"
+PAYMENT_MICROSERVICE_URL = "http://kong:8000"
+ERROR_MICROSERVICE_URL = "http://kong:8000/error"
+SHOP_MICROSERVICE_URL = "http://kong:8000"
 
 # amqp stuff
 exchangename = "order_topic"  # exchange name
