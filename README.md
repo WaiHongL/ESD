@@ -27,7 +27,19 @@ Shop Microservice Database
     <li>Password: pSSSS+]q8zZ-pjF</li>
 </ul> -->
 ## Stripe
-API Key
-```
+API Key: (Replace with your own key)
+```bash
 pk_test_51LrjcfK1WW7DRh3qozq21D4vjLWPEPCEvUlElldx7B3kxJ0KlScZzZS8B17tNBs2cNJLCm83hNMx3HDgVXagGGOM00IYhIPgw7
+```
+
+Test Card Numbers
+```bash
+# Simulate payment success
+Card number: 4242424242424242
+
+# Simulate payment failure
+Card number: 4000000000009995
+
+MM/YY: 04/24
+CVC: 4242
 ```
