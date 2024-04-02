@@ -27,11 +27,11 @@ def get_common_genre():
     tags:
         - ['Recommend']
     requestBody:
-        description: List of genres
         required: true
         content:
             application/json:
                 schema:
+                    type: object
                     properties:
                         data:
                             type: array

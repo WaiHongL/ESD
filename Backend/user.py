@@ -148,6 +148,8 @@ def get_user_details(userId):
             description: Returned user details successfully
         404:
             description: User not found
+        500:
+            description: Internal server error
     """
     try:
         user = db.session.scalars(db.select(User).filter_by(user_id=userId)).one()
@@ -185,32 +187,35 @@ def get_user_details(userId):
 # UPDATE USER POINTS
 @app.route("/users/<int:userId>/update", methods=["PUT"])
 def update_user_details(userId):
-    # """
-    # Update user points
-    # ---
-    # tags:
-    #     - ['Users']
-    # requestBody:
-    #     description: Points update operation
-    #     required: true
-    #     content:
-    #         application/json:
-    #             schema:
-    #                 properties:
-    #                     operation: 
-    #                         type: string
-    #                         description: Operation type (add or subtract)
-    #                     price: 
-    #                         type: number
-    #                         description: Price for the operation
-    # responses:
-    #     200:
-    #         description: Points updated successfully
-    #     404:
-    #         description: User not found
-    #     500:
-    #         description: Internal server error
-    # """
+    """
+    Update user points
+    ---
+    tags:
+        - ['Users']
+    requestBody:
+        description: Points update operation
+        required: true
+        content:
+            application/json:
+                schema:
+                    type: object
+                    properties:
+                        points:
+                            type: integer
+                            description: The new points for the user
+                        selected_customization_id:
+                            type: integer
+                            description: The selected customization id for the user
+    responses:
+        200:
+            description: Points updated successfully
+        400:
+            description: Invalid JSON input
+        404:
+            description: User not found
+        500:
+            description: Internal server error
+    """
     if request.is_json:
         try:
             data = request.get_json()
@@ -288,6 +293,8 @@ def get_wishlist_and_purchase(userId):
             description: Returned user wishlist and purchases successfully
         404:
             description: User not found or no wishlist/purchases
+        500:
+            description: Internal server error
     """    
     try:
         user = db.session.scalars(db.select(User).filter_by(user_id=userId)).all()
@@ -356,6 +363,17 @@ def create_wishlist():
     ---
     tags:
         - ['Users']
+    requestBody:
+        description: Wishlist creation details
+        required: true
+        content:
+            application/json:
+                schema:
+                    type: object
+                    properties:
+                        product_id:
+                            type: integer
+                            description: The id of the product to add to the wishlist
     responses:
         201:
             description: Wishlist entry created
@@ -403,9 +421,22 @@ def delete_wishlist():
     ---
     tags:
         - ['Users']
+    requestBody:
+        description: Wishlist deletion operation
+        required: true
+        content:
+            application/json:
+                schema:
+                    type: object
+                    properties:
+                        wishlist_id:
+                            type: integer
+                            description: The id of the wishlist entry to delete
     responses:
         200:
             description: Wishlist entry deleted 
+        400:
+            description: Invalid JSON input
         404:
             description: Wishlist entry not found
         500:
@@ -471,6 +502,8 @@ def get_customizations(userId):
             description: Returned user customizations successfully
         404:
             description: User not found or no customizations
+        500:
+            description: Internal server error
     """
     try:
         user = db.session.scalars(db.select(User).filter_by(user_id=userId)).all()
@@ -636,9 +669,22 @@ def delete_customization():
     ---
     tags:
         - ['Customizations']
+    requestBody:
+        description: Customization deletion operation
+        required: true
+        content:
+            application/json:
+                schema:
+                    type: object
+                    properties:
+                        customization_id:
+                            type: integer
+                            description: The id of the customization to delete
     responses:
         200:
             description: Customization purchase records deleted
+        400:
+            description: Invalid JSON input
         404:
             description: Customization purchase records not found
         500:
@@ -689,6 +735,30 @@ def delete_customization():
 # GET GAME PURCHASE RECORD
 @app.route("/users/game-purchase", methods = ["GET"])
 def get_game_purchase_record():
+    """
+    Get game purchase record
+    ---
+    tags:
+        - ['Users']
+    parameters:
+        - name: userId
+          in: query
+          type: integer
+          required: true
+          description: The id of the user
+        - name: gameId
+          in: query
+          type: integer
+          required: true
+          description: The id of the game
+    responses:
+        200:
+            description: Game purchase record retrieved
+        404:
+            description: Game purchase record not found
+        400:
+            description: Invalid query parameters
+    """
     if (request.args.get("userId") and request.args.get("gameId")):
         user_id = request.args.get("userId")
         game_id = request.args.get("gameId")
@@ -815,15 +885,14 @@ def update_game_purchase():
                         game_id: 
                             type: integer
                             description: Game ID
-                        purchase_id: 
+                        transcation_id: 
                             type: string
-                            description: Purchase ID
-                        gameplay_time: 
-                            type: integer
-                            description: Gameplay time in minutes
+                            make_payment_result: ['data']['iq']
     responses:
         200:
             description: Game purchase record updated successfully
+        400:
+            description: Invalid JSON input
         404:
             description: Game purchase record not found
         500:
@@ -892,9 +961,14 @@ def delete_game_purchase():
                         game_id: 
                             type: integer
                             description: Game ID
+                        transcation_id:
+                            type: string
+                            description: Purchase ID
     responses:
         200:
             description: Game purchase record deleted successfully
+        400:
+            description: Invalid JSON input
         404:
             description: Game purchase record not found
         500:

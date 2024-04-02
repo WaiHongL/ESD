@@ -97,6 +97,8 @@ def get_games():
             description: Returned game details successfully
         404:
             description: Games not found
+        500:
+            description: Internal server error
     """
     # CHECK IF "GENRE" IS IN QUERY PARAMS
     if (request.args.getlist("genre")):
@@ -179,21 +181,39 @@ def get_games_genre():
     tags:
         - ['Games']  
     requestBody:
-        description: Games Genre 
         required: true
         content:
             application/json:
                 schema:
+                    type: object
                     properties:
-                        game_id: 
-                            type: integer
-                            description: Game ID
-                        customization_id: 
-                            type: integer
-                            description: Customization ID
+                        wishlist:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    game_id:
+                                        type: integer
+                                        description: Game ID
+                                    customization_id:
+                                        type: integer
+                                        description: Customization ID
+                        purchases:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    game_id:
+                                        type: integer
+                                        description: Game ID
+                                    customization_id:
+                                        type: integer
+                                        description: Customization ID
     responses:
         200:
             description: Returned game genres successfully
+        400:
+            description: Invalid JSON input
         404:
             description: Game genres not found
     """
@@ -265,6 +285,8 @@ def get_game_details(gameId):
             description: Return game details
         404:
             description: Game details not found
+        500:
+            description: Internal server error
     """
     try:
         game = db.session.scalars(db.select(Game).filter_by(game_id=gameId)).one()
@@ -312,6 +334,8 @@ def get_customizations():
             description: Returned customizations successfully
         404:
             description: Games not found
+        500:
+            description: Internal server error
     """
     try: 
         customization_list = db.session.scalars(db.select(Customizations)).all()
@@ -359,6 +383,8 @@ def get_customization_details(customizationId):
             description: Returned customization details successfully
         404:
             description: Games not found
+        500:
+            description: Internal server error
     """
     try: 
         customization = db.session.scalars(db.select(Customizations).filter_by(customization_id=customizationId)).one()
