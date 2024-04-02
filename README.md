@@ -13,12 +13,17 @@ npm run dev
 ```
 
 ## Stripe
-API Key: (Replace with your own key)
+### API Key: (Replace with your Publishable key)
 ```bash
 pk_test_51LrjcfK1WW7DRh3qozq21D4vjLWPEPCEvUlElldx7B3kxJ0KlScZzZS8B17tNBs2cNJLCm83hNMx3HDgVXagGGOM00IYhIPgw7
 ```
 
-Test Card Numbers:
+### Locate API Key:
+1. Login to your Stripe account
+2. Select "Test mode"
+3. Replace API Key with your Publishable Key
+
+### Test Card Numbers:
 ```bash
 # Simulate payment success
 Card number: 4242424242424242
@@ -30,8 +35,9 @@ MM/YY: 04/24
 CVC: 4242
 ```
 
-Check Payment Status on Stripe
-Navigate to Payments
+### Check Transactions Status on Stripe:
+1. Login to your Stripe account
+2. Navigate to Payments tab
 
 ## MailJet
 API Keys:
@@ -42,3 +48,13 @@ b234bb351a835b67c4f8ce412a8e77ab
 # Secret Key
 d20ed987dd240464d6f4bd92af7247de
 ```
+
+### Locate API Key:
+1. Login to your Mailjet account
+2. Select "API"
+3. Replace API and Secret Key with the API and Secret Key shown
+
+### Check Email Status on Stripe:
+1. Login to your Mailjet account
+2. In homepage, Real-time message events shows dashboard of sent email status within the past 30 minutes
+3. In the same homepage, Latest messages sent shows sent email status within the past 24 hours
