@@ -13,20 +13,18 @@ npm run dev
 ```
 
 ## Stripe
-API Key: (Replace with your Publishable key)
+### API Key: (Replace with your Publishable key)
 ```bash
 pk_test_51LrjcfK1WW7DRh3qozq21D4vjLWPEPCEvUlElldx7B3kxJ0KlScZzZS8B17tNBs2cNJLCm83hNMx3HDgVXagGGOM00IYhIPgw7
 ```
 
-
-Locate API Key:
+### Locate API Key:
 1. Login to your Stripe account
 2. Navigate to the Developers section of the Stripe dashboard
 3. Click on API Keys
 4. Replace API Key with your Publishable Key
 
-
-Test Card Numbers:
+### Test Card Numbers:
 ```bash
 # Simulate payment success
 Card number: 4242424242424242
@@ -38,8 +36,7 @@ MM/YY: 04/24
 CVC: 4242
 ```
 
-
-Check Transactions Status on Stripe:
+### Check Transactions Status on Stripe:
 1. Login to your Stripe account
 2. Navigate to Payments tab
 
