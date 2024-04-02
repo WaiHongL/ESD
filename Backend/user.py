@@ -133,7 +133,7 @@ class CustomizationPurchase(db.Model):
 
 # GET USER DETAILS 
 @app.route("/users/<int:userId>")
-def get_user_details(userId):
+def get_user_details(userId):                       
     """
     Get user details by user ID
     ---
@@ -185,7 +185,7 @@ def get_user_details(userId):
     
 
 # UPDATE USER POINTS
-@app.route("/users/<int:userId>/update", methods=["PUT"])
+@app.route("/<int:userId>/update", methods=["PUT"])
 def update_user_details(userId):
     """
     Update user points
@@ -887,7 +887,6 @@ def update_game_purchase():
                             description: Game ID
                         transcation_id: 
                             type: string
-                            make_payment_result: ['data']['iq']
     responses:
         200:
             description: Game purchase record updated successfully
