@@ -48,3 +48,13 @@ b234bb351a835b67c4f8ce412a8e77ab
 # Secret Key
 d20ed987dd240464d6f4bd92af7247de
 ```
+
+### Locate API Key:
+1. Login to your Mailjet account
+2. Select "API"
+3. Replace API and Secret Key with the API and Secret Key shown
+
+### Check Email Status on Stripe:
+1. Login to your Mailjet account
+2. In homepage, Real-time message events shows dashboard of sent email status within the past 30 minutes
+3. In the same homepage, Latest messages sent shows sent email status within the past 24 hours
