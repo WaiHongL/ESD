@@ -132,7 +132,7 @@ class CustomizationPurchase(db.Model):
 
 
 # GET USER DETAILS 
-@app.route("/users/<int:userId>")
+@app.route("/<int:userId>", methods=["GET"])
 def get_user_details(userId):                       
     """
     Get user details by user ID
@@ -277,7 +277,7 @@ def update_user_details(userId):
 
 
 # GET USER WISHLIST AND PURCHASES
-@app.route("/users/<int:userId>/wishlist-and-purchases")
+@app.route("/<int:userId>/wishlist-and-purchases")
 def get_wishlist_and_purchase(userId):
     """
     Get user wishlist and purchases
@@ -356,7 +356,7 @@ def get_wishlist_and_purchase(userId):
     
 
 # ADD TO WISHLIST
-@app.route("/users/wishlist/create", methods=["POST"])
+@app.route("/wishlist/create", methods=["POST"])
 def create_wishlist():
     """
     Create wishlist record
@@ -414,7 +414,7 @@ def create_wishlist():
 
 
 # DELETE WISHLIST
-@app.route("/users/wishlist/delete", methods=["DELETE"])
+@app.route("/wishlist/delete", methods=["DELETE"])
 def delete_wishlist(): 
     """
     Delete a wishlist entry
@@ -486,7 +486,7 @@ def delete_wishlist():
     
 
 # GET USER CUSTOMIZATIONS
-@app.route("/users/<int:userId>/customization-purchase")
+@app.route("/<int:userId>/customization-purchase")
 def get_customizations(userId):
     """
     Get user customizations
@@ -628,7 +628,7 @@ def get_customizations(userId):
     
 
 # CREATE A PURCHASE RECORD IN CUSTOMIZATION PURCHASE TABLE
-@app.route("/users/customization-purchase/create", methods=["POST"])
+@app.route("/customization-purchase/create", methods=["POST"])
 def create_customization_purchase():
     if request.is_json:
         data = request.get_json(force=True)
@@ -662,7 +662,7 @@ def create_customization_purchase():
     
 
 # DELETE CUSTOMIZATION RECORDS
-@app.route("/users/customization-purchase/delete", methods=["DELETE"])
+@app.route("/customization-purchase/delete", methods=["DELETE"])
 def delete_customization():
     """
     Delete customization purchase records
@@ -733,7 +733,7 @@ def delete_customization():
 
 
 # GET GAME PURCHASE RECORD
-@app.route("/users/game-purchase", methods = ["GET"])
+@app.route("/game-purchase", methods = ["GET"])
 def get_game_purchase_record():
     """
     Get game purchase record
@@ -799,7 +799,7 @@ def get_game_purchase_record():
 
 
 # CREATE A PURCHASE RECORD IN GAME PURCHASE TABLE
-@app.route("/users/game-purchase/create", methods=["POST"])
+@app.route("/game-purchase/create", methods=["POST"])
 def create_game_purchase():
     """
     Create a game purchase record
@@ -865,7 +865,7 @@ def create_game_purchase():
 
 
 # UPDATE PURCHASE RECORD IN GAME PURCHASE TABLE
-@app.route("/users/game-purchase/update", methods=["PUT"])
+@app.route("/game-purchase/update", methods=["PUT"])
 def update_game_purchase():
     """
     Update a game purchase record
@@ -940,7 +940,7 @@ def update_game_purchase():
 
 
 # DELETE A PURCHASE RECORD
-@app.route("/users/game-purchase/delete", methods=["DELETE"])
+@app.route("/game-purchase/delete", methods=["DELETE"])
 def delete_game_purchase():
     """
     Delete a game purchase record
