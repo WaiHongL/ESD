@@ -27,4 +27,7 @@ Shop Microservice Database
     <li>Password: pSSSS+]q8zZ-pjF</li>
 </ul> -->
 ## Stripe
-API Key: pk_test_51LrjcfK1WW7DRh3qozq21D4vjLWPEPCEvUlElldx7B3kxJ0KlScZzZS8B17tNBs2cNJLCm83hNMx3HDgVXagGGOM00IYhIPgw7
+API Key
+```
+pk_test_51LrjcfK1WW7DRh3qozq21D4vjLWPEPCEvUlElldx7B3kxJ0KlScZzZS8B17tNBs2cNJLCm83hNMx3HDgVXagGGOM00IYhIPgw7
+```
