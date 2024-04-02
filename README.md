@@ -20,9 +20,8 @@ pk_test_51LrjcfK1WW7DRh3qozq21D4vjLWPEPCEvUlElldx7B3kxJ0KlScZzZS8B17tNBs2cNJLCm8
 
 ### Locate API Key:
 1. Login to your Stripe account
-2. Navigate to the Developers section of the Stripe dashboard
-3. Click on API Keys
-4. Replace API Key with your Publishable Key
+2. Select "Test mode"
+3. Replace API Key with your Publishable Key
 
 ### Test Card Numbers:
 ```bash
