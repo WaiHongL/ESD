@@ -142,7 +142,7 @@ def process_recommendation(userId):
 
     # INVOKE RECOMMEND MICROSERVICE TO GET COMMON GENRE
     print("\n-----Invoking recommend microservice-----")
-    common_genre_result = invoke_http(common_genre_URL, method="POST", json=games_genre_result)
+    common_genre_result = invoke_http(common_genre_URL, method="POST", json=games_genre_result["data"])
     print("common_genre_result:", common_genre_result)
 
     common_genre_result_code = common_genre_result["code"]
@@ -167,8 +167,8 @@ def process_recommendation(userId):
         }
 
 
-    # INVOKE GAME MICROSERVICE TO GET GAMES THAT MATCHES COMMON GENRE
-    print("\n-----Invoking game microservice-----")
+    # INVOKE shop MICROSERVICE TO GET GAMES THAT MATCHES COMMON GENRE
+    print("\n-----Invoking shop microservice-----")
     genre = common_genre_result["data"]
     games_by_genre_URL = "http://kong:8000/shop/games?genre="
 

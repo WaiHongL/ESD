@@ -47,7 +47,7 @@ def get_common_genre():
             description: No common genres found
     """
     if request.get_json():
-        genre_data = request.get_json()["data"]
+        genre_data = request.get_json()
         genre_dict = {}
 
         for genre in genre_data:
