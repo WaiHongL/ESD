@@ -9,6 +9,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flasgger import Swagger
 
 app = Flask(__name__)
+CORS(app)
+
 # Initialize flasgger for API Documentation
 app.config['SWAGGER'] = {
     'title': 'Make_Purchase Microservice API',
@@ -25,7 +27,6 @@ swagger = Swagger(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:pSSSS+]q8zZ-pjF@34.124.211.169/user'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
-CORS(app)
 
 # AMQP connection setup
 exchangename = "order_topic" # exchange name

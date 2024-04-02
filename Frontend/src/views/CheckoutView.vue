@@ -13,7 +13,7 @@ const gameGenre = ref(null);
 const gamePrice = ref(null);
 
 function getGameDetails() {
-    axios.get("http://localhost:5601/shop/games/" + gameId)
+    axios.get("http://localhost:8000/shop/games/" + gameId)
         .then((res) => {
             const data = res.data.data;
             gameTitle.value = data.title;
@@ -67,13 +67,13 @@ function handleSubmit() {
 
                 isPaymentProcessing.value = true;
 
-                await axios.post("http://localhost:5605/make-purchase", axiosData)
+                await axios.post("http://localhost:8000/make-purchase", axiosData)
                     .then(res => {
                         if (res.data.code == 200) {
                             isPaymentProcessing.value = false;
                             isPaymentModalDisplayed.value = true;
                             setTimeout(() => {
-                                router.push("/");
+                                // router.push("/");
                             }, 3000);
                         } else {
                             isPaymentProcessing.value = false;
@@ -81,7 +81,7 @@ function handleSubmit() {
                             isPaymentModalDisplayed.value = true;
                             setTimeout(() => {
                                 isPaymentModalDisplayed.value = false;
-                                window.location.reload();
+                                // window.location.reload();
                             }, 3000);
                         }
                     })
@@ -92,7 +92,7 @@ function handleSubmit() {
                         isPaymentModalDisplayed.value = true;
                         setTimeout(() => {
                             isPaymentModalDisplayed.value = false;
-                            window.location.reload();
+                            // window.location.reload();
                         }, 3000);
                     })
             }

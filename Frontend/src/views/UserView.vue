@@ -18,7 +18,7 @@ async function handleRefund(gameData) {
     }
     // CALL REFUND COMPLEX MICROSERVICE HERE
     isRefundProcessing.value = true;
-    await axios.post("http://localhost:5606/refund-game", axiosData)
+    await axios.post("http://localhost:8000/refund-game", axiosData)
         .then(res => {
             if (res.data.code == 200) {
                 isRefundProcessing.value = false;
@@ -69,7 +69,7 @@ function handleCustomizationChange(customization) {
         "selected_customization_id": id
     }
 
-    axios.put("http://localhost:5600/users/1/update", axiosData)
+    axios.put("http://localhost:8000/users/1/update", axiosData)
         .then(res => {
             console.log(res);
         })
@@ -91,7 +91,7 @@ async function handleWishlist(data) {
     };
 
     if (!data.isWishlist) {
-        await axios.post("http://localhost:5600/users/wishlist/create", axiosData)
+        await axios.post("http://localhost:8000/users/wishlist/create", axiosData)
             .then(res => {
                 console.log(res);
             })
@@ -99,7 +99,7 @@ async function handleWishlist(data) {
                 console.log(err);
             })
     } else {
-        await axios.delete("http://localhost:5600/users/wishlist/delete", { data: axiosData })
+        await axios.delete("http://localhost:8000/users/wishlist/delete", { data: axiosData })
             .then(res => {
                 console.log(res);
             })
@@ -117,7 +117,7 @@ const purchases = ref([]);
 let purchaseData;
 
 async function getWishlistAndPurchases() {
-    await axios.get("http://localhost:5600/users/1/wishlist-and-purchases")
+    await axios.get("http://localhost:8000/users/1/wishlist-and-purchases")
         .then(res => {
             const data = res.data.data;
             wishlistData = data.wishlist;
@@ -168,7 +168,7 @@ async function getWishlistAndPurchases() {
 }
 
 async function getGameById(gameId, type) {
-    axios.get("http://localhost:5601/shop/games/" + gameId)
+    axios.get("http://localhost:8000/shop/games/" + gameId)
         .then(res => {
             const data = res.data.data
             type == "wishlist" ? wishlist.value.push(data) : purchases.value.push(data);
@@ -183,7 +183,7 @@ const userName = ref(null);
 const points = ref(null);
 const selectedCustomizationId = ref(null);
 async function getUserDetails() {
-    axios.get("http://localhost:5600/users/1")
+    axios.get("http://localhost:8000/users/1")
         .then(res => {
             const data = res.data.data;
             userName.value = data
@@ -199,7 +199,7 @@ async function getUserDetails() {
 const customizations = ref([]);
 let customizationData;
 async function getUserCustomizations() {
-    await axios.get("http://localhost:5600/users/1/customization-purchase")
+    await axios.get("http://localhost:8000/users/1/customization-purchase")
         .then(res => {
             customizationData = res.data.data;
         })
@@ -210,7 +210,7 @@ async function getUserCustomizations() {
     if (customizationData != undefined) {
         for (const customization of customizationData) {
             const id = customization.customization_id
-            await axios.get("http://localhost:5601/shop/customizations/" + id)
+            await axios.get("http://localhost:8000/shop/customizations/" + id)
                 .then(res => {
                     customizations.value.push(res.data.data);
 

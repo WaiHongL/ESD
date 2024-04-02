@@ -33,7 +33,7 @@ async function handleWishlist(data) {
 	};
 
 	if (!data.isWishlist) {
-		await axios.post("http://localhost:5600/users/wishlist/create", axiosData)
+		await axios.post("http://localhost:8000/users/wishlist/create", axiosData)
 			.then(res => {
 				console.log(res);
 			})
@@ -41,7 +41,7 @@ async function handleWishlist(data) {
 				console.log(err);
 			})
 	} else {
-		await axios.delete("http://localhost:5600/users/wishlist/delete", { data: axiosData })
+		await axios.delete("http://localhost:8000/users/wishlist/delete", { data: axiosData })
 			.then(res => {
 				console.log(res);
 			})
@@ -58,7 +58,7 @@ async function handleWishlist(data) {
 // GET ALL AVAILABLE GAMES
 const games = ref([]);
 async function getAllGames() {
-	await axios.get("http://localhost:5601/shop/games")
+	await axios.get("http://localhost:8000/shop/games")
 		.then((res) => {
 			const data = res.data.data;
 			games.value = data.games;
@@ -74,7 +74,7 @@ const isRecommendedGamesLoading = ref(false);
 async function getRecommendedGames() {
 	isRecommendedGamesLoading.value = true;
 	recommendedGames.value = [];
-	await axios.get("http://localhost:5603/create-recommendation/1")
+	await axios.get("http://localhost:8000/create-recommendation/1")
 		.then((res) => {
 			const data = res.data.data;
 			recommendedGames.value = data.games;
@@ -91,7 +91,7 @@ let wishlistData;
 const purchases = ref([]);
 let purchaseData;
 async function getWishlistAndPurchases() {
-	await axios.get("http://localhost:5600/users/1/wishlist-and-purchases")
+	await axios.get("http://localhost:8000/users/1/wishlist-and-purchases")
 		.then(res => {
 			const data = res.data.data;
 			wishlistData = data.wishlist;

@@ -59,7 +59,7 @@ async function handlePurchase(customizationData) {
 
 async function getUserPoints() {
     let userPoints;
-    await axios.get("http://localhost:5600/users/1")
+    await axios.get("http://localhost:8000/users/1")
         .then(res => {
             const data = res.data.data;
             userPoints = data.points;
@@ -77,7 +77,7 @@ function createPurchaseRecord(customizationId) {
         "customization_id": customizationId
     }
 
-    axios.post("http://localhost:5600/users/customization-purchase/create", axiosData)
+    axios.post("http://localhost:8000/users/customization-purchase/create", axiosData)
         .then(res => {})
         .catch(err => {
             console.log(err);
@@ -90,7 +90,7 @@ function updateUserPoints(customizationPoints) {
         "operation": "subtract"
     }
 
-    axios.put("http://localhost:5600/users/1/update", axiosData)
+    axios.put("http://localhost:8000/users/1/update", axiosData)
         .then(res => {})
         .catch(err => {
             console.log(err);
@@ -100,7 +100,7 @@ function updateUserPoints(customizationPoints) {
 // GET ALL AVAILABLE CUSTOMIZATIONS
 const customizations = ref([])
 function getAllCustomizations() {
-    axios.get("http://localhost:5601/shop/customizations")
+    axios.get("http://localhost:8000/shop/customizations")
         .then((res) => {
             customizations.value = res.data.data.customizations;
         })
@@ -113,7 +113,7 @@ function getAllCustomizations() {
 const purchases = ref([]);
 let purchaseData;
 async function getPurchases() {
-    await axios.get("http://localhost:5600/users/1/customization-purchase")
+    await axios.get("http://localhost:8000/users/1/customization-purchase")
         .then(res => {
             const data = res.data.data;
             purchaseData = data;

@@ -71,7 +71,7 @@ def create_recommendation(userId):
         ), 500
 
 def process_recommendation(userId):
-    wishlist_and_purchase_URL = "http://user:5600/users/" + str(userId) + "/wishlist-and-purchases"
+    wishlist_and_purchase_URL = "http://kong:8000/users/" + str(userId) + "/wishlist-and-purchases"
 
     # INVOKE USER MICROSERVICE TO GET USER WISHLIST AND PURCHASE
     print("\n-----Invoking user microservice-----")
