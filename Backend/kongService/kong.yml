@@ -1,0 +1,127 @@
+_format_version: "1.1"
+services:
+  - name: shop
+    url: http://shop:5601/
+    routes:
+      - name: get-all-games
+        paths:
+          - /shop/games
+        methods:
+          - GET
+        strip_path: false
+
+      - name: get-game-detail
+        paths:
+          - /shop/games
+        methods:
+          - GET
+        strip_path: false
+
+      - name: get-game-genres
+        paths:
+          - /shop/games/genre
+        methods:
+          - POST
+        strip_path: false
+
+      - name: get-all-customizations
+        paths:
+          - /shop/customizations
+        methods:
+          - GET
+        strip_path: false
+
+      - name: get-customization-detail
+        paths:
+          - /shop/customizations
+        methods:
+          - GET
+        strip_path: false
+
+  - name: user
+    url: http://user:5600/
+    routes:
+      - name: get-user
+        paths:
+          - /users
+        methods:
+          - GET
+        strip_path: false
+
+      - name: update-user-points
+        paths:
+          - /users/update
+        methods:
+          - PUT
+        strip_path: false
+
+      - name: get-wishlist-and-purchases
+        paths:
+          - /users/wishlist-and-purchases
+        methods:
+          - GET
+        strip_path: false
+
+      - name: add-to-wishlist
+        paths:
+          - /users/wishlist/create
+        methods:
+          - POST
+        strip_path: false
+
+      - name: delete-wishlist
+        paths:
+          - /users/wishlist/delete
+        methods:
+          - DELETE
+        strip_path: false
+
+      - name: get-user-customizations
+        paths:
+          - /users/customization-purchase
+        methods:
+          - GET
+        strip_path: false
+
+      - name: create-customization-purchase-record
+        paths:
+          - /users/customization-purchase/create
+        methods:
+          - POST
+        strip_path: false
+
+      - name: delete-customization-record
+        paths:
+          - /users/customization-purchase/delete
+        methods:
+          - DELETE
+        strip_path: false
+
+      - name: get-game-purchase-record
+        paths:
+          - /users/game-purchase
+        methods:
+          - GET
+        strip_path: false
+
+      - name: create-game-purchase-record
+        paths:
+          - /users/game-purchase/create
+        methods:
+          - POST
+        strip_path: false
+
+      - name: update-purchase-record
+        paths:
+          - /users/game-purchase/update
+        methods:
+          - PUT
+        strip_path: false
+
+      - name: delete-purchase-record
+        paths:
+          - /users/game-purchase/delete
+        methods:
+          - DELETE
+        strip_path: false
+

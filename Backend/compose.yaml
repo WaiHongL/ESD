@@ -182,4 +182,27 @@ services:
 
     environment:
       PYTHONUNBUFFERED: 1
+
   
+  ###############################################
+  # Kong
+  ###############################################
+  kong:
+    # image: kong:latest
+    # platform: linux/amd64
+    build: 
+      context: .
+      dockerfile: ./kongService/Dockerfile
+    container_name: kong
+    hostname: kong
+    ports:
+      - "8000:8000"
+      - "8001:8001"
+
+#     networks:
+#       - kong_network
+
+# networks:
+#   kong_network:
+#     driver: bridge
+#     name: kong_network
