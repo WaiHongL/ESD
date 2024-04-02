@@ -12,27 +12,13 @@ cd frontend
 npm run dev
 ```
 
-<!-- ## Connecting to Google Cloud SQL via MySQL Workbench
-User Microservice Database
-<ul>
-    <li>Hostname: 34.124.211.169</li>
-    <li>Username: root</li>
-    <li>Password: pSSSS+]q8zZ-pjF</li>
-</ul>
-
-Shop Microservice Database
-<ul>
-    <li>Hostname: 34.142.233.183</li>
-    <li>Username: root</li>
-    <li>Password: pSSSS+]q8zZ-pjF</li>
-</ul> -->
 ## Stripe
 API Key: (Replace with your own key)
 ```bash
 pk_test_51LrjcfK1WW7DRh3qozq21D4vjLWPEPCEvUlElldx7B3kxJ0KlScZzZS8B17tNBs2cNJLCm83hNMx3HDgVXagGGOM00IYhIPgw7
 ```
 
-Test Card Numbers
+Test Card Numbers:
 ```bash
 # Simulate payment success
 Card number: 4242424242424242
@@ -42,4 +28,17 @@ Card number: 4000000000009995
 
 MM/YY: 04/24
 CVC: 4242
+```
+
+Check Payment Status on Stripe
+Navigate to Payments
+
+## MailJet
+API Keys:
+```bash
+# API Key
+b234bb351a835b67c4f8ce412a8e77ab
+
+# Secret Key
+d20ed987dd240464d6f4bd92af7247de
 ```
