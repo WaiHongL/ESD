@@ -631,6 +631,26 @@ def get_customizations(userId):
 # CREATE A PURCHASE RECORD IN CUSTOMIZATION PURCHASE TABLE
 @app.route("/customization-purchase/create", methods=["POST"])
 def create_customization_purchase():
+    """
+    Create a purchase record in the customization purchase table
+    ---
+    tags:
+      - Customization Purchases
+    consumes:
+      - application/json
+    parameters:
+      - name: body
+        in: body
+        required: true
+        description: The customization purchase data
+    responses:
+      201:
+        description: Customization purchase record created successfully
+      400:
+        description: Invalid JSON input
+      500:
+        description: An error occurred while creating the customization purchase record
+    """
     if request.is_json:
         data = request.get_json(force=True)
         customization = CustomizationPurchase(**data)

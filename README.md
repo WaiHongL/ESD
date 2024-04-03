@@ -86,10 +86,10 @@ http://localhost:5600/apidocs/
 ```
 
 ### Endpoints
-User Microservice: http://localhost:5600/apidocs/
-Shop Microservice: http://localhost:5601/apidocs/
-Recommend Microservice: http://localhost:5602/apidocs/
-Create Recommendation Microservice: http://localhost:5603/apidocs/
-Payment Microservice: http://localhost:5604/apidocs/
-Make Purchase Microservice: http://localhost:5605/apidocs/
-Refund Game Microservice: http://localhost:5606/apidocs/
+1. User Microservice: http://localhost:5600/apidocs/
+2. Shop Microservice: http://localhost:5601/apidocs/
+3. Recommend Microservice: http://localhost:5602/apidocs/
+4. Create Recommendation Microservice: http://localhost:5603/apidocs/
+5. Payment Microservice: http://localhost:5604/apidocs/
+6. Make Purchase Microservice: http://localhost:5605/apidocs/
+7. Refund Game Microservice: http://localhost:5606/apidocs/

@@ -159,8 +159,7 @@ def make_purchase():
                                 result = {
                                     "code": 200,
                                     "data": {
-                                        "update_game_purchase_result": update_game_purchase_result,
-                                        "update_points_result": update_points_result
+                                        "make_payment_result": make_payment_result
                                     }
                                 }
 
@@ -197,7 +196,7 @@ def make_purchase():
                                 result = {
                                     "code": 500,
                                     "data": {
-                                        "user_details_result": user_details_result
+                                        "make_payment_result": make_payment_result
                                     },
                                     "message": make_payment_result["message"]
                                 }
