@@ -150,6 +150,7 @@ services:
           - /make-purchase
         methods:
           - POST
+          - OPTIONS
         strip_path: false
 
   - name: payment
@@ -180,5 +181,6 @@ services:
           - /refund-game
         methods:
           - POST
+          - OPTIONS
         strip_path: false
 
