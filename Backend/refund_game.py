@@ -392,7 +392,7 @@ def process_refund():
                     return jsonify(result), result["code"]
             else:
                 points_to_deduct_from_customizations = points_to_deduct - user_points
-                user_points=0
+                
 
                 # Get user customizations
                 while num_retries < max_retries and user_customizations_result_code not in range(200, 300) and shouldRetry == True:
@@ -519,8 +519,9 @@ def process_refund():
                     points_to_deduct_from_customizations -= possible_user_customizations_to_remove[-1][1]
                     possible_user_customization_to_remove = possible_user_customizations_to_remove.pop()
                     to_remove_list.append(possible_user_customization_to_remove[0])
-                    
-                change_points = points_to_deduct_from_customizations
+                
+                final_points = abs(points_to_deduct_from_customizations)
+                #change_points = user_points + points_to_deduct_from_customizations #must end up with this positive of this value
 
 
                 # Delete user customizations
@@ -582,13 +583,22 @@ def process_refund():
 
                 # Update user details
                 selected_customization_id = user_details_result["data"]["selected_customization_id"]
+
+
                 user_details_to_change = {}
 
-                if int(selected_customization_id) in to_remove_list:
+                if selected_customization_id in to_remove_list:
                     user_details_to_change["selected_customization_id"] = None
 
-                user_details_to_change["points"] = abs(change_points / 100)
-                user_details_to_change["operation"] = "add"
+                if (user_points - final_points) >= 0:
+                    difference = user_points - final_points
+                    user_details_to_change["points"] = difference / 100
+                    user_details_to_change["operation"] = "subtract"
+                
+                else:
+                    difference = final_points - user_points
+                    user_details_to_change["points"] = difference / 100
+                    user_details_to_change["operation"] = "add"
 
                 while num_retries < max_retries and update_user_details_result_code not in range(200, 300) and shouldRetry == True:
                     print("-----Invoking user microservice-----")
