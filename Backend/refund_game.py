@@ -764,7 +764,7 @@ def process_refund():
                 "purchase_id": payment_intent_id,
             }
             print("processing notification...")
-            # process_refund_notification(notification_json)
+            process_refund_notification(notification_json)
 
             result = {
                 "code": 200,
