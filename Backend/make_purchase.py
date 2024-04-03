@@ -121,101 +121,107 @@ def make_purchase():
             if(create_game_purchase_result['code'] in range(200, 300)):
                 #get game details
                 game_result = get_game_detail(game_id)
-                game_details = game_result["data"]["game_details_result"]["data"]
-                payment_json = json.dumps({
-                    'price': game_details["price"],
-                    'purchase_id': userid_gameid['purchase_id']
-                })
-                # payment
-                make_payment_result = make_payment(payment_json)["data"]["payment_result"]
-                if make_payment_result['code'] in range(200, 300):
-                    # update game_purchase table
-                    update_json = {
-                        'user_id': user_id,
-                        'game_id': game_id,
-                        'transaction_id': make_payment_result['data']['id']
-                    }
-                    
-                    update_game_purchase_result = update_game_purchase(update_json)
-                    if update_game_purchase_result["code"] in range(200, 300):
-                        # update points
-                        update_points_result = update_points(user_id, game_details)
 
-                        if update_points_result["code"] in range(200, 300):
-                            user_details = update_points_result['data']["update_points_result"]["data"]
-                            notification_json = {
-                                'game_price': game_details['price'],
-                                'game_title': game_details['title'],
-                                'email': user_details['email'],
-                                'account_name': user_details['account_name'],
-                                'purchase_id': make_payment_result['data']['id']
-                            }    
+                if(game_result["code"] in range(200, 300)):
+                    game_details = game_result["data"]["game_details_result"]["data"]
+                    payment_json = json.dumps({
+                        'price': game_details["price"],
+                        'purchase_id': userid_gameid['purchase_id']
+                    })
+                    # payment
+                    make_payment_result = make_payment(payment_json)["data"]["payment_result"]
+                    if make_payment_result['code'] in range(200, 300):
+                        # update game_purchase table
+                        update_json = {
+                            'user_id': user_id,
+                            'game_id': game_id,
+                            'transaction_id': make_payment_result['data']['id']
+                        }
+                        
+                        update_game_purchase_result = update_game_purchase(update_json)
+                        if update_game_purchase_result["code"] in range(200, 300):
+                            # update points
+                            update_points_result = update_points(user_id, game_details)
 
-                            print('processing notification...')
-                            process_notification(notification_json)
+                            if update_points_result["code"] in range(200, 300):
+                                user_details = update_points_result['data']["update_points_result"]["data"]
+                                notification_json = {
+                                    'game_price': game_details['price'],
+                                    'game_title': game_details['title'],
+                                    'email': user_details['email'],
+                                    'account_name': user_details['account_name'],
+                                    'purchase_id': make_payment_result['data']['id']
+                                }    
 
-                            result = {
-                                "code": 200,
-                                "data": {
-                                    "update_game_purchase_result": update_game_purchase_result,
-                                    "update_points_result": update_points_result
+                                print('processing notification...')
+                                process_notification(notification_json)
+
+                                result = {
+                                    "code": 200,
+                                    "data": {
+                                        "update_game_purchase_result": update_game_purchase_result,
+                                        "update_points_result": update_points_result
+                                    }
                                 }
-                            }
 
-                            print('\n------------------------')
-                            print('\nresult: ', result)
+                                print('\n------------------------')
+                                print('\nresult: ', result)
 
-                            return jsonify(result), result["code"]
+                                return jsonify(result), result["code"]
+                            else:
+                                print('\n------------------------')
+                                print('\nresult: ', update_points_result)
+                                return jsonify(update_points_result), update_points_result["code"]
                         else:
                             print('\n------------------------')
-                            print('\nresult: ', update_points_result)
-                            return jsonify(update_points_result), update_points_result["code"]
+                            print('\nresult: ', update_game_purchase_result)
+                            return jsonify(update_game_purchase_result), update_game_purchase_result["code"]
                     else:
-                        print('\n------------------------')
-                        print('\nresult: ', update_game_purchase_result)
-                        return jsonify(update_game_purchase_result), update_game_purchase_result["code"]
+                        rollback_record_result = rollback_record(user_id, game_id)
+
+                        if rollback_record_result["code"] in range(200, 300):
+                            user_details_result = get_user_details(user_id)
+
+                            if user_details_result["code"] in range(200, 300):
+                                user_details = user_details_result['data']["user_details_result"]["data"]
+                                notification_json = {
+                                    'game_price': game_details['price'],
+                                    'game_title': game_details['title'],
+                                    'email': user_details['email'],
+                                    'account_name': user_details['account_name']
+                                }    
+
+                                print('processing notification...')
+                                process_fail_notification(notification_json)
+
+                                result = {
+                                    "code": 500,
+                                    "data": {
+                                        "user_details_result": user_details_result
+                                    },
+                                    "message": make_payment_result["message"]
+                                }
+
+                                print('\n------------------------')
+                                print('\nresult: ', result)
+
+                                return jsonify(result), result["code"]
+                            else:
+                                print('\n------------------------')
+                                print('\nresult: ', user_details_result)
+                                return jsonify(user_details_result), user_details_result["code"]
+                        else:
+                            print('\n------------------------')
+                            print('\nresult: ', rollback_record_result)
+                            return jsonify(rollback_record_result), rollback_record_result["code"]
                 else:
-                    rollback_record_result = rollback_record(user_id, game_id)
-
-                    if rollback_record_result["code"] in range(200, 300):
-                        user_details_result = get_user_details(user_id)
-
-                        if user_details_result["code"] in range(200, 300):
-                            user_details = user_details_result['data']["user_details_result"]["data"]
-                            notification_json = {
-                                'game_price': game_details['price'],
-                                'game_title': game_details['title'],
-                                'email': user_details['email'],
-                                'account_name': user_details['account_name']
-                            }    
-
-                            print('processing notification...')
-                            process_fail_notification(notification_json)
-
-                            result = {
-                                "code": 500,
-                                "data": {
-                                    "user_details_result": user_details_result
-                                },
-                                "message": make_payment_result["message"]
-                            }
-
-                            print('\n------------------------')
-                            print('\nresult: ', result)
-
-                            return jsonify(result), result["code"]
-                        else:
-                            print('\n------------------------')
-                            print('\nresult: ', user_details_result)
-                            return jsonify(user_details_result), user_details_result["code"]
-                    else:
-                        print('\n------------------------')
-                        print('\nresult: ', rollback_record_result)
-                        return jsonify(rollback_record_result), rollback_record_result["code"]
+                    print('\n------------------------')
+                    print('\nresult: ', rollback_record_result)
+                    return jsonify(rollback_record_result), rollback_record_result["code"]
             else:
                 print('\n------------------------')
-                print('\nresult: ', create_game_purchase_result)
-                return jsonify(create_game_purchase_result), create_game_purchase_result["code"]
+                print('\nresult: ', game_result)
+                return jsonify(game_result), game_result["code"]
 
         except Exception as e:
             # Unexpected error in code
@@ -241,18 +247,35 @@ def make_purchase():
 
 
 def create_game_purchase(userid_gameid):
+    # Technical robustness
+    num_retries = 0
+    max_retries = 5
+
+    shouldRetry = False
+
+    create_game_purchase_result = {}
+    create_game_purchase_result_code = 400
+    create_game_purchase_message = ""
+
     # create entry in game_purchase table
     create_game_purchase_json = {
         "user_id": userid_gameid['user_id'],
         "game_id": userid_gameid['game_id']
     }
 
-    print('\n-----Invoking user microservice-----')
-    create_game_purchase_result = invoke_http(create_game_purchase_URL, method='POST', json=create_game_purchase_json)
-    print('create_game_purchase_result:', create_game_purchase_result, '\n')
+    while num_retries < max_retries and (create_game_purchase_result_code not in range(200, 300) or shouldRetry == True):
+        print('\n-----Invoking user microservice-----')
+        create_game_purchase_result = invoke_http(create_game_purchase_URL, method='POST', json=create_game_purchase_json)
+        print('create_game_purchase_result:', create_game_purchase_result, '\n')
 
-    create_game_purchase_result_code = create_game_purchase_result["code"]
-    create_game_purchase_message = json.dumps(create_game_purchase_result)
+        if "message" in create_game_purchase_result and len(create_game_purchase_result) == 2:
+            shouldRetry = True
+            num_retries += 1
+        else: 
+            shouldRetry = False
+            create_game_purchase_result_code = create_game_purchase_result["code"]
+            create_game_purchase_message = json.dumps(create_game_purchase_result)
+            num_retries = 0
  
     if create_game_purchase_result_code not in range(200, 300):
         print('\n\n-----Publishing the (game purchase creation error) message with routing_key=game.purchase.creation.error-----')
@@ -279,8 +302,6 @@ def create_game_purchase(userid_gameid):
             "message": "Game purchase creation error sent for error handling"
         }
     
-
-    
     return {
         "code": 201,
         "data": {
@@ -289,13 +310,30 @@ def create_game_purchase(userid_gameid):
     }
 
 def get_game_detail(game_id):
-    # get game details
-    print('\n-----Invoking shop microservice-----')
-    game_details_result = invoke_http(game_details_URL + str(game_id), method='GET')
-    print('game_details_result:', game_details_result, '\n')
+    # Technical robustness
+    num_retries = 0
+    max_retries = 5
 
-    game_details_result_code = game_details_result["code"]
-    game_details_message = json.dumps(game_details_result)
+    shouldRetry = False
+
+    game_details_result = {}
+    game_details_result_code = 400
+    game_details_message = ""
+
+    # get game details
+    while num_retries < max_retries and (game_details_result_code not in range(200, 300) or shouldRetry == True):
+        print('\n-----Invoking shop microservice-----')
+        game_details_result = invoke_http(game_details_URL + str(game_id), method='GET')
+        print('game_details_result:', game_details_result, '\n')
+
+        if "message" in game_details_result and len(game_details_result) == 2:
+            shouldRetry = True
+            num_retries += 1
+        else: 
+            shouldRetry = False
+            game_details_result_code = game_details_result["code"]
+            game_details_message = json.dumps(game_details_result)
+            num_retries = 0
 
     if game_details_result_code not in range(200, 300):
         print('\n\n-----Publishing the (game details error) message with routing_key=game.details.error-----')
@@ -324,14 +362,31 @@ def get_game_detail(game_id):
         }
     }
 def make_payment(payment_json):
-    print('\n-----Invoking payment microservice-----')
-    payment_result = invoke_http(payment_URL, method='POST', json=payment_json)
-    print("payment_result: ", payment_result, '\n')
+    # Technical robustness
+    num_retries = 0
+    max_retries = 5
 
-    #returns client secret and id
+    shouldRetry = False
 
-    payment_result_code = payment_result["code"]
-    payment_message = json.dumps(payment_result)
+    payment_result = {}
+    payment_result_code = 400
+    payment_message = ""
+
+    while num_retries < max_retries and (payment_result_code not in range(200, 300) or shouldRetry == True):
+        print('\n-----Invoking payment microservice-----')
+        payment_result = invoke_http(payment_URL, method='POST', json=payment_json)
+        print("payment_result: ", payment_result, '\n')
+
+        #returns client secret and id
+
+        if "message" in payment_result and len(payment_result) == 2:
+            shouldRetry = True
+            num_retries += 1
+        else: 
+            shouldRetry = False
+            payment_result_code = payment_result["code"]
+            payment_message = json.dumps(payment_result)
+            num_retries = 0
 
     if payment_result_code not in range(200, 300):
         print('\n\n-----Publishing the (payment error) message with routing_key=payment.error-----')
@@ -363,12 +418,29 @@ def make_payment(payment_json):
 
 
 def update_game_purchase(update_json):
-    print('\n-----Invoking user microservice-----')
-    update_game_purchase_result = invoke_http(update_game_purchase_URL, method='PUT', json=update_json)
-    print('update_game_purchase_result:', update_game_purchase_result, '\n')
+    # Technical robustness
+    num_retries = 0
+    max_retries = 5
 
-    update_game_purchase_result_code = update_game_purchase_result['code']
-    update_game_purchase_message = json.dumps(update_game_purchase_result)
+    shouldRetry = False
+
+    update_game_purchase_result = {}
+    update_game_purchase_result_code = 400
+    update_game_purchase_message = ""
+
+    while num_retries < max_retries and (update_game_purchase_result_code not in range(200, 300) or shouldRetry == True):
+        print('\n-----Invoking user microservice-----')
+        update_game_purchase_result = invoke_http(update_game_purchase_URL, method='PUT', json=update_json)
+        print('update_game_purchase_result:', update_game_purchase_result, '\n')
+
+        if "message" in update_game_purchase_result and len(update_game_purchase_result) == 2:
+            shouldRetry = True
+            num_retries += 1
+        else: 
+            shouldRetry = False
+            update_game_purchase_result_code = update_game_purchase_result["code"]
+            update_game_purchase_message = json.dumps(update_game_purchase_result)
+            num_retries = 0
 
     if update_game_purchase_result_code not in range(200, 300):
         print('\n\n-----Publishing the (game purchase update error) message with routing_key=game.purchase.update.error-----')
@@ -400,17 +472,34 @@ def update_game_purchase(update_json):
 
 
 def update_points(user_id, game_details):
+    # Technical robustness
+    num_retries = 0
+    max_retries = 5
+
+    shouldRetry = False
+
+    update_points_result = {}
+    update_points_result_code = 400
+    update_points_message = ""
+
     points_json = {
         "points": game_details["price"],
         "operation": "add"
     }
 
-    print('\n-----Invoking user microservice-----')
-    update_points_result = invoke_http(update_points_URL + str(user_id) + "/update", method='PUT', json=points_json)
-    print("update_points_result: ", update_points_result, '\n')
+    while num_retries < max_retries and (update_points_result_code not in range(200, 300) or shouldRetry == True):
+        print('\n-----Invoking user microservice-----')
+        update_points_result = invoke_http(update_points_URL + str(user_id) + "/update", method='PUT', json=points_json)
+        print("update_points_result: ", update_points_result, '\n')
 
-    update_points_result_code = update_points_result["code"]
-    update_points_message = json.dumps(update_points_result)
+        if "message" in update_points_result and len(update_points_result) == 2:
+            shouldRetry = True
+            num_retries += 1
+        else: 
+            shouldRetry = False
+            update_points_result_code = update_points_result["code"]
+            update_points_message = json.dumps(update_points_result)
+            num_retries = 0
 
     if update_points_result_code not in range(200, 300):
         print('\n\n-----Publishing the (points update error) message with routing_key=points.update.error-----')
@@ -442,12 +531,29 @@ def update_points(user_id, game_details):
 
 
 def get_user_details(user_id):
-    print('\n-----Invoking user microservice-----')
-    user_details_result = invoke_http(user_details_URL + str(user_id), method='GET')
-    print('user_details_result:', user_details_result, '\n')
+    # Technical robustness
+    num_retries = 0
+    max_retries = 5
 
-    user_details_result_code = user_details_result['code']
-    user_details_message = json.dumps(user_details_result)
+    shouldRetry = False
+
+    user_details_result = {}
+    user_details_result_code = 400
+    user_details_message = ""
+
+    while num_retries < max_retries and (user_details_result_code not in range(200, 300) or shouldRetry == True):
+        print('\n-----Invoking user microservice-----')
+        user_details_result = invoke_http(user_details_URL + str(user_id), method='GET')
+        print('user_details_result:', user_details_result, '\n')
+
+        if "message" in user_details_result and len(user_details_result) == 2:
+            shouldRetry = True
+            num_retries += 1
+        else: 
+            shouldRetry = False
+            user_details_result_code = user_details_result['code']
+            user_details_message = json.dumps(user_details_result)
+            num_retries = 0
 
     if user_details_result_code not in range(200, 300):
         print('\n\n-----Publishing the (user details error) message with routing_key=user.details.error-----')
@@ -519,17 +625,34 @@ def process_fail_notification(notification_json):
     #     print(ex_str)
         
 def rollback_record(user_id, game_id):
+    # Technical robustness
+    num_retries = 0
+    max_retries = 5
+
+    shouldRetry = False
+
+    delete_game_purchase_result = {}
+    delete_game_purchase_result_code = 400
+    delete_game_purchase_message = ""
+
     delete_game_purchase_json = {
         "user_id": user_id,
         "game_id": game_id
     }
 
-    print('\n-----Invoking user microservice-----')
-    delete_game_purchase_result = invoke_http(delete_game_purchase_URL, method='DELETE', json=delete_game_purchase_json)
-    print('delete_game_purchase_result:', delete_game_purchase_result, '\n')
+    while num_retries < max_retries and (delete_game_purchase_result_code not in range(200, 300) or shouldRetry == True):
+        print('\n-----Invoking user microservice-----')
+        delete_game_purchase_result = invoke_http(delete_game_purchase_URL, method='DELETE', json=delete_game_purchase_json)
+        print('delete_game_purchase_result:', delete_game_purchase_result, '\n')
 
-    delete_game_purchase_result_code = delete_game_purchase_result["code"]
-    delete_game_purchase_message = json.dumps(delete_game_purchase_result)
+        if "message" in delete_game_purchase_result and len(delete_game_purchase_result) == 2:
+            shouldRetry = True
+            num_retries += 1
+        else: 
+            shouldRetry = False
+            delete_game_purchase_result_code = delete_game_purchase_result["code"]
+            delete_game_purchase_message = json.dumps(delete_game_purchase_result)
+            num_retries = 0
 
     if delete_game_purchase_result_code not in range(200, 300):
         print('\n\n-----Publishing the (game purchase deletion error) message with routing_key=game.purchase.deletion.error-----')
