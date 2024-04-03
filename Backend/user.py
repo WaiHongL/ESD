@@ -184,7 +184,7 @@ def get_user_details(userId):
         ), 500
     
 
-# UPDATE USER POINTS
+# UPDATE USER DETAILS
 @app.route("/<int:userId>/update", methods=["PUT"])
 def update_user_details(userId):
     """

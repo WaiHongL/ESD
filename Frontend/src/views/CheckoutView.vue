@@ -73,7 +73,7 @@ function handleSubmit() {
                             isPaymentProcessing.value = false;
                             isPaymentModalDisplayed.value = true;
                             setTimeout(() => {
-                                // router.push("/");
+                                router.push("/");
                             }, 3000);
                         } else {
                             isPaymentProcessing.value = false;
@@ -81,7 +81,7 @@ function handleSubmit() {
                             isPaymentModalDisplayed.value = true;
                             setTimeout(() => {
                                 isPaymentModalDisplayed.value = false;
-                                // window.location.reload();
+                                window.location.reload();
                             }, 3000);
                         }
                     })
@@ -92,7 +92,7 @@ function handleSubmit() {
                         isPaymentModalDisplayed.value = true;
                         setTimeout(() => {
                             isPaymentModalDisplayed.value = false;
-                            // window.location.reload();
+                            window.location.reload();
                         }, 3000);
                     })
             }

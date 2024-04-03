@@ -13,12 +13,12 @@ npm run dev
 ```
 
 ## Stripe
-### API Key: (Replace with your Publishable Key)
+### API Keys: 
 ```bash
+# Publishable Key: (Replace with your own key)
 pk_test_51LrjcfK1WW7DRh3qozq21D4vjLWPEPCEvUlElldx7B3kxJ0KlScZzZS8B17tNBs2cNJLCm83hNMx3HDgVXagGGOM00IYhIPgw7
-```
-### API Secret Key (Replace with your Secret Key)
-```bash
+
+# Secret Key: (Replace with your own key)
 sk_test_51LrjcfK1WW7DRh3qSpVCT1CWMxeC8bpxPOQdTWJ6SyFCJCSpt6opHUXb1QqB65u8zvxdrmkzYqNcZy2TBHoSzjX000cRwCOEA6
 ```
 
