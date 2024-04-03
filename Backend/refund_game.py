@@ -94,34 +94,7 @@ def process_refund_notification(notification_json):
 
 @app.route("/refund-game", methods=["POST"])
 def process_refund():
-    """
-    Process a game refund
-    ---
-    tags:
-      - Refunds
-    consumes:
-      - application/json
-    parameters:
-      - name: body
-        in: body
-        required: true
-        schema:
-          type: object
-          properties:
-            user_id:
-              type: integer
-              description: The ID of the user requesting the refund
-            game_id:
-              type: integer
-              description: The ID of the game to be refunded
-    responses:
-      200:
-        description: Refund processed successfully
-      400:
-        description: Invalid JSON input
-      500:
-        description: Internal server error
-    """
+    # Pull data first
     
     if request.is_json:
         try:

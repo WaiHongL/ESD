@@ -69,6 +69,7 @@ d20ed987dd240464d6f4bd92af7247de
 Flasgger is a Flask extension that extracts OpenAPI-Specification from all Flask views registered in your API.
 
 ### How to Test Flasgger Documentation
+To test the Flasgger documentation for your services, follow these steps:
 
 1. Start your Docker containers as you normally would. This can be done by navigating to your project's backend directory and running the command:
 ```bash
@@ -86,13 +87,8 @@ http://localhost:5600/apidocs/
 # This will open the Swagger UI in your web browser, displaying all the available API endpoints, their parameters, and the expected responses. You can use this interface to test your API endpoints directly from your browser.
 ```
 
-### Endpoints
+### Luden's API Documentation
 User Microservice: http://localhost:5600/apidocs/
-Shop Microservice: http://localhost:5601/apidocs/
-Recommend Microservice: http://localhost:5602/apidocs/
-Create Recommendation Microservice: http://localhost:5603/apidocs/
-Payment Microservice: http://localhost:5604/apidocs/
-Make Purchase Microservice: http://localhost:5605/apidocs/
-Refund Game Microservice: http://localhost:5606/apidocs/
-
-
+```bash
+# User Microservice: http://localhost:5600/apidocs/
+```
