@@ -57,6 +57,23 @@ common_genre_URL = "http://kong:8000/recommend/genre"
 # CREATE RECOMMENDATION
 @app.route("/create-recommendation/<int:userId>")
 def create_recommendation(userId):
+    """
+    Create a recommendation for a user
+    ---
+    tags:
+      - Recommendations
+    parameters:
+      - name: userId
+        in: path
+        type: integer
+        required: true
+        description: The ID of the user to create a recommendation for
+    responses:
+      200:
+        description: Recommendation created successfully
+      500:
+        description: Internal server error
+    """
     try:
         result = process_recommendation(userId)
         print('\n------------------------')
