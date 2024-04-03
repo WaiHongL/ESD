@@ -75,7 +75,7 @@ def process_recommendation(userId):
     num_retries = 0
     max_retries = 5
 
-    shouldRetry = False
+    shouldRetry = True
 
     wishlist_and_purchase_result = {}
     wishlist_and_purchase_result_code = 400
@@ -96,19 +96,23 @@ def process_recommendation(userId):
     wishlist_and_purchase_URL = "http://kong:8000/users/" + str(userId) + "/wishlist-and-purchases"
 
     # INVOKE USER MICROSERVICE TO GET USER WISHLIST AND PURCHASE
-    while num_retries < max_retries and (wishlist_and_purchase_result_code not in range(200, 300) or shouldRetry == True):
+    while num_retries < max_retries and wishlist_and_purchase_result_code not in range(200, 300) and shouldRetry == True:
         print("\n-----Invoking user microservice-----")
         wishlist_and_purchase_result = invoke_http(wishlist_and_purchase_URL)
         print("wishlist_and_purchase_result:", wishlist_and_purchase_result)
 
         if "message" in wishlist_and_purchase_result and len(wishlist_and_purchase_result) == 2:
             shouldRetry = True
-            num_retries += 1
         else: 
             shouldRetry = False
             wishlist_and_purchase_result_code = wishlist_and_purchase_result["code"]
             wishlist_and_purchase_message = json.dumps(wishlist_and_purchase_result)
-            num_retries = 0
+
+        num_retries += 1
+
+    # Reset
+    shouldRetry = True
+    num_retries = 0
 
     if wishlist_and_purchase_result_code not in range(200, 300):
         print("\n\n-----Publishing the (wishlist and purchase error) message with routing_key=wishlist.purchase.error-----")
@@ -143,19 +147,23 @@ def process_recommendation(userId):
             purchase_ids.append(purchase["game_id"])
 
     # INVOKE SHOP MICROSERVICE TO GET GAMES GENRE
-    while num_retries < max_retries and (games_genre_result_code not in range(200, 300) or shouldRetry == True):
+    while num_retries < max_retries and games_genre_result_code not in range(200, 300) and shouldRetry == True:
         print("\n-----Invoking shop microservice-----")
         games_genre_result = invoke_http(game_genres_URL, method="POST", json=wishlist_and_purchase_result["data"])
         print("games_genre_result:", games_genre_result)
 
-        if "message" in games_genre_result and len(games_genre_result) == 2:
+        if "message" in games_genre_result and len(games_genre_result) == 2 and games_genre_result["message"] != "There are no game genres" and "Invalid JSON input" not in games_genre_result["message"]:
             shouldRetry = True
-            num_retries += 1
         else: 
             shouldRetry = False
             games_genre_result_code = games_genre_result["code"]
             games_genre_message = json.dumps(games_genre_result)
-            num_retries = 0
+
+        num_retries += 1
+
+    # Reset
+    shouldRetry = True
+    num_retries = 0
 
     if games_genre_result_code not in range(200, 300):
         print("\n\n-----Publishing the (games genre error) message with routing_key=games.genre.error-----")
@@ -177,19 +185,23 @@ def process_recommendation(userId):
     
 
     # INVOKE RECOMMEND MICROSERVICE TO GET COMMON GENRE
-    while num_retries < max_retries and (common_genre_result_code not in range(200, 300) or shouldRetry == True):
+    while num_retries < max_retries and common_genre_result_code not in range(200, 300) and shouldRetry == True:
         print("\n-----Invoking recommend microservice-----")
         common_genre_result = invoke_http(common_genre_URL, method="POST", json=games_genre_result["data"])
         print("common_genre_result:", common_genre_result)
 
-        if "message" in common_genre_result and len(common_genre_result) == 2:
+        if "message" in common_genre_result and len(common_genre_result) == 2 and "Invalid JSON input" not in common_genre_result["message"]:
             shouldRetry = True
-            num_retries += 1
         else: 
             shouldRetry = False
             common_genre_result_code = common_genre_result["code"]
             common_genre_message = json.dumps(common_genre_result)
-            num_retries = 0
+
+        num_retries += 1
+
+    # Reset
+    shouldRetry = True
+    num_retries = 0
 
     if common_genre_result_code not in range(200, 300):
         print("\n\n-----Publishing the (common genre error) message with routing_key=common.genre.error-----")
@@ -223,19 +235,23 @@ def process_recommendation(userId):
     else:
         games_by_genre_URL += quote(genre)
 
-    while num_retries < max_retries and (games_by_genre_result_code not in range(200, 300) or shouldRetry == True):
+    while num_retries < max_retries and games_by_genre_result_code not in range(200, 300) and shouldRetry == True:
         print("\n-----Invoking shop microservice-----")
         games_by_genre_result = invoke_http(games_by_genre_URL)
         print("games_by_genre_result:", games_by_genre_result)
 
-        if "message" in games_by_genre_result and len(games_by_genre_result) == 2:
+        if "message" in games_by_genre_result and len(games_by_genre_result) == 2 and games_by_genre_result["message"] != "There are no games" and "An error occurred" not in games_by_genre_result["message"]:
             shouldRetry = True
-            num_retries += 1
         else: 
             shouldRetry = False
             games_by_genre_result_code = games_by_genre_result["code"]
             games_by_genre_message = json.dumps(games_by_genre_result)
-            num_retries = 0
+
+        num_retries += 1
+
+    # Reset
+    shouldRetry = True
+    num_retries = 0
 
     if games_by_genre_result_code not in range(200, 300):
         print("\n\n-----Publishing the (game by genre error) message with routing_key=game.by.genre.error-----")
