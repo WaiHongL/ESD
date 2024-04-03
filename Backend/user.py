@@ -225,8 +225,6 @@ def update_user_details(userId):
 
             user = User.query.get(userId)
 
-            print("data:", data)
-
             if not user:
                 return jsonify(
                     {

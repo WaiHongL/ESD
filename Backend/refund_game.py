@@ -102,17 +102,77 @@ def process_refund():
             user_id = data["user_id"]
             game_id = data["game_id"]
 
-            # Retrieve user's gameplay time and purchase id
-            print("-----Invoking user microservice-----")
-            game_purchase_details_result = invoke_http(
-                f"{USER_MICROSERVICE_URL}/users/game-purchase?userId={user_id}&gameId={game_id}",
-                method="GET"
-            )
-            print("game_purchase_details_result:", game_purchase_details_result, "\n")
+            # Technical robustness
+            num_retries = 0
+            max_retries = 5
 
-            game_purchase_details_result_code = game_purchase_details_result["code"]
-            game_purchase_details_message = json.dumps(game_purchase_details_result)
- 
+            shouldRetry = True
+
+            game_purchase_details_result = {}
+            game_purchase_details_result_code = 400
+            game_purchase_details_message = ""
+
+            game_details_result = {}
+            game_details_result_code = 400
+            game_details_message = ""
+
+            user_details_result = {}
+            user_details_result_code = 400
+            user_details_message = ""
+
+            update_points_result = {}
+            update_points_result_code = 400
+            update_points_message = ""
+
+            user_customizations_result = {}
+            user_customizations_result_code = 400
+            user_customizations_message = ""
+
+            customizations_result = {}
+            customizations_result_code = 400
+            customizations_message = ""
+
+            delete_customizations_result = {}
+            delete_customizations_result_code = 400
+            delete_customizations_message = ""
+
+            update_user_details_result = {}
+            update_user_details_result_code = 400
+            update_user_details_message = ""
+
+            delete_game_purchase_result = {}
+            delete_game_purchase_result_code = 400
+            delete_game_purchase_message = ""
+
+            payment_refund_result = {}
+            payment_refund_result_code = 400
+            payment_refund_message = ""
+
+            # Retrieve user's gameplay time and purchase id
+            while num_retries < max_retries and game_purchase_details_result_code not in range(200, 300) and shouldRetry == True:
+                print("-----Invoking user microservice-----")
+                game_purchase_details_result = invoke_http(
+                    f"{USER_MICROSERVICE_URL}/users/game-purchase?userId={user_id}&gameId={game_id}",
+                    method="GET"
+                )
+                print("game_purchase_details_result:", game_purchase_details_result, "\n")
+
+                if "message" in game_purchase_details_result and len(game_purchase_details_result) == 2 and "Invalid query" not in game_purchase_details_result["message"]:
+                    shouldRetry = True
+
+                    if num_retries + 1 == max_retries:
+                        game_purchase_details_message = json.dumps(game_purchase_details_result)
+                else: 
+                    shouldRetry = False
+                    game_purchase_details_result_code = game_purchase_details_result["code"]
+                    game_purchase_details_message = json.dumps(game_purchase_details_result)
+                    
+                num_retries += 1
+
+            # Reset
+            shouldRetry = True
+            num_retries = 0
+
             if game_purchase_details_result_code not in range(200, 300):
                 print('\n\n-----Publishing the (game purchase details error) message with routing_key=game.purchase.details.error-----')
 
@@ -165,15 +225,30 @@ def process_refund():
             
 
             # Get game points awarded
-            print("-----Invoking shop microservice-----")
-            game_details_result = invoke_http(
-                f"{SHOP_MICROSERVICE_URL}/shop/games/{game_id}", method="GET"
-            )
-            print("game_details_result:", game_details_result, "\n")
+            while num_retries < max_retries and game_details_result_code not in range(200, 300) and shouldRetry == True:
+                print("-----Invoking shop microservice-----")
+                game_details_result = invoke_http(
+                    f"{SHOP_MICROSERVICE_URL}/shop/games/{game_id}", method="GET"
+                )
+                print("game_details_result:", game_details_result, "\n")
 
-            game_details_message = json.dumps(game_details_result)
+                if "message" in game_details_result and len(game_details_result) == 2:
+                    shouldRetry = True
 
-            if game_details_result["code"] not in range(200, 300):
+                    if num_retries + 1 == max_retries:
+                        game_details_message = json.dumps(game_details_result)
+                else: 
+                    shouldRetry = False
+                    game_details_result_code = game_details_result["code"]
+                    game_details_message = json.dumps(game_details_result)
+
+                num_retries += 1
+
+            # Reset
+            shouldRetry = True
+            num_retries = 0
+
+            if game_details_result_code not in range(200, 300):
                 print(
                     "\n\n-----Publishing the (game details error) message with routing_key=game.details.error-----"
                 )
@@ -190,7 +265,7 @@ def process_refund():
                 # continue even if this invocation fails
                 print(
                     "\nGame details status ({:d}) published to the RabbitMQ Exchange:".format(
-                        game_details_result["code"]
+                        game_details_result_code
                     ),
                     game_details_result
                 )
@@ -209,14 +284,28 @@ def process_refund():
             
             
             # Get user points
-            print("-----Invoking user microservice-----")
-            user_details_result = invoke_http(
-                f"{USER_MICROSERVICE_URL}/users/{user_id}", method="GET"
-            )
-            print("user_details_result:", user_details_result, "\n")
+            while num_retries < max_retries and user_details_result_code not in range(200, 300) and shouldRetry == True:
+                print("-----Invoking user microservice-----")
+                user_details_result = invoke_http(
+                    f"{USER_MICROSERVICE_URL}/users/{user_id}", method="GET"
+                )
+                print("user_details_result:", user_details_result, "\n")
 
-            user_details_result_code = user_details_result['code']
-            user_details_message = json.dumps(user_details_result)
+                if "message" in user_details_result and len(user_details_result) == 2:
+                    shouldRetry = True
+                    
+                    if num_retries + 1 == max_retries:
+                        user_details_message = json.dumps(user_details_result)
+                else: 
+                    shouldRetry = False
+                    user_details_result_code = user_details_result['code']
+                    user_details_message = json.dumps(user_details_result)
+
+                num_retries += 1
+
+            # Reset
+            shouldRetry = True
+            num_retries = 0
 
             if user_details_result_code not in range(200, 300):
                 print('\n\n-----Publishing the (user details error) message with routing_key=user.details.error-----')
@@ -253,16 +342,30 @@ def process_refund():
                 }
 
                 # invoke user.py endpoint that only updates the points
-                print("-----Invoking user microservice-----")
-                update_points_result = invoke_http(
-                    f"{USER_MICROSERVICE_URL}/users/" + str(user_id) + "/update",
-                    method="PUT",
-                    json=points_to_change,
-                )
-                print("update_points_result:", update_points_result, "\n")
+                while num_retries < max_retries and update_points_result_code not in range(200, 300) and shouldRetry == True:
+                    print("-----Invoking user microservice-----")
+                    update_points_result = invoke_http(
+                        f"{USER_MICROSERVICE_URL}/users/" + str(user_id) + "/update",
+                        method="PUT",
+                        json=points_to_change,
+                    )
+                    print("update_points_result:", update_points_result, "\n")
 
-                update_points_result_code = update_points_result["code"]
-                update_points_message = json.dumps(update_points_result)
+                    if "message" in update_points_result and len(update_points_result) == 2 and "Invalid JSON input" not in update_points_result["message"]:
+                        shouldRetry = True
+
+                        if num_retries + 1 == max_retries:
+                            update_points_message = json.dumps(update_points_result)
+                    else: 
+                        shouldRetry = False
+                        update_points_result_code = update_points_result["code"]
+                        update_points_message = json.dumps(update_points_result)
+
+                    num_retries += 1
+
+                # Reset
+                shouldRetry = True
+                num_retries = 0
 
                 if update_points_result_code not in range(200, 300):
                     print('\n\n-----Publishing the (points update error) message with routing_key=points.update.error-----')
@@ -289,18 +392,32 @@ def process_refund():
                     return jsonify(result), result["code"]
             else:
                 points_to_deduct_from_customizations = points_to_deduct - user_points
+                user_points=0
 
                 # Get user customizations
-                print("-----Invoking user microservice-----")
-                user_customizations_result = invoke_http(
-                    f"{USER_MICROSERVICE_URL}/users/{user_id}/customization-purchase",
-                    method="GET",
-                )
-                print("user_customizations_result: ", user_customizations_result, '\n')
+                while num_retries < max_retries and user_customizations_result_code not in range(200, 300) and shouldRetry == True:
+                    print("-----Invoking user microservice-----")
+                    user_customizations_result = invoke_http(
+                        f"{USER_MICROSERVICE_URL}/users/{user_id}/customization-purchase",
+                        method="GET",
+                    )
+                    print("user_customizations_result: ", user_customizations_result, '\n')
 
-                user_customizations_result_code = user_customizations_result["code"]
-                user_customizations_message = json.dumps(user_customizations_result)
-                
+                    if "message" in user_customizations_result and len(user_customizations_result) == 2:
+                        shouldRetry = True
+                        if num_retries + 1 == max_retries:
+                            user_customizations_message = json.dumps(user_customizations_result)
+                    else: 
+                        shouldRetry = False
+                        user_customizations_result_code = user_customizations_result["code"]
+                        user_customizations_message = json.dumps(user_customizations_result)
+        
+                    num_retries += 1
+
+                # Reset
+                shouldRetry = True
+                num_retries = 0
+
                 # error handle if cant retrieve
                 if user_customizations_result_code not in range(200, 300):
                     print('\n\n-----Publishing the (user customizations error) message with routing_key=user.customizations.error-----')
@@ -330,15 +447,29 @@ def process_refund():
 
 
                 # Get all customizations
-                print("-----Invoking shop microservice-----")
-                customizations_result = invoke_http(
-                    f"{SHOP_MICROSERVICE_URL}/shop/customizations",
-                    method="GET"
-                )
-                print("customizations_result:", customizations_result, "\n")
+                while num_retries < max_retries and customizations_result_code not in range(200, 300) and shouldRetry == True:
+                    print("-----Invoking shop microservice-----")
+                    customizations_result = invoke_http(
+                        f"{SHOP_MICROSERVICE_URL}/shop/customizations",
+                        method="GET"
+                    )
+                    print("customizations_result:", customizations_result, "\n")
 
-                customizations_result_code = customizations_result["code"]
-                customizations_message = json.dumps(customizations_result)
+                    if "message" in customizations_result and len(customizations_result) == 2 and "no customizations" not in customizations_result["message"] and "An error occurred" not in customizations_result["message"]:
+                        shouldRetry = True
+
+                        if num_retries + 1 == max_retries:
+                            customizations_message = json.dumps(customizations_result)
+                    else: 
+                        shouldRetry = False
+                        customizations_result_code = customizations_result["code"]
+                        customizations_message = json.dumps(customizations_result)
+
+                    num_retries += 1
+
+                # Reset
+                shouldRetry = True
+                num_retries = 0
 
                 # error handle if cant retrieve
                 if customizations_result_code not in range(200, 300):
@@ -389,7 +520,7 @@ def process_refund():
                     possible_user_customization_to_remove = possible_user_customizations_to_remove.pop()
                     to_remove_list.append(possible_user_customization_to_remove[0])
                     
-                change_points = user_points + points_to_deduct_from_customizations
+                change_points = points_to_deduct_from_customizations
 
 
                 # Delete user customizations
@@ -398,16 +529,30 @@ def process_refund():
                     "to_remove_list": to_remove_list,
                 }
 
-                print("-----Invoking user microservice-----")
-                delete_customizations_result = invoke_http(
-                    f"{USER_MICROSERVICE_URL}/users/customization-purchase/delete",
-                    method="DELETE",
-                    json=customizations_to_delete,
-                )
-                print("delete_customizations_result:", delete_customizations_result, "\n")
+                while num_retries < max_retries and delete_customizations_result_code not in range(200, 300) and shouldRetry == True:
+                    print("-----Invoking user microservice-----")
+                    delete_customizations_result = invoke_http(
+                        f"{USER_MICROSERVICE_URL}/users/customization-purchase/delete",
+                        method="DELETE",
+                        json=customizations_to_delete,
+                    )
+                    print("delete_customizations_result:", delete_customizations_result, "\n")
 
-                delete_customizations_result_code = delete_customizations_result["code"]
-                delete_customizations_message = json.dumps(delete_customizations_result)
+                    if "message" in delete_customizations_result and len(delete_customizations_result) == 2 and "Customization purchase" not in delete_customizations_result["message"] and "Invalid JSON input" not in delete_customizations_result["message"]:
+                        shouldRetry = True
+
+                        if num_retries + 1 == max_retries:
+                            delete_customizations_message = json.dumps(delete_customizations_result)
+                    else: 
+                        shouldRetry = False
+                        delete_customizations_result_code = delete_customizations_result["code"]
+                        delete_customizations_message = json.dumps(delete_customizations_result)
+
+                    num_retries += 1
+
+                # Reset
+                shouldRetry = True
+                num_retries = 0
 
                 # error handle if cant retrieve
                 if delete_customizations_result_code not in range(200, 300):
@@ -445,16 +590,30 @@ def process_refund():
                 user_details_to_change["points"] = abs(change_points / 100)
                 user_details_to_change["operation"] = "add"
 
-                print("-----Invoking user microservice-----")
-                update_user_details_result = invoke_http(
-                    f"{USER_MICROSERVICE_URL}/users/" + str(user_id) + "/update",
-                    method="PUT",
-                    json=user_details_to_change,
-                )
-                print("update_user_details_result:", update_user_details_result, "\n")
+                while num_retries < max_retries and update_user_details_result_code not in range(200, 300) and shouldRetry == True:
+                    print("-----Invoking user microservice-----")
+                    update_user_details_result = invoke_http(
+                        f"{USER_MICROSERVICE_URL}/users/" + str(user_id) + "/update",
+                        method="PUT",
+                        json=user_details_to_change,
+                    )
+                    print("update_user_details_result:", update_user_details_result, "\n")
 
-                update_user_details_result_code = update_user_details_result["code"]
-                update_user_details_message = json.dumps(update_user_details_result)
+                    if "message" in update_user_details_result and len(update_user_details_result) == 2 and "Invalid JSON input" not in update_user_details_result["message"]:
+                        shouldRetry = True
+
+                        if num_retries + 1 == max_retries:
+                            update_user_details_message = json.dumps(update_user_details_result)
+                    else: 
+                        shouldRetry = False
+                        update_user_details_result_code = update_user_details_result["code"]
+                        update_user_details_message = json.dumps(update_user_details_result)
+
+                    num_retries += 1
+
+                # Reset
+                shouldRetry = True
+                num_retries = 0
 
                 # error handle if cant retrieve
                 if update_user_details_result_code not in range(200, 300):
@@ -484,16 +643,30 @@ def process_refund():
             # Delete purchase record
             del_json = {"user_id": user_id, "game_id": game_id}
             
-            print("-----Invoking user microservice-----")
-            delete_game_purchase_result = invoke_http(
-                f"{USER_MICROSERVICE_URL}/users/game-purchase/delete",
-                method="DELETE",
-                json=del_json,
-            )
-            print("delete_game_purchase_result:", delete_game_purchase_result, "\n")
+            while num_retries < max_retries and delete_game_purchase_result_code not in range(200, 300) and shouldRetry == True:
+                print("-----Invoking user microservice-----")
+                delete_game_purchase_result = invoke_http(
+                    f"{USER_MICROSERVICE_URL}/users/game-purchase/delete",
+                    method="DELETE",
+                    json=del_json,
+                )
+                print("delete_game_purchase_result:", delete_game_purchase_result, "\n")
 
-            delete_game_purchase_result_code = delete_game_purchase_result["code"]
-            delete_game_purchase_message = json.dumps(delete_game_purchase_result)
+                if "message" in delete_game_purchase_result and len(delete_game_purchase_result) == 2 and "Game purchase record" not in delete_game_purchase_result["message"] and "An error occurred" not in delete_game_purchase_result["message"] and "Invalid JSON input" not in delete_game_purchase_result["message"]:
+                    shouldRetry = True
+
+                    if num_retries + 1 == max_retries:
+                        delete_game_purchase_message = json.dumps(delete_game_purchase_result)
+                else: 
+                    shouldRetry = False
+                    delete_game_purchase_result_code = delete_game_purchase_result["code"]
+                    delete_game_purchase_message = json.dumps(delete_game_purchase_result)
+
+                num_retries += 1
+
+            # Reset
+            shouldRetry = True
+            num_retries = 0
 
             # error handle if cant retrieve
             if delete_game_purchase_result_code not in range(200, 300):
@@ -525,14 +698,28 @@ def process_refund():
             payment_intent_id = purchase_id
             payment_refund_data = {"payment_intent": payment_intent_id}
 
-            print('\n-----Invoking payment microservice-----')
-            payment_refund_result = invoke_http(
-                f"{PAYMENT_MICROSERVICE_URL}/refund", method="POST", json=payment_refund_data
-            )
-            print('payment_refund_result:', payment_refund_result, '\n')
+            while num_retries < max_retries and payment_refund_result_code not in range(200, 300) and shouldRetry == True:
+                print('\n-----Invoking payment microservice-----')
+                payment_refund_result = invoke_http(
+                    f"{PAYMENT_MICROSERVICE_URL}/refund", method="POST", json=payment_refund_data
+                )
+                print('payment_refund_result:', payment_refund_result, '\n')
 
-            payment_refund_result_code = payment_refund_result["code"]
-            payment_refund_message = json.dumps(payment_refund_result)
+                if "message" in payment_refund_result and len(payment_refund_result) == 2 and "Refund failed" not in payment_refund_result["message"] and "An error occurred" not in payment_refund_result["message"] and "Invalid JSON input" not in payment_refund_result["message"]:
+                    shouldRetry = True
+
+                    if num_retries + 1 == max_retries:
+                        payment_refund_message = json.dumps(payment_refund_result)
+                else: 
+                    shouldRetry = False
+                    payment_refund_result_code = payment_refund_result["code"]
+                    payment_refund_message = json.dumps(payment_refund_result)
+
+                num_retries += 1
+
+            # Reset
+            shouldRetry = True
+            num_retries = 0
 
             if payment_refund_result_code not in range(200, 300):
                 print('\n\n-----Publishing the (payment refund error) message with routing_key=payment.refund.error-----')
@@ -567,7 +754,7 @@ def process_refund():
                 "purchase_id": payment_intent_id,
             }
             print("processing notification...")
-            process_refund_notification(notification_json)
+            # process_refund_notification(notification_json)
 
             result = {
                 "code": 200,
@@ -597,5 +784,5 @@ def process_refund():
     ), 400
 
 
-if __name__ == "__main__":
+if __name__ == "__main__": 
     app.run(host="0.0.0.0", port=5606, debug=True)
