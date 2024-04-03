@@ -159,9 +159,12 @@ services:
       - name: payment
         paths:
           - /payment
+          - /refund
         methods:
           - POST
         strip_path: false
+
+
 
   - name: recommend
     url: http://recommend:5602/
