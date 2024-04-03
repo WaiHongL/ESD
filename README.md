@@ -59,6 +59,13 @@ d20ed987dd240464d6f4bd92af7247de
 2. Select "API"
 3. Replace API and Secret Key with the API and Secret Key shown
 
+### Receiving Payment/Refund Email
+In user.sql, look for the following code and replace with your email
+```bash
+INSERT INTO user (email, account_name, password, points)
+VALUES ("your.email@email.com", "Chason", SHA2("chason", 256), 5490);
+```
+
 ### Check Email Status on Mailjet:
 1. Login to your Mailjet account
 2. In homepage, Real-time message events shows dashboard of sent email status within the past 30 minutes
