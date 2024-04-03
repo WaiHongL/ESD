@@ -142,7 +142,7 @@ def process_refund():
 
 
             # Check for refund eligibility, publish error if gameplay time > 120 mins
-            if gameplay_time and gameplay_time >= 120:
+            if gameplay_time and gameplay_time > 120:
                 result = {
                     "code": 400,
                     "message": "Refund cannot be processed as the gameplay time exceeds 120 minutes"
@@ -547,7 +547,7 @@ def process_refund():
                     user_details_to_change["selected_customization_id"] = None
 
                 user_details_to_change["points"] = abs(change_points / 100)
-                user_details_to_change["operation"] = "subtract"
+                user_details_to_change["operation"] = "add"
 
                 print("-----Invoking user microservice-----")
                 update_user_details_result = invoke_http(
