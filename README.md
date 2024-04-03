@@ -63,3 +63,26 @@ d20ed987dd240464d6f4bd92af7247de
 1. Login to your Mailjet account
 2. In homepage, Real-time message events shows dashboard of sent email status within the past 30 minutes
 3. In the same homepage, Latest messages sent shows sent email status within the past 24 hours
+
+
+## Using Flasgger for API Documentation
+Flasgger is a Flask extension that extracts OpenAPI-Specification from all Flask views registered in your API. It comes with a Swagger UI that allows you to visualize and interact with your API's resources without having any of the implementation logic in place.
+
+### How to Test Flasgger Documentation
+To test the Flasgger documentation for your services, follow these steps:
+
+1. Start your Docker containers as you normally would. This can be done by navigating to your project's backend directory and running the command:
+```bash
+docker compose up -d
+```
+
+2. 2. Once the containers are up and running, you can access the Flasgger documentation for each of your services by navigating to the `/apidocs/` endpoint on your local machine. The URL format is as follows:
+```bash
+http://localhost:<portnum>/apidocs/
+```
+
+For example, if you want to view the documentation for the user service, which is running on port 5600, you would navigate to:
+```bash
+http://localhost:5600/apidocs/
+# This will open the Swagger UI in your web browser, displaying all the available API endpoints, their parameters, and the expected responses. You can use this interface to test your API endpoints directly from your browser.
+```
