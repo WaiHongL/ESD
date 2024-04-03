@@ -72,6 +72,9 @@ def get_common_genre():
 
         # CHECKS IF GENRE_DATA IS EMPTY
         try:
+            max_value = max(genre_dict.values())
+
+            common_genre = [k for k,v in genre_dict.items() if v == max_value]
             common_genre = max(genre_dict, key=genre_dict.get)
             return jsonify(
                 {
