@@ -14,26 +14,14 @@ CORS(app)
 
 # Initialize flasgger for API Documentation
 app.config['SWAGGER'] = {
-    'title': 'Shop microservice API',
+    'title': 'Refund Microservice API',
     'version': 2.0,
     "openapi": "3.0.2",
-    'description': 'Allows create, retrieve, update, and delete of shop items',
+    'description': 'Allows users to request refunds for games they have purchased',
     'tags': {
         'Games': 'Operations related to game management',
         'Customizations': 'Operations related to customizations',
-    },
-    'ui_params': {
-        'apisSorter': 'alpha',
-        'operationsSorter': 'alpha',
-        'tagsSorter': 'alpha',
-    },
-    'ui_params_text': '''{
-        "tagsSorter": (a, b) => {
-            const order = ['Users', 'Customisations'];
-            return order.indexOf(a) - order.indexOf(b);
-        }
-    }''',
-    
+    },    
 }
 
 swagger = Swagger(app)

@@ -14,26 +14,14 @@ CORS(app)
 
 # Initialize flasgger for API Documentation
 app.config['SWAGGER'] = {
-    'title': 'Shop microservice API',
+    'title': 'Create Recommendation Microservice API',
     'version': 2.0,
     "openapi": "3.0.2",
-    'description': 'Allows create, retrieve, update, and delete of shop items',
+    'description': 'Orchestrate the creation of recommendations for a user',
     'tags': {
         'Games': 'Operations related to game management',
         'Customizations': 'Operations related to customizations',
     },
-    'ui_params': {
-        'apisSorter': 'alpha',
-        'operationsSorter': 'alpha',
-        'tagsSorter': 'alpha',
-    },
-    'ui_params_text': '''{
-        "tagsSorter": (a, b) => {
-            const order = ['Users', 'Customisations'];
-            return order.indexOf(a) - order.indexOf(b);
-        }
-    }''',
-    
 }
 
 swagger = Swagger(app)
@@ -58,7 +46,7 @@ common_genre_URL = "http://kong:8000/recommend/genre"
 @app.route("/create-recommendation/<int:userId>")
 def create_recommendation(userId):
     """
-    Create a recommendation for a user
+    Creates recommendations of games for a user
     ---
     tags:
       - Recommendations

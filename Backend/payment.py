@@ -16,7 +16,7 @@ app.config['SWAGGER'] = {
     'title': 'Payment Microservice API',
     'version': 2.0,
     "openapi": "3.0.2",
-    'description': 'Allows processing of payments',
+    'description': 'Allows users to process payments and refunds using Stripe API',
     'tags': {
         'Payment': 'Operations related to payment processing',
     },

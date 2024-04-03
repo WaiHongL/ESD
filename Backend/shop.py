@@ -13,7 +13,7 @@ app.config['SWAGGER'] = {
     'title': 'Shop microservice API',
     'version': 2.0,
     "openapi": "3.0.2",
-    'description': 'Allows create, retrieve, update, and delete of shop items',
+    'description': 'Allow for the purchase of games and customization',
     'tags': {
         'Games': 'Operations related to game management',
         'Customizations': 'Operations related to customizations',
