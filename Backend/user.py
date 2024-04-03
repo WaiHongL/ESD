@@ -188,12 +188,12 @@ def get_user_details(userId):
 @app.route("/<int:userId>/update", methods=["PUT"])
 def update_user_details(userId):
     """
-    Update user points
+    Update user details
     ---
     tags:
         - ['Users']
     requestBody:
-        description: Points update operation
+        description: User details update operation
         required: true
         content:
             application/json:
@@ -203,6 +203,9 @@ def update_user_details(userId):
                         points:
                             type: integer
                             description: The new points for the user
+                        operation:
+                            type: string
+                            description: Defines the points operation
                         selected_customization_id:
                             type: integer
                             description: The selected customization id for the user
