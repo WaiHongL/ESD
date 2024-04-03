@@ -103,6 +103,9 @@ def process_recommendation(userId):
 
         if "message" in wishlist_and_purchase_result and len(wishlist_and_purchase_result) == 2:
             shouldRetry = True
+
+            if num_retries + 1 == max_retries:
+                wishlist_and_purchase_message = json.dumps(wishlist_and_purchase_result)
         else: 
             shouldRetry = False
             wishlist_and_purchase_result_code = wishlist_and_purchase_result["code"]
@@ -154,6 +157,9 @@ def process_recommendation(userId):
 
         if "message" in games_genre_result and len(games_genre_result) == 2 and games_genre_result["message"] != "There are no game genres" and "Invalid JSON input" not in games_genre_result["message"]:
             shouldRetry = True
+
+            if num_retries + 1 == max_retries:
+                games_genre_message = json.dumps(games_genre_result)
         else: 
             shouldRetry = False
             games_genre_result_code = games_genre_result["code"]
@@ -192,6 +198,9 @@ def process_recommendation(userId):
 
         if "message" in common_genre_result and len(common_genre_result) == 2 and "Invalid JSON input" not in common_genre_result["message"]:
             shouldRetry = True
+
+            if num_retries + 1 == max_retries:
+                common_genre_message = json.dumps(common_genre_result)
         else: 
             shouldRetry = False
             common_genre_result_code = common_genre_result["code"]
@@ -242,6 +251,9 @@ def process_recommendation(userId):
 
         if "message" in games_by_genre_result and len(games_by_genre_result) == 2 and games_by_genre_result["message"] != "There are no games" and "An error occurred" not in games_by_genre_result["message"]:
             shouldRetry = True
+
+            if num_retries + 1 == max_retries:
+                games_by_genre_message = json.dumps(games_by_genre_result)
         else: 
             shouldRetry = False
             games_by_genre_result_code = games_by_genre_result["code"]

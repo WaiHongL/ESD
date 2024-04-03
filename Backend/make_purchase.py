@@ -251,7 +251,7 @@ def create_game_purchase(userid_gameid):
     num_retries = 0
     max_retries = 5
 
-    shouldRetry = False
+    shouldRetry = True
 
     create_game_purchase_result = {}
     create_game_purchase_result_code = 400
@@ -263,19 +263,26 @@ def create_game_purchase(userid_gameid):
         "game_id": userid_gameid['game_id']
     }
 
-    while num_retries < max_retries and (create_game_purchase_result_code not in range(200, 300) or shouldRetry == True):
+    while num_retries < max_retries and create_game_purchase_result_code not in range(200, 300) and shouldRetry == True:
         print('\n-----Invoking user microservice-----')
         create_game_purchase_result = invoke_http(create_game_purchase_URL, method='POST', json=create_game_purchase_json)
         print('create_game_purchase_result:', create_game_purchase_result, '\n')
 
-        if "message" in create_game_purchase_result and len(create_game_purchase_result) == 2:
+        if "message" in create_game_purchase_result and len(create_game_purchase_result) == 2 and "Invalid JSON input" not in create_game_purchase_result["message"] and "An error occurred" not in create_game_purchase_result["message"]:
             shouldRetry = True
-            num_retries += 1
+
+            if num_retries + 1 == max_retries:
+                create_game_purchase_message = json.dumps(create_game_purchase_result)
         else: 
             shouldRetry = False
             create_game_purchase_result_code = create_game_purchase_result["code"]
             create_game_purchase_message = json.dumps(create_game_purchase_result)
-            num_retries = 0
+
+        num_retries += 1
+
+    # Reset
+    shouldRetry = True
+    num_retries = 0
  
     if create_game_purchase_result_code not in range(200, 300):
         print('\n\n-----Publishing the (game purchase creation error) message with routing_key=game.purchase.creation.error-----')
@@ -314,26 +321,33 @@ def get_game_detail(game_id):
     num_retries = 0
     max_retries = 5
 
-    shouldRetry = False
+    shouldRetry = True
 
     game_details_result = {}
     game_details_result_code = 400
     game_details_message = ""
 
     # get game details
-    while num_retries < max_retries and (game_details_result_code not in range(200, 300) or shouldRetry == True):
+    while num_retries < max_retries and game_details_result_code not in range(200, 300) and shouldRetry == True:
         print('\n-----Invoking shop microservice-----')
         game_details_result = invoke_http(game_details_URL + str(game_id), method='GET')
         print('game_details_result:', game_details_result, '\n')
 
         if "message" in game_details_result and len(game_details_result) == 2:
             shouldRetry = True
-            num_retries += 1
+
+            if num_retries + 1 == max_retries:
+                game_details_message = json.dumps(game_details_result)
         else: 
             shouldRetry = False
             game_details_result_code = game_details_result["code"]
             game_details_message = json.dumps(game_details_result)
-            num_retries = 0
+
+        num_retries += 1
+
+    # Reset
+    shouldRetry = True
+    num_retries = 0
 
     if game_details_result_code not in range(200, 300):
         print('\n\n-----Publishing the (game details error) message with routing_key=game.details.error-----')
@@ -366,7 +380,7 @@ def make_payment(payment_json):
     num_retries = 0
     max_retries = 5
 
-    shouldRetry = False
+    shouldRetry = True
 
     payment_result = {}
     payment_result_code = 400
@@ -379,14 +393,21 @@ def make_payment(payment_json):
 
         #returns client secret and id
 
-        if "message" in payment_result and len(payment_result) == 2:
+        if "message" in payment_result and len(payment_result) == 2 and "Invalid JSON input" not in payment_result["message"] and "An error occurred" not in payment_result["message"]:
             shouldRetry = True
-            num_retries += 1
+
+            if num_retries + 1 == max_retries:
+                payment_message = json.dumps(payment_result)
         else: 
             shouldRetry = False
             payment_result_code = payment_result["code"]
             payment_message = json.dumps(payment_result)
-            num_retries = 0
+
+        num_retries += 1
+
+    # Reset
+    shouldRetry = True
+    num_retries = 0
 
     if payment_result_code not in range(200, 300):
         print('\n\n-----Publishing the (payment error) message with routing_key=payment.error-----')
@@ -422,25 +443,32 @@ def update_game_purchase(update_json):
     num_retries = 0
     max_retries = 5
 
-    shouldRetry = False
+    shouldRetry = True
 
     update_game_purchase_result = {}
     update_game_purchase_result_code = 400
     update_game_purchase_message = ""
 
-    while num_retries < max_retries and (update_game_purchase_result_code not in range(200, 300) or shouldRetry == True):
+    while num_retries < max_retries and update_game_purchase_result_code not in range(200, 300) and shouldRetry == True:
         print('\n-----Invoking user microservice-----')
         update_game_purchase_result = invoke_http(update_game_purchase_URL, method='PUT', json=update_json)
         print('update_game_purchase_result:', update_game_purchase_result, '\n')
 
-        if "message" in update_game_purchase_result and len(update_game_purchase_result) == 2:
+        if "message" in update_game_purchase_result and len(update_game_purchase_result) == 2 and "Invalid JSON input" not in update_game_purchase_result["message"] and "An error occurred" not in update_game_purchase_result["message"]:
             shouldRetry = True
-            num_retries += 1
+
+            if num_retries + 1 == max_retries:
+                update_game_purchase_message = json.dumps(update_game_purchase_result)
         else: 
             shouldRetry = False
             update_game_purchase_result_code = update_game_purchase_result["code"]
             update_game_purchase_message = json.dumps(update_game_purchase_result)
-            num_retries = 0
+
+        num_retries += 1
+
+    # Reset
+    shouldRetry = True
+    num_retries = 0
 
     if update_game_purchase_result_code not in range(200, 300):
         print('\n\n-----Publishing the (game purchase update error) message with routing_key=game.purchase.update.error-----')
@@ -476,7 +504,7 @@ def update_points(user_id, game_details):
     num_retries = 0
     max_retries = 5
 
-    shouldRetry = False
+    shouldRetry = True
 
     update_points_result = {}
     update_points_result_code = 400
@@ -487,19 +515,26 @@ def update_points(user_id, game_details):
         "operation": "add"
     }
 
-    while num_retries < max_retries and (update_points_result_code not in range(200, 300) or shouldRetry == True):
+    while num_retries < max_retries and update_points_result_code not in range(200, 300) and shouldRetry == True:
         print('\n-----Invoking user microservice-----')
         update_points_result = invoke_http(update_points_URL + str(user_id) + "/update", method='PUT', json=points_json)
         print("update_points_result: ", update_points_result, '\n')
 
-        if "message" in update_points_result and len(update_points_result) == 2:
+        if "message" in update_points_result and len(update_points_result) == 2 and "Invalid JSON input" not in update_points_result["message"]:
             shouldRetry = True
-            num_retries += 1
+
+            if num_retries + 1 == max_retries:
+                update_points_message = json.dumps(update_points_result)
         else: 
             shouldRetry = False
             update_points_result_code = update_points_result["code"]
             update_points_message = json.dumps(update_points_result)
-            num_retries = 0
+
+        num_retries += 1
+
+    # Reset
+    shouldRetry = True
+    num_retries = 0
 
     if update_points_result_code not in range(200, 300):
         print('\n\n-----Publishing the (points update error) message with routing_key=points.update.error-----')
@@ -535,25 +570,32 @@ def get_user_details(user_id):
     num_retries = 0
     max_retries = 5
 
-    shouldRetry = False
+    shouldRetry = True
 
     user_details_result = {}
     user_details_result_code = 400
     user_details_message = ""
 
-    while num_retries < max_retries and (user_details_result_code not in range(200, 300) or shouldRetry == True):
+    while num_retries < max_retries and user_details_result_code not in range(200, 300) and shouldRetry == True:
         print('\n-----Invoking user microservice-----')
         user_details_result = invoke_http(user_details_URL + str(user_id), method='GET')
         print('user_details_result:', user_details_result, '\n')
 
         if "message" in user_details_result and len(user_details_result) == 2:
             shouldRetry = True
-            num_retries += 1
+
+            if num_retries + 1 == max_retries:
+                user_details_message = json.dumps(user_details_result)
         else: 
             shouldRetry = False
             user_details_result_code = user_details_result['code']
             user_details_message = json.dumps(user_details_result)
-            num_retries = 0
+
+        num_retries += 1
+
+    # Reset
+    shouldRetry = True
+    num_retries = 0
 
     if user_details_result_code not in range(200, 300):
         print('\n\n-----Publishing the (user details error) message with routing_key=user.details.error-----')
@@ -629,7 +671,7 @@ def rollback_record(user_id, game_id):
     num_retries = 0
     max_retries = 5
 
-    shouldRetry = False
+    shouldRetry = True
 
     delete_game_purchase_result = {}
     delete_game_purchase_result_code = 400
@@ -640,19 +682,26 @@ def rollback_record(user_id, game_id):
         "game_id": game_id
     }
 
-    while num_retries < max_retries and (delete_game_purchase_result_code not in range(200, 300) or shouldRetry == True):
+    while num_retries < max_retries and delete_game_purchase_result_code not in range(200, 300) and shouldRetry == True:
         print('\n-----Invoking user microservice-----')
         delete_game_purchase_result = invoke_http(delete_game_purchase_URL, method='DELETE', json=delete_game_purchase_json)
         print('delete_game_purchase_result:', delete_game_purchase_result, '\n')
 
-        if "message" in delete_game_purchase_result and len(delete_game_purchase_result) == 2:
+        if "message" in delete_game_purchase_result and len(delete_game_purchase_result) == 2 and "Game purchase record" not in delete_game_purchase_result["message"] and "An error occurred" not in delete_game_purchase_result["message"] and "Invalid JSON input" not in delete_game_purchase_result["message"]:
             shouldRetry = True
-            num_retries += 1
+
+            if num_retries + 1 == max_retries:
+                delete_game_purchase_message = json.dumps(delete_game_purchase_result)
         else: 
             shouldRetry = False
             delete_game_purchase_result_code = delete_game_purchase_result["code"]
             delete_game_purchase_message = json.dumps(delete_game_purchase_result)
-            num_retries = 0
+
+        num_retries += 1
+
+    # Reset
+    shouldRetry = True
+    num_retries = 0
 
     if delete_game_purchase_result_code not in range(200, 300):
         print('\n\n-----Publishing the (game purchase deletion error) message with routing_key=game.purchase.deletion.error-----')
