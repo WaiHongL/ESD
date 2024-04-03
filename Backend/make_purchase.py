@@ -152,7 +152,7 @@ def make_purchase():
                             }    
 
                             print('processing notification...')
-                            # process_notification(notification_json)
+                            process_notification(notification_json)
 
                             result = {
                                 "code": 200,
@@ -190,7 +190,7 @@ def make_purchase():
                             }    
 
                             print('processing notification...')
-                            # process_fail_notification(notification_json)
+                            process_fail_notification(notification_json)
 
                             result = {
                                 "code": 500,
