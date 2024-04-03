@@ -103,15 +103,12 @@ def process_recommendation(userId):
 
         if "message" in wishlist_and_purchase_result and len(wishlist_and_purchase_result) == 2:
             shouldRetry = True
+            num_retries += 1
         else: 
             shouldRetry = False
             wishlist_and_purchase_result_code = wishlist_and_purchase_result["code"]
             wishlist_and_purchase_message = json.dumps(wishlist_and_purchase_result)
-
-        num_retries += 1
-
-    # Reset
-    num_retries = 0
+            num_retries = 0
 
     if wishlist_and_purchase_result_code not in range(200, 300):
         print("\n\n-----Publishing the (wishlist and purchase error) message with routing_key=wishlist.purchase.error-----")
@@ -153,15 +150,12 @@ def process_recommendation(userId):
 
         if "message" in games_genre_result and len(games_genre_result) == 2:
             shouldRetry = True
+            num_retries += 1
         else: 
             shouldRetry = False
             games_genre_result_code = games_genre_result["code"]
             games_genre_message = json.dumps(games_genre_result)
-
-        num_retries += 1
-
-    # Reset
-    num_retries = 0
+            num_retries = 0
 
     if games_genre_result_code not in range(200, 300):
         print("\n\n-----Publishing the (games genre error) message with routing_key=games.genre.error-----")
@@ -190,13 +184,12 @@ def process_recommendation(userId):
 
         if "message" in common_genre_result and len(common_genre_result) == 2:
             shouldRetry = True
+            num_retries += 1
         else: 
             shouldRetry = False
             common_genre_result_code = common_genre_result["code"]
             common_genre_message = json.dumps(common_genre_result)
-
-    # Reset
-    num_retries = 0
+            num_retries = 0
 
     if common_genre_result_code not in range(200, 300):
         print("\n\n-----Publishing the (common genre error) message with routing_key=common.genre.error-----")
@@ -237,13 +230,12 @@ def process_recommendation(userId):
 
         if "message" in games_by_genre_result and len(games_by_genre_result) == 2:
             shouldRetry = True
+            num_retries += 1
         else: 
             shouldRetry = False
             games_by_genre_result_code = games_by_genre_result["code"]
             games_by_genre_message = json.dumps(games_by_genre_result)
-
-    # Reset
-    num_retries = 0
+            num_retries = 0
 
     if games_by_genre_result_code not in range(200, 300):
         print("\n\n-----Publishing the (game by genre error) message with routing_key=game.by.genre.error-----")
