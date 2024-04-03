@@ -544,7 +544,7 @@ def process_refund():
                 user_details_to_change = {}
 
                 if int(selected_customization_id) in to_remove_list:
-                    user_details_to_change["selected_customization_id"] = "none"
+                    user_details_to_change["selected_customization_id"] = None
 
                 user_details_to_change["points"] = abs(change_points / 100)
                 user_details_to_change["operation"] = "subtract"
